@@ -1,0 +1,22 @@
+<% if(projets.length > 0) { %> 
+  <% projets.forEach(function(projet) { %>
+    <section class="content">
+      <div class="col-md-12 text-center">
+        <div class="d-flex align-items-center">
+          <img src="<%= projet.iconpath %>" alt="Logo du projet" class="job-image custom-image">
+          <h1 class="section-h1">
+            <%= projet.titre %> - 
+            <%= projet.date_debut.toLocaleString('fr-FR', { month: 'long' }) %> <%= projet.date_debut.getFullYear() %> à
+            <%= projet.date_fin.toLocaleString('fr-FR', { month: 'long' }) %> <%= projet.date_fin.getFullYear() %>
+          </h1>
+        </div>
+        <div class="horizontal_line"></div>
+        <div class="d-flex align-items-center">
+          <p class="description-text"><%= projet.description %></p>
+        </div>
+      </div>
+    </section>
+  <% }); %>
+<% } else { %>
+  <p>Aucun projet disponible.</p>
+<% } %>

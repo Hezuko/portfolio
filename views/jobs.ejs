@@ -1,0 +1,22 @@
+<% if(jobs.length > 0) { %> 
+  <% jobs.forEach(function(job) { %>
+    <section class="content">
+      <div class="col-md-12 text-center">
+        <div class="d-flex align-items-center">
+          <img src="<%= job.iconpath %>" alt="Logo de l'entreprise" class="job-image custom-image">
+          <h1 class="section-h1">
+            <%= job.titre %> - 
+            <%= job.date_debut.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_debut.getFullYear() %> à
+            <%= job.date_fin.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_fin.getFullYear() %>
+          </h1>
+        </div>
+        <div class="horizontal_line"></div>
+        <div class="d-flex align-items-center">
+          <p class="description-text"><%= job.description %></p>
+        </div>
+      </div>
+    </section>
+  <% }); %>
+<% } else { %>
+  <p>Aucun job disponible.</p>
+<% } %>

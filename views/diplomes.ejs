@@ -1,0 +1,34 @@
+<% if (diplomes.length) { %>
+    <% for (let i = 0; i < diplomes.length; i += 3) { %> 
+      <section class="content">
+        <div class="col-md-12 text-center">
+          <h1 class="section-h1">Mes diplômes</h1>
+          <div class="horizontal_line"></div>
+  
+          <ul class="list-unstyled diplomes-list">
+            <% diplomes.slice(i, i + 3).forEach(function(diplome) { %>  
+              <li class="card custom-card mb-3">
+                <div class="d-flex align-items-center">
+                  <img src="<%= diplome.image_path %>" alt="Image du diplôme" class="diplome-image">
+                  <div class="diplome-details card-text">
+                    <p><strong>Titre :</strong> <%= diplome.titre %></p>
+                    <p><strong>Etablissement :</strong> <%= diplome.delivrepar %></p>
+                    <p><strong>Niveau :</strong> <%= diplome.niveau_etude %></p>
+                    <p><strong>Année d'obtention :</strong> <%= diplome.annee_obtention %></p>
+                  </div>
+                </div>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </section>
+    <% } %>
+  <% } else { %>
+    <section class="content">
+      <div class="col-md-12 text-center">
+        <h1 class="section-h1">Aucun diplôme trouvé</h1>
+        <img src="/gif/giphy.webp" class="img-fluid" style="max-width: 80%; height: auto;">
+      </div>
+    </section>
+  <% } %>
+  

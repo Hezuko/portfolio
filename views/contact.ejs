@@ -1,0 +1,28 @@
+<div class="content contact">
+  <form action="/contact" method="POST" class="mt-4">
+    <div class="mb-3">
+      <label for="nom" class="form-label">Nom</label>
+      <input type="text" class="form-control" id="nom" name="nom" maxlength="50" required>
+    </div>
+    <div class="mb-3">
+      <label for="prenom" class="form-label">Prénom</label>
+      <input type="text" class="form-control" id="prenom" name="prenom" maxlength="50" required>
+    </div>
+    <div class="mb-3">
+      <label for="objet" class="form-label">Objet</label>
+      <input type="text" class="form-control" id="objet" name="objet" maxlength="100" required>
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <div class="mb-3">
+      <label for="texte" class="form-label">Contenu (500 caractères maximum)</label>
+      <textarea class="form-control" id="texte" name="texte" rows="5" maxlength="500" required></textarea>
+      <small id="charCount" class="form-text text-muted">500 caractères restants</small>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary">Envoyer</button>
+    </div>
+  </form>
+</div>

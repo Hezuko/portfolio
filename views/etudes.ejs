@@ -1,0 +1,18 @@
+<% if (etudes.length > 0) { %> 
+  <% etudes.forEach(function(etude) { %>
+    <section class="content">
+      <div class="col-md-12 text-center">
+        <div class="d-flex align-items-center">
+          <img src="<%= etude.iconpath %>" alt="Logo de l'école" class="diplome-image custom-image">
+          <h1 class="section-h1"><%= etude.titre %> - <%= etude.date_debut.getFullYear() %> - <%= etude.date_fin.getFullYear() %></h1>
+        </div>
+        <div class="horizontal_line"></div>
+        <div class="d-flex align-items-center">
+          <p class="description-text"><%= etude.description %></p>
+        </div>
+      </div>
+    </section>
+  <% }); %>
+<% } else { %>
+  <p class="text-center">Aucune étude trouvée.</p>
+<% } %>
