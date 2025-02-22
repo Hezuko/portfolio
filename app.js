@@ -32,13 +32,6 @@ app.use(cookieParser());
 // Servir les fichiers statiques
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Servir le favicon avec un try/catch pour éviter une erreur si absent
-try {
-  app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
-} catch (err) {
-  console.log("⚠️ Favicon non trouvé, mais ce n'est pas bloquant.");
-}
-
 // Routes pour Bootstrap CSS & JS
 app.use('/css', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/js')));
