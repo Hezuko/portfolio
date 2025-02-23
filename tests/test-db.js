@@ -1,4 +1,4 @@
-const pool = require('./model/db');
+const pool = require('../model/db');
 
 (async () => {
     try {

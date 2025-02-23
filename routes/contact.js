@@ -59,6 +59,7 @@ router.post('/', async function(req, res, next) {
         subject: `Portfolio en savoir Plus : ${objet}`,
         text: `Vous avez reçu un nouveau message de contact.\n\nNom: ${nom}\nPrénom: ${prenom}\nEmail: ${email}\nMessage:\n${texte}`
     };
+    
 
     transporter.sendMail(mailOptions, function(error, info){
         if (error) {
@@ -69,11 +70,14 @@ router.post('/', async function(req, res, next) {
     });
 
     try {
-        await contact.AddContact(nom, prenom, objet, email, texte);
+        const contactAjoute = await contact.AddContact(nom, prenom, objet, email, texte);
+        console.log("✅ Contact ajouté en base :", contactAjoute);
         res.redirect('/confirmation');
     } catch (err) {
+        console.error("❌ Erreur lors de l'ajout du contact :", err);
         next(err);
     }
+    
 });
 
 module.exports = router;

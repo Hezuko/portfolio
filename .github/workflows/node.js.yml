@@ -20,12 +20,31 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🛠️ Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+
+    - name: 🔑 Set environment variables
+      run: |
+        echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> $GITHUB_ENV
+        echo "NODE_ENV=development" >> $GITHUB_ENV
+        echo "DB_URL=${{ secrets.DB_URL }}" >> $GITHUB_ENV
+        echo "CLOUDINARY_URL=${{ secrets.CLOUDINARY_URL }}" >> $GITHUB_ENV
+      env:
+        SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        DB_URL: ${{ secrets.DB_URL }}
+        CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔨 Build application (if applicable)
+      run: npm run build --if-present
+
+    - name: 🧪 Run tests
+      run: npm test

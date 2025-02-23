@@ -1,5 +1,8 @@
 <div class="content contact">
   <form action="/contact" method="POST" class="mt-4">
+    
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
     <div class="mb-3">
       <label for="nom" class="form-label">Nom</label>
       <input type="text" class="form-control" id="nom" name="nom" maxlength="50" required>
