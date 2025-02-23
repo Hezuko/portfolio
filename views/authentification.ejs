@@ -1,0 +1,25 @@
+<section class="content d-flex justify-content-center align-items-center min-vh-90">
+    <div class="col-md-6 text-center p-4 shadow rounded bg-light">
+        <h1 class="section-h1">🔐 Connexion</h1>
+
+        <form action="/authentification" method="POST" class="mt-4">
+            <div class="mb-3 text-start">
+                <label for="pseudo" class="form-label">Pseudo</label>
+                <input type="text" id="pseudo" name="pseudo" class="form-control" required>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label for="password" class="form-label">Mot de passe</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+        </form>
+
+        <hr class="my-3">
+
+        <p class="text-muted">Ou</p>
+
+        <a href="/authentification/visiteur" class="btn btn-outline-secondary w-100">🔍 Continuer en tant que visiteur</a>
+    </div>
+</section>

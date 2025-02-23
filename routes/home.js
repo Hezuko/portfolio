@@ -11,7 +11,7 @@ router.get('/', async function(req, res, next) {
   try {
     //Récupérer les diplômes
     var diplomes = await diplome.getDiplomes();
-    var certifications = await certification.getCertification();
+    var certifications = await certification.getCertifications();
 
     //Lire le fichier description.txt
     const descriptionPath = path.join(__dirname,'../public/document/description.txt');
