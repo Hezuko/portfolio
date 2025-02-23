@@ -17,12 +17,9 @@ async function verifyUtilisateur(pseudo, mdp) {
         const res = await pool.query("SELECT * FROM utilisateurs WHERE pseudo = $1", [pseudo]);
         const utilisateur = res.rows[0];
 
-        if(!utilisateur) return null;
-
-        // const match = await bcrypt.compare(mdp, utilisateur.mot_de_passe);
-        // if (!match) return null;
-
-        if(!(mdp == utilisateur.mot_de_passe)) {
+        if (!utilisateur) return null;
+        
+        if (mdp !== utilisateur.mot_de_passe) {
             return null;
         }
 
@@ -32,8 +29,8 @@ async function verifyUtilisateur(pseudo, mdp) {
         console.error("❌ Erreur lors de la vérification de l'utilisateur :", err);
         throw err;
     }
-    
 }
+
 
 module.exports = {
     getUtilisateur,

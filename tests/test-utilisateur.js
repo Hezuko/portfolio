@@ -1,4 +1,4 @@
-const { getUtilisateur } = require("./model/utilisateur"); // Importer la fonction
+const { getUtilisateur } = require("../model/utilisateur"); // Importer la fonction
 
 async function testGetUtilisateur() {
     try {

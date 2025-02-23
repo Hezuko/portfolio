@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
 // 🔹 Limiteur de requêtes : max 5 tentatives par minute
 const loginLimiter = rateLimit({
     windowMs: 60 * 1000, 
-    max: 5, 
+    max: 20, 
     message: "⛔ Trop de tentatives de connexion. Réessayez plus tard.",
     standardHeaders: true, 
     legacyHeaders: false, 
@@ -34,7 +34,7 @@ router.post("/", loginLimiter, async function (req, res) {
         if (!user) {
             return res.render("authentification", { 
                 title: "Authentification", 
-                error: "Pseudo ou mot de passe incorrect" 
+                error: "Identifiant ou code d'accès incorrect" // Envoie de l'erreur à la vue
             });
         }
 
