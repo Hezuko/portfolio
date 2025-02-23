@@ -16,11 +16,14 @@ function initSession() {
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: false, // Mettre `true` en production si HTTPS est activé
-            maxAge: 3600 * 1000, // Expiration après 1 heure
+            secure: process.env.NODE_ENV === 'production', // Activé uniquement en production
+            httpOnly: true, // Empêche l'accès au cookie via JavaScript
+            sameSite: 'strict', // Empêche les attaques CSRF
+            maxAge: 3600 * 1000 // Expiration après 1 heure
         },
     });
 }
+
 // 🟢 Créer une session utilisateur après connexion
 async function createSession(req, user) {
     req.session.userid = user.id;

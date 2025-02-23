@@ -4,6 +4,17 @@ var utilisateur = require("../model/utilisateur");
 var sessionManager = require("../config/session"); 
 const { v4: uuidv4 } = require("uuid");
 var { preventAuthAccess } = require("../middlewares/auth");
+const rateLimit = require("express-rate-limit");
+
+
+// 🔹 Limiteur de requêtes : max 5 tentatives par minute
+const loginLimiter = rateLimit({
+    windowMs: 60 * 1000, 
+    max: 5, 
+    message: "⛔ Trop de tentatives de connexion. Réessayez plus tard.",
+    standardHeaders: true, 
+    legacyHeaders: false, 
+});
 
 // 🔹 Afficher la page de connexion
 router.get("/", preventAuthAccess, async function (req, res) {
@@ -13,13 +24,12 @@ router.get("/", preventAuthAccess, async function (req, res) {
     });
 });
 
-// 🔹 Connexion de l'utilisateur
-router.post("/", async function (req, res) { 
+// Appliquer le limiter uniquement à la route de connexion
+router.post("/", loginLimiter, async function (req, res) { 
     try {
         const { pseudo, password } = req.body;
 
         const user = await utilisateur.verifyUtilisateur(pseudo, password);
-
 
         if (!user) {
             return res.render("authentification", { 
