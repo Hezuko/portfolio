@@ -1,13 +1,33 @@
 <% if(jobs.length > 0) { %> 
   <% jobs.forEach(function(job) { %>
     <section class="content">
+
+      <% if (typeof user !== "undefined" && user.role === "admin") { %>
+
+        <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+          <a href="/jobs/ajouter" class="custom-btn add-btn">
+              ➕
+          </a>
+          <a href="/jobs/modifier/<%= job.id %>" class="custom-btn edit-btn">
+              📝
+          </a>
+          <form action="/jobs/supprimer/<%= job.id %>" method="POST" class="d-inline">
+              <button type="submit" class="custom-btn delete-btn" 
+                      onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce job ?');">
+                  ❌
+              </button>
+          </form>
+        </div>
+      
+      <% } %>
+
       <div class="col-md-12 text-center">
         <div class="d-flex align-items-center">
           <img src="<%= job.iconpath %>" alt="Logo de l'entreprise" class="job-image custom-image">
           <h1 class="section-h1">
             <%= job.titre %> - 
-            <%= job.date_debut.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_debut.getFullYear() %> à
-            <%= job.date_fin.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_fin.getFullYear() %>
+            <%= new Date(job.date_debut).toLocaleString('fr-FR', { month: 'long', year: 'numeric' }) %> à
+            <%= new Date(job.date_fin).toLocaleString('fr-FR', { month: 'long', year: 'numeric' }) %>
           </h1>
         </div>
         <div class="horizontal_line"></div>
@@ -19,11 +39,20 @@
   <% }); %>
 <% } else { %>
   <section class="content">
+
+    <% if (typeof user !== "undefined" && user.role === "admin") { %>
+      <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+        <a href="/jobs/ajouter" class="custom-btn add-btn">
+          ➕ 
+        </a>
+      </div>
+    <% } %>
+
     <div class="col-md-12 text-center">
       <div class="d-flex flex-column align-items-center">
-            <h1 class="section-h1">Aucun job trouvé</h1>
-            <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
-        </div>
+        <h1 class="section-h1">Aucun job trouvé</h1>
+        <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
+      </div>
     </div>
-</section>
+  </section>
 <% } %>
