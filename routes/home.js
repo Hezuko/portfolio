@@ -21,7 +21,8 @@ router.get('/', async function(req, res, next) {
     title: 'Mon portfolio',
     diplomes: diplomes,
     certifications : certifications,
-    description: description
+    description: description,
+    henoc_photo: 'https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740309643/henoc_r0fiwi.jpg',
   });
   } catch(err) {
     next(err);
