@@ -5,6 +5,7 @@ const path = require('path');
 var diplome = require('../model/diplome.js');
 var certification = require('../model/certification.js');
 var etude = require('../model/etude.js');
+var sessionManager = require("../config/session"); 
 const rateLimit = require("express-rate-limit");
 
 // 🛑 Limitation du nombre de requêtes pour éviter les attaques DoS
@@ -247,6 +248,18 @@ router.post('/certification/supprimer', async function(req, res, next) {
       message: "Une erreur est survenue lors de la suppression de la certification.",
       success: false
     });
+  }
+});
+
+
+// ✅ Route pour la déconnexion
+router.post('/desauthentification', async function(req, res) {
+  try {
+      await sessionManager.deleteSession(req); // 🔹 Supprime correctement la session
+      res.redirect('/'); // 🔹 Redirection vers la page d'accueil
+  } catch (error) {
+      console.error("❌ Erreur lors de la déconnexion :", error);
+      res.status(500).send("Erreur lors de la déconnexion.");
   }
 });
 
