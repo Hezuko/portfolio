@@ -431,3 +431,200 @@ describe("📝 Tests CRUD des Projets", () => {
     });
 
 });
+
+
+//// Test CRUD des jobs ////
+
+
+describe("📝 Tests CRUD des jobs", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let jobId; // Stocke l'ID du job ajouté pour les tests suivants
+
+    beforeEach(async () => {
+        agent = request.agent(app); // Crée un agent pour stocker la session
+
+        // 🔹 1. Récupérer la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 🔹 2. Extraire le CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 🔹 3. Extraire les cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 🔹 4. Simuler une connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout de job
+     */
+    it("✅ Devrait ajouter un job avec succès", async () => {
+        const response = await agent
+            .post("/jobs/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Test job",
+                description: "Description du job test",
+                employeur:"Le jo de mes rêves",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/image.jpg",
+                partenaire: "Léo",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des jobs pour obtenir l'ID du job ajouté
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        expect(jobsResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(jobsResponse.text);
+        jobId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du job ajouté
+        expect(jobId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification de job
+     */
+    it("✅ Devrait modifier un job avec succès", async () => {
+        expect(jobId).toBeDefined(); // Vérifie que l'ID du job existe
+
+        const response = await agent
+            .post("/jobs/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: jobId,
+                titre: "job Modifié",
+                description: "Nouvelle description",
+                employeur: "Le cauchemar",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "Terminé",
+                partenaire:"Amina",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le job a bien été modifié
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        expect(jobsResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(jobsResponse.text);
+        expect($$("h1.section-h1").text()).toContain("job Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression de job
+     */
+    it("✅ Devrait supprimer un job avec succès", async () => {
+        // 🔹 1. Récupérer la liste des jobs
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        const $ = cheerio.load(jobsResponse.text);
+    
+        // 🔹 2. Extraire l'ID du premier job existant
+        const jobId = $("button[data-id]").first().attr("data-id");
+    
+        expect(jobId).toBeDefined(); // Vérifie que l'ID est bien récupéré
+    
+        // 🔹 3. Envoyer la requête de suppression
+        const response = await agent
+            .post(`/jobs/supprimer/${jobId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+    
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+    
+        // 🔹 4. Vérifier que le job n'existe plus
+        const jobsResponseAfter = await agent.get("/jobs").set("Cookie", cookies);
+        const $$ = cheerio.load(jobsResponseAfter.text);
+    
+        // 🔹 5. Vérifier que l'ID supprimé n'apparaît plus
+        const jobExisteEncore = $$(`button[data-id="${jobId}"]`).length > 0;
+        expect(jobExisteEncore).toBe(false);
+    });
+    
+
+    /**
+     * ❌ Test suppression d'un job avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un job avec un ID invalide", async () => {
+        const response = await agent
+                .post(`/jobs/supprimer/999`) // 👉 Ajout de l'ID dans l'URL
+                .set("Cookie", cookies)
+                .set("X-CSRF-Token", csrfToken)
+                .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un job inexistant
+     */
+    it("❌ Devrait refuser de modifier un job inexistant", async () => {
+        const response = await agent
+            .post("/jobs/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "job Fictif",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un job sans titre", async () => {
+        const response = await agent
+            .post("/jobs/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description du job test",
+                employeur:"Le jo de mes rêves",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/image.jpg",
+                partenaire: "Léo",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+
+});
