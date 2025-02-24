@@ -18,14 +18,14 @@
           <% certifications.slice(i, i + 3).forEach(function(certification) { %>  
             <li class="card custom-card mb-3">
               <div class="d-flex align-items-center">
-                <img src="<%= certification.image_path %>" alt="Image du diplôme" class="certification-image">
+                <img src="<%= certification.image_path %>" alt="Image du diplôme" class="diplome-image">
                 <div class="certification-details card-text">
                   <p><strong>Titre :</strong> <%= certification.titre %></p>
                   <p><strong>Organisme :</strong> <%= certification.delivrepar %></p>
                   <p><strong>Année d'obtention :</strong> <%= certification.annee_obtention.toLocaleString('fr-FR', { month: 'long' }) %> <%= certification.annee_obtention.getFullYear() %>  </p>
                 </div>
                 <% if (typeof user !== "undefined" && user.role === "admin") { %>
-                  <div class="d-flex gap-2 ms-3">
+                  <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
                     <!-- Bouton Modifier -->
                     <button class="custom-btn edit-btn" 
                             data-bs-toggle="modal" 
