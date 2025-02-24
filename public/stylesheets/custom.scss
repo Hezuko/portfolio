@@ -343,3 +343,38 @@ h2 {
 .navbar .social-icons {
   margin-right: 200px; /* Ajuste la valeur selon ton besoin */
 }
+
+.custom-btn {
+  font-size: 3.0rem; /* Taille des icônes */
+  text-decoration: none; /* Enlève le soulignement des liens */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem; /* Taille du bouton */
+  height: 4rem;
+  border-radius: 50%; /* Rond */
+  transition: transform 0.2s ease-in-out;
+}
+
+.custom-btn:hover {
+  transform: scale(1.2); /* Effet zoom */
+}
+
+.add-btn {
+  color: green !important;
+  border: none;
+  background: none;
+}
+
+.edit-btn {
+  color: blue;
+  border: none;
+  background: none;
+}
+
+.delete-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}

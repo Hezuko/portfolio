@@ -1,0 +1,203 @@
+<!-- ✅ Modal pour Ajouter un projet -->
+<div class="modal fade" id="modalAjout" tabindex="-1" aria-labelledby="modalAjoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAjoutLabel">Ajouter un projet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/projets/ajouter" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titre" name="titre" class="form-control" placeholder="Titre du projet" required>
+                    </div>
+                
+                    <!-- Description -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-chat-text"></i></span>
+                        <textarea id="description" name="description" class="form-control" placeholder="Description du projet" required></textarea>
+                    </div>
+                
+                    <!-- Adresse -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" id="adresse" name="adresse" class="form-control" placeholder="Adresse du projet" required>
+                    </div>
+                
+                    <!-- Date de début -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="date" id="date_debut" name="date_debut" class="form-control" required>
+                    </div>
+                
+                    <!-- Date de fin -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+                        <input type="date" id="date_fin" name="date_fin" class="form-control" required>
+                    </div>
+                
+                   <!-- État -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-flag"></i></span>
+                        <select id="etat" name="etat" class="form-control" required>
+                            <option value="Planifié" data-label="📅">Planifié</option>
+                            <option value="En cours" data-label="⚙️">En cours</option>
+                            <option value="Terminé" data-label="✅">Terminé</option>
+                            <option value="Annulé" data-label="❌">Annulé</option>
+                        </select>
+                    </div>
+
+                
+                    <!-- Lien de l'image -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="text" id="iconpath" name="iconpath" class="form-control" placeholder="URL de l'image">
+                    </div>
+                
+                    <button type="submit" class="btn btn-success mt-3">
+                        <i class="bi bi-plus-lg"></i> Ajouter
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Modifier un projet -->
+<div class="modal fade" id="modalModifier" tabindex="-1" aria-labelledby="modalModifierLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalModifierLabel">Modifier le projet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formModifier" action="/projets/modifier" method="POST">
+                    <input type="hidden" id="projetIdModif" name="id">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+
+                    <label for="titreModif">Titre :</label>
+                    <input type="text" id="titreModif" name="titre" class="form-control" required>
+
+                    <label for="descriptionModif">Description :</label>
+                    <textarea id="descriptionModif" name="description" class="form-control" required></textarea>
+
+                    <label for="adresseModif">Adresse :</label>
+                    <input type="text" id="adresseModif" name="adresse" class="form-control" required>
+
+                    <label for="date_debutModif">Date de début :</label>
+                    <input type="date" id="date_debutModif" name="date_debut" class="form-control" required>
+
+                    <label for="date_finModif">Date de fin :</label>
+                    <input type="date" id="date_finModif" name="date_fin" class="form-control" required>
+
+                    <label for="etatModif">État :</label>
+                    <select id="etatModif" name="etat" class="form-control" required>
+                        <option value="Planifié">📅 Planifié</option>
+                        <option value="En cours">⚙️ En cours</option>
+                        <option value="Terminé">✅ Terminé</option>
+                        <option value="Annulé">❌ Annulé</option>
+                    </select>
+
+                    <label for="iconpathModif">Lien de l'image :</label>
+                    <input type="text" id="iconpathModif" name="iconpath" class="form-control">
+
+                    <button type="submit" class="btn btn-primary mt-3">Modifier</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal de Confirmation pour la Suppression d'un Projet -->
+<div class="modal fade" id="modalSupprimer" tabindex="-1" aria-labelledby="modalSupprimerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSupprimerLabel">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le projet <strong id="nomProjetSuppr"></strong> ?</p>
+                <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="formSupprimer" action="/projets/supprimer" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="projetIdSuppr" name="id">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const etatSelect = document.getElementById("etat");
+
+    // Met à jour les options pour afficher les emojis
+    for (let option of etatSelect.options) {
+        let emoji = option.getAttribute("data-label");
+        if (emoji) {
+            option.textContent = `${emoji} ${option.value}`;
+        }
+    }
+
+    const modalModifier = document.getElementById("modalModifier");
+    
+    if (modalModifier) {
+        modalModifier.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+
+            // Récupération des données du projet via les attributs du bouton
+            const projetId = button.getAttribute("data-id");
+            const titre = button.getAttribute("data-titre");
+            const description = button.getAttribute("data-description");
+            const adresse = button.getAttribute("data-adresse");
+            const dateDebut = button.getAttribute("data-date_debut");
+            const dateFin = button.getAttribute("data-date_fin");
+            const etat = button.getAttribute("data-etat");
+            const iconpath = button.getAttribute("data-iconpath");
+
+            // Remplir le formulaire avec les valeurs récupérées
+            document.getElementById("projetIdModif").value = projetId;
+            document.getElementById("titreModif").value = titre;
+            document.getElementById("descriptionModif").value = description;
+            document.getElementById("adresseModif").value = adresse;
+            document.getElementById("date_debutModif").value = dateDebut;
+            document.getElementById("date_finModif").value = dateFin;
+            document.getElementById("etatModif").value = etat;
+            document.getElementById("iconpathModif").value = iconpath;
+        });
+    }
+
+    const modalSupprimer = document.getElementById("modalSupprimer");
+
+    if (modalSupprimer) {
+        modalSupprimer.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+            const projetId = button.getAttribute("data-id");
+            const projetTitre = button.getAttribute("data-titre");
+
+            // Mettre à jour le champ caché du formulaire avec l'ID du projet
+            document.getElementById("projetIdSuppr").value = projetId;
+            
+            // Mettre à jour le texte du projet à supprimer
+            document.getElementById("nomProjetSuppr").textContent = projetTitre;
+
+            // Modifier dynamiquement l'action du formulaire pour inclure l'ID
+            document.getElementById("formSupprimer").action = `/projets/supprimer/${projetId}`;
+        });
+    }
+});
+</script>

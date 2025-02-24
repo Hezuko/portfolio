@@ -72,6 +72,9 @@ router.post('/', async function(req, res, next) {
     try {
         const contactAjoute = await contact.AddContact(nom, prenom, objet, email, texte);
         console.log("✅ Contact ajouté en base :", contactAjoute);
+
+        req.session.messageSent = true; 
+
         res.redirect('/confirmation');
     } catch (err) {
         console.error("❌ Erreur lors de l'ajout du contact :", err);

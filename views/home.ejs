@@ -1,4 +1,15 @@
 <section class="content">
+
+  <% if (typeof user !== "undefined" && user.role === "admin") { %>
+
+    <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+        <button class="custom-btn-profil edit-btn">
+            📝
+        </button>
+  </div>
+  
+  <% } %>
+
   <div class="text-center">
     <img src="<%= henoc_photo %>" alt="Logo Portfolio" class="img-fluid photo" style="max-width: 80%; height: auto;">
   </div>

@@ -25,8 +25,18 @@ async function getJobById(id) {
 // 🟢 Ajouter un job
 async function addJob(titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) {
     try {
+            document = document || null;
+            partenaire = partenaire || null;
+            iconpath = iconpath || null;
+
+            console.log(`📌 Requête SQL exécutée : 
+                INSERT INTO job (titre, description,employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) 
+                VALUES ('${titre}', '${description}', '${employeur}','${adresse}', '${date_debut}', '${date_fin}', '${document}', '${partenaire}', '${iconpath}')`);
+    
+
         const res = await pool.query(
-            "INSERT INTO job (titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+            `INSERT INTO job (titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath)  
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
             [titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath]
         );
         return res.rows[0];
@@ -39,16 +49,30 @@ async function addJob(titre, description, employeur, adresse, date_debut, date_f
 // 🟢 Mettre à jour un job
 async function updateJob(id, titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) {
     try {
+        console.log(`📌 Requête SQL exécutée :
+            UPDATE job 
+            SET titre = '${titre}', description = '${description}', employeur = '${employeur}', adresse = '${adresse}', 
+                date_debut = '${date_debut}', date_fin = '${date_fin}', document = '${document}', 
+                partenaire = '${partenaire}', iconpath = '${iconpath}'
+            WHERE id = ${id}
+        `);
+
         const res = await pool.query(
-            "UPDATE job SET titre=$1, description=$2, employeur=$3, adresse=$4, date_debut=$5, date_fin=$6, document=$7, partenaire=$8, iconpath=$9 WHERE id=$10 RETURNING *",
+            `UPDATE job 
+             SET titre = $1, description = $2, employeur = $3, adresse = $4, date_debut = $5, date_fin = $6, 
+                 document = $7, partenaire = $8, iconpath = $9
+             WHERE id = $10
+             RETURNING *`, 
             [titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath, id]
         );
-        return res.rows[0];
-    } catch (err) {  
-        console.error("❌ Erreur lors de la mise à jour du job :", err);
+
+        return res.rows[0]; // Retourne l'élément mis à jour
+    } catch (err) {
+        console.error("❌ Erreur lors de la modification du projet :", err);
         throw err;
     }
 }
+
 
 // 🟢 Supprimer un job
 async function deleteJob(id) {

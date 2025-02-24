@@ -1,0 +1,186 @@
+<!-- ✅ Modal pour Ajouter un job -->
+<div class="modal fade" id="modalAjout" tabindex="-1" aria-labelledby="modalAjoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAjoutLabel">Ajouter un job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/jobs/ajouter" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titre" name="titre" class="form-control" placeholder="Titre du job" required>
+                    </div>
+                
+                    <!-- Description -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-chat-text"></i></span>
+                        <textarea id="description" name="description" class="form-control" placeholder="Description du job" required></textarea>
+                    </div>
+
+                    <!-- Employeur -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" id="employeur" name="employeur" class="form-control" placeholder="Employeur du job" required>
+                    </div>
+                
+                    <!-- Adresse -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" id="adresse" name="adresse" class="form-control" placeholder="Adresse du job" required>
+                    </div>
+                
+                    <!-- Date de début -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="date" id="date_debut" name="date_debut" class="form-control" required>
+                    </div>
+                
+                    <!-- Date de fin -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
+                        <input type="date" id="date_fin" name="date_fin" class="form-control" required>
+                    </div>
+
+                
+                    <!-- Lien de l'image -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="text" id="iconpath" name="iconpath" class="form-control" placeholder="URL de l'image">
+                    </div>
+                
+                    <button type="submit" class="btn btn-success mt-3">
+                        <i class="bi bi-plus-lg"></i> Ajouter
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Modifier un job -->
+<div class="modal fade" id="modalModifier" tabindex="-1" aria-labelledby="modalModifierLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalModifierLabel">Modifier le job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formModifier" action="/jobs/modifier" method="POST">
+                    <input type="hidden" id="jobIdModif" name="id">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+
+                    <label for="titreModif">Titre :</label>
+                    <input type="text" id="titreModif" name="titre" class="form-control" required>
+
+                    <label for="employeurModif">Employeur</label>
+                    <input type="text" id="employeurModif" name="employeur" class="form-control" required>
+
+                    <label for="descriptionModif">Description :</label>
+                    <textarea id="descriptionModif" name="description" class="form-control" required></textarea>
+
+                    <label for="adresseModif">Adresse :</label>
+                    <input type="text" id="adresseModif" name="adresse" class="form-control" required>
+
+                    <label for="date_debutModif">Date de début :</label>
+                    <input type="date" id="date_debutModif" name="date_debut" class="form-control" required>
+
+                    <label for="date_finModif">Date de fin :</label>
+                    <input type="date" id="date_finModif" name="date_fin" class="form-control" required>
+
+                    <label for="iconpathModif">Lien de l'image :</label>
+                    <input type="text" id="iconpathModif" name="iconpath" class="form-control">
+
+                    <button type="submit" class="btn btn-primary mt-3">Modifier</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal de Confirmation pour la Suppression d'un job -->
+<div class="modal fade" id="modalSupprimer" tabindex="-1" aria-labelledby="modalSupprimerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSupprimerLabel">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le job <strong id="nomjobSuppr"></strong> ?</p>
+                <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="formSupprimer" action="/jobs/supprimer" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="jobIdSuppr" name="id">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modalModifier = document.getElementById("modalModifier");
+    
+    if (modalModifier) {
+        modalModifier.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+
+            // Récupération des données du job via les attributs du bouton
+            const jobId = button.getAttribute("data-id");
+            const titre = button.getAttribute("data-titre");
+            const employeur = button.getAttribute("data-employeur");
+            const description = button.getAttribute("data-description");
+            const adresse = button.getAttribute("data-adresse");
+            const dateDebut = button.getAttribute("data-date_debut");
+            const dateFin = button.getAttribute("data-date_fin");
+            const etat = button.getAttribute("data-etat");
+            const iconpath = button.getAttribute("data-iconpath");
+
+            // Remplir le formulaire avec les valeurs récupérées
+            document.getElementById("jobIdModif").value = jobId;
+            document.getElementById("titreModif").value = titre;
+            document.getElementById("employeurModif").value = employeur;
+            document.getElementById("descriptionModif").value = description;
+            document.getElementById("adresseModif").value = adresse;
+            document.getElementById("date_debutModif").value = dateDebut;
+            document.getElementById("date_finModif").value = dateFin;
+            document.getElementById("etatModif").value = etat;
+            document.getElementById("iconpathModif").value = iconpath;
+        });
+    }
+
+    const modalSupprimer = document.getElementById("modalSupprimer");
+
+    if (modalSupprimer) {
+        modalSupprimer.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+            const jobId = button.getAttribute("data-id");
+            const jobTitre = button.getAttribute("data-titre");
+
+            // Mettre à jour le champ caché du formulaire avec l'ID du job
+            document.getElementById("jobIdSuppr").value = jobId;
+            
+            // Mettre à jour le texte du job à supprimer
+            document.getElementById("nomjobSuppr").textContent = jobTitre;
+
+            // Modifier dynamiquement l'action du formulaire pour inclure l'ID
+            document.getElementById("formSupprimer").action = `/jobs/supprimer/${jobId}`;
+        });
+    }
+});
+</script>

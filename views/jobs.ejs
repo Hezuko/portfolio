@@ -1,13 +1,49 @@
 <% if(jobs.length > 0) { %> 
   <% jobs.forEach(function(job) { %>
     <section class="content">
+
+      <% if (typeof user !== "undefined" && user.role === "admin") { %>
+
+        <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+          <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+              ➕
+          </button>
+          <!-- Bouton Modifier -->
+          <button class="custom-btn edit-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalModifier"
+                  data-id="<%= job.id %>"
+                  data-titre="<%= job.titre %>"
+                  data-employeur="<%= job.employeur %>"
+                  data-description="<%= job.description %>"
+                  data-adresse="<%= job.adresse %>"
+                  data-date_debut="<%= job.date_debut.toISOString().slice(0,10) %>"
+                  data-date_fin="<%= job.date_fin.toISOString().slice(0,10) %>"
+                  data-etat="<%= job.etat %>"
+                  data-iconpath="<%= job.iconpath %>">
+              📝
+          </button>
+          
+          <!-- Bouton Supprimer -->
+          <button class="custom-btn delete-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalSupprimer"
+                  data-id="<%= job.id %>"
+                  data-titre="<%= job.titre %>">
+              ❌
+          </button>
+
+        </div>
+      
+      <% } %>
+
       <div class="col-md-12 text-center">
         <div class="d-flex align-items-center">
           <img src="<%= job.iconpath %>" alt="Logo de l'entreprise" class="job-image custom-image">
           <h1 class="section-h1">
             <%= job.titre %> - 
-            <%= job.date_debut.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_debut.getFullYear() %> à
-            <%= job.date_fin.toLocaleString('fr-FR', { month: 'long' }) %> <%= job.date_fin.getFullYear() %>
+            <%= new Date(job.date_debut).toLocaleString('fr-FR', { month: 'long', year: 'numeric' }) %> à
+            <%= new Date(job.date_fin).toLocaleString('fr-FR', { month: 'long', year: 'numeric' }) %>
           </h1>
         </div>
         <div class="horizontal_line"></div>
@@ -19,11 +55,24 @@
   <% }); %>
 <% } else { %>
   <section class="content">
+
+    <% if (typeof user !== "undefined" && user.role === "admin") { %>
+      <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+        <!-- Bouton Ajouter lorsqu'il n'y a aucun job -->
+        <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+          ➕
+        </button>
+      </div>
+    <% } %>
+
     <div class="col-md-12 text-center">
       <div class="d-flex flex-column align-items-center">
-            <h1 class="section-h1">Aucun job trouvé</h1>
-            <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
-        </div>
+        <h1 class="section-h1">Aucun job trouvé</h1>
+        <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
+      </div>
     </div>
-</section>
+  </section>
 <% } %>
+
+<!-- Inclusion des modals pour l'ajout et la modification -->
+<%- include('forms/job-ajout-modif-suppression') %>

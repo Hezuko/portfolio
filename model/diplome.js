@@ -25,9 +25,12 @@ async function getDiplomeById(id) {
 // 🟢 Ajouter un diplôme
 async function addDiplome(titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path) {
     try {
+
+        console.log("Les données qui vont êtres insérées :", titre, niveau_etude, delivrepar, etude_id, image_path, annee_obtention);
+        
         const res = await pool.query(
             "INSERT INTO diplome (titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path]
+            [titre, niveau_etude, delivrepar, etude_id, image_path, annee_obtention]
         );
         return res.rows[0];
     } catch (err) {
@@ -37,12 +40,22 @@ async function addDiplome(titre, niveau_etude, delivrepar, etude_id, annee_obten
 }
 
 // 🟢 Mettre à jour un diplôme
-async function updateDiplome(id, titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path) {
+async function updateDiplome(id, titre, niveau_etude, annee_obtention) {
     try {
         const res = await pool.query(
-            "UPDATE diplome SET titre=$1, niveau_etude=$2, delivrepar=$3, etude_id=$4, annee_obtention=$5, image_path=$6 WHERE id=$7 RETURNING *",
-            [titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path, id]
+            `UPDATE diplome 
+            SET titre = $1, 
+                niveau_etude = $2, 
+                annee_obtention = $3
+            WHERE id = $4 
+            RETURNING *`,
+            [titre, niveau_etude, annee_obtention, id]
         );
+
+        if (res.rowCount === 0) {
+            throw new Error("Diplôme non trouvé !");
+        }
+
         return res.rows[0];
     } catch (err) {  
         console.error("❌ Erreur lors de la mise à jour du diplôme :", err);

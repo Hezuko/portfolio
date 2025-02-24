@@ -1,34 +1,78 @@
 <% if (diplomes.length) { %>
-    <% for (let i = 0; i < diplomes.length; i += 3) { %> 
-      <section class="content">
-        <div class="col-md-12 text-center">
-          <h1 class="section-h1">Mes diplômes</h1>
-          <div class="horizontal_line"></div>
-  
-          <ul class="list-unstyled diplomes-list">
-            <% diplomes.slice(i, i + 3).forEach(function(diplome) { %>  
-              <li class="card custom-card mb-3">
-                <div class="d-flex align-items-center">
-                  <img src="<%= diplome.image_path %>" alt="Image du diplôme" class="diplome-image">
-                  <div class="diplome-details card-text">
-                    <p><strong>Titre :</strong> <%= diplome.titre %></p>
-                    <p><strong>Etablissement :</strong> <%= diplome.delivrepar %></p>
-                    <p><strong>Niveau :</strong> <%= diplome.niveau_etude %></p>
-                    <p><strong>Année d'obtention :</strong> <%= diplome.annee_obtention %></p>
-                  </div>
-                </div>
-              </li>
-            <% }); %>
-          </ul>
-        </div>
-      </section>
-    <% } %>
-  <% } else { %>
+  <% for (let i = 0; i < diplomes.length; i += 2) { %> 
     <section class="content">
+
+      <% if (typeof user !== "undefined" && user.role === "admin") { %>
+        <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+          <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+            ➕
+          </button>
+        </div>
+      <% } %>
+
       <div class="col-md-12 text-center">
-        <h1 class="section-h1">Aucun diplôme trouvé</h1>
-        <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 80%; height: auto;">
+        <h1 class="section-h1">Mes diplômes</h1>
+        <div class="horizontal_line"></div>
+
+        <ul class="list-unstyled diplomes-list">
+          <% diplomes.slice(i, i + 2).forEach(function(diplome) { %>  
+            <li class="card custom-card mb-3">
+              <div class="d-flex align-items-center">
+                <img src="<%= diplome.image_path %>" alt="Image du diplôme" class="diplome-image">
+                <div class="diplome-details card-text">
+                  <p><strong>Titre :</strong> <%= diplome.titre %></p>
+                  <p><strong>Etablissement :</strong> <%= diplome.delivrepar %></p>
+                  <p><strong>Niveau :</strong> <%= diplome.niveau_etude %></p>
+                  <p><strong>Année d'obtention :</strong> <%= diplome.annee_obtention.toLocaleString('fr-FR', { month: 'long' }) %> <%= diplome.annee_obtention.getFullYear() %> </p>
+                </div>
+                <% if (typeof user !== "undefined" && user.role === "admin") { %>
+                  <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+                    <!-- Bouton Modifier -->
+                    <button class="custom-btn edit-btn" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalModifier"
+                            data-id="<%= diplome.id %>"
+                            data-titre="<%= diplome.titre %>"
+                            data-niveau="<%= diplome.niveau_etude %>"
+                            data-annee="<%= diplome.annee_obtention %>"
+                            data-image="<%= diplome.image_path %>">
+                        📝
+                    </button>
+            
+                    <!-- Bouton Supprimer -->
+                    <button class="custom-btn delete-btn" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalSupprimer"
+                            data-id="<%= diplome.id %>"
+                            data-titre="<%= diplome.titre %>">
+                        ❌
+                    </button>
+                  </div>
+                <% } %>
+              </div>
+            </li>
+          <% }); %>
+        </ul>
       </div>
     </section>
   <% } %>
-  
+<% } else { %>
+  <section class="content">
+    <% if (typeof user !== "undefined" && user.role === "admin") { %>
+      <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
+        <!-- Bouton Ajouter lorsqu'il n'y a aucun projet -->
+        <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+          ➕
+        </button>
+      </div>
+    <% } %>
+    
+    <div class="col-md-12 text-center">
+      <h1 class="section-h1">Aucun diplôme trouvé</h1>
+      <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" 
+           class="img-fluid" style="max-width: 80%; height: auto;">
+    </div>
+  </section>
+<% } %>
+
+<%- include('forms/diplome-ajout-modif-suppresion') %>

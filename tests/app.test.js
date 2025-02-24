@@ -2,6 +2,7 @@ const request = require("supertest");
 const cheerio = require("cheerio");
 const he = require("he");
 const app = require("../app");
+const { raw } = require("express");
 
 describe("🔍 Tests de l'application", () => {
     let agent;
@@ -241,5 +242,903 @@ describe("📝 Tests du formulaire de contact", () => {
 
         expect(response.statusCode).toBe(403); // 🔴 CSRF Token manquant
         expect(response.text).toContain("Invalid CSRF token.");
+    });
+});
+
+
+describe("📝 Tests CRUD des Projets", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let projetId; // Stocke l'ID du projet ajouté pour les tests suivants
+
+    beforeEach(async () => {
+        agent = request.agent(app); // Crée un agent pour stocker la session
+
+        // 🔹 1. Récupérer la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 🔹 2. Extraire le CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 🔹 3. Extraire les cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 🔹 4. Simuler une connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout de projet
+     */
+    it("✅ Devrait ajouter un projet avec succès", async () => {
+        const response = await agent
+            .post("/projets/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Test Projet",
+                description: "Description du projet test",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des projets pour obtenir l'ID du projet ajouté
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        expect(projetsResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(projetsResponse.text);
+        projetId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du projet ajouté
+        expect(projetId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification de projet
+     */
+    it("✅ Devrait modifier un projet avec succès", async () => {
+        expect(projetId).toBeDefined(); // Vérifie que l'ID du projet existe
+
+        const response = await agent
+            .post("/projets/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: projetId,
+                titre: "Projet Modifié",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le projet a bien été modifié
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        expect(projetsResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(projetsResponse.text);
+        expect($$("h1.section-h1").text()).toContain("Projet Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression de projet
+     */
+    it("✅ Devrait supprimer un projet avec succès", async () => {
+        // 🔹 1. Récupérer la liste des projets
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        const $ = cheerio.load(projetsResponse.text);
+    
+        // 🔹 2. Extraire l'ID du premier projet existant
+        const projetId = $("button[data-id]").first().attr("data-id");
+    
+        expect(projetId).toBeDefined(); // Vérifie que l'ID est bien récupéré
+    
+        // 🔹 3. Envoyer la requête de suppression
+        const response = await agent
+            .post(`/projets/supprimer/${projetId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+    
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+    
+        // 🔹 4. Vérifier que le projet n'existe plus
+        const projetsResponseAfter = await agent.get("/projets").set("Cookie", cookies);
+        const $$ = cheerio.load(projetsResponseAfter.text);
+    
+        // 🔹 5. Vérifier que l'ID supprimé n'apparaît plus
+        const projetExisteEncore = $$(`button[data-id="${projetId}"]`).length > 0;
+        expect(projetExisteEncore).toBe(false);
+    });
+    
+
+    /**
+     * ❌ Test suppression d'un projet avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un projet avec un ID invalide", async () => {
+        const response = await agent
+                .post(`/projets/supprimer/999`) // 👉 Ajout de l'ID dans l'URL
+                .set("Cookie", cookies)
+                .set("X-CSRF-Token", csrfToken)
+                .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un projet inexistant
+     */
+    it("❌ Devrait refuser de modifier un projet inexistant", async () => {
+        const response = await agent
+            .post("/projets/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Projet Fictif",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un projet sans titre", async () => {
+        const response = await agent
+            .post("/projets/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description du projet test",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+
+});
+
+
+//// Test CRUD des jobs ////
+
+
+describe("📝 Tests CRUD des jobs", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let jobId; // Stocke l'ID du job ajouté pour les tests suivants
+
+    beforeEach(async () => {
+        agent = request.agent(app); // Crée un agent pour stocker la session
+
+        // 🔹 1. Récupérer la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 🔹 2. Extraire le CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 🔹 3. Extraire les cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 🔹 4. Simuler une connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout de job
+     */
+    it("✅ Devrait ajouter un job avec succès", async () => {
+        const response = await agent
+            .post("/jobs/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Test job",
+                description: "Description du job test",
+                employeur:"Le jo de mes rêves",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/image.jpg",
+                partenaire: "Léo",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des jobs pour obtenir l'ID du job ajouté
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        expect(jobsResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(jobsResponse.text);
+        jobId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du job ajouté
+        expect(jobId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification de job
+     */
+    it("✅ Devrait modifier un job avec succès", async () => {
+        expect(jobId).toBeDefined(); // Vérifie que l'ID du job existe
+
+        const response = await agent
+            .post("/jobs/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: jobId,
+                titre: "job Modifié",
+                description: "Nouvelle description",
+                employeur: "Le cauchemar",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "Terminé",
+                partenaire:"Amina",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le job a bien été modifié
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        expect(jobsResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(jobsResponse.text);
+        expect($$("h1.section-h1").text()).toContain("job Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression de job
+     */
+    it("✅ Devrait supprimer un job avec succès", async () => {
+        // 🔹 1. Récupérer la liste des jobs
+        const jobsResponse = await agent.get("/jobs").set("Cookie", cookies);
+        const $ = cheerio.load(jobsResponse.text);
+    
+        // 🔹 2. Extraire l'ID du premier job existant
+        const jobId = $("button[data-id]").first().attr("data-id");
+    
+        expect(jobId).toBeDefined(); // Vérifie que l'ID est bien récupéré
+    
+        // 🔹 3. Envoyer la requête de suppression
+        const response = await agent
+            .post(`/jobs/supprimer/${jobId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+    
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+    
+        // 🔹 4. Vérifier que le job n'existe plus
+        const jobsResponseAfter = await agent.get("/jobs").set("Cookie", cookies);
+        const $$ = cheerio.load(jobsResponseAfter.text);
+    
+        // 🔹 5. Vérifier que l'ID supprimé n'apparaît plus
+        const jobExisteEncore = $$(`button[data-id="${jobId}"]`).length > 0;
+        expect(jobExisteEncore).toBe(false);
+    });
+    
+
+    /**
+     * ❌ Test suppression d'un job avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un job avec un ID invalide", async () => {
+        const response = await agent
+                .post(`/jobs/supprimer/999`) // 👉 Ajout de l'ID dans l'URL
+                .set("Cookie", cookies)
+                .set("X-CSRF-Token", csrfToken)
+                .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un job inexistant
+     */
+    it("❌ Devrait refuser de modifier un job inexistant", async () => {
+        const response = await agent
+            .post("/jobs/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "job Fictif",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un job sans titre", async () => {
+        const response = await agent
+            .post("/jobs/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description du job test",
+                employeur:"Le jo de mes rêves",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/image.jpg",
+                partenaire: "Léo",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+
+});
+
+
+describe("📝 Tests CRUD des Études", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let etudeId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'une étude
+     */
+    it("✅ Devrait ajouter une étude avec succès", async () => {
+        const response = await agent
+            .post("/etudes/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Université de Technologie de Compiègne",
+                description: "Formation en ingénierie informatique",
+                adresse: "Compiègne, France",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-12",
+                document: "https://example.com/document.pdf",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                buildingpath: "https://example.com/building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des études pour obtenir l'ID de l'étude ajoutée
+        const etudeResponse = await agent.get("/etudes").set("Cookie", cookies);
+        expect(etudeResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(etudeResponse.text);
+        etudeId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID de l'étude ajoutée
+        expect(etudeId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'une étude
+     */
+    it("✅ Devrait modifier une étude avec succès", async () => {
+        expect(etudeId).toBeDefined(); // Vérifie que l'ID de l'étude existe
+
+        const response = await agent
+            .post("/etudes/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: etudeId,
+                titre: "Université de Technologie de Compiègne - Modifié",
+                description: "Formation avancée en ingénierie informatique",
+                adresse: "Compiègne, France",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "https://example.com/new-document.pdf",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                buildingpath: "https://example.com/new-building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que l'étude a bien été modifiée
+        const etudesResponse = await agent.get("/etudes").set("Cookie", cookies);
+        expect(etudesResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(etudesResponse.text);
+        expect($$("h1.section-h1").text()).toContain("Université de Technologie de Compiègne - Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression d'une étude
+     */
+    it("✅ Devrait supprimer une étude avec succès", async () => {
+        expect(etudeId).toBeDefined(); // Vérifie que l'ID de l'étude existe
+
+        const response = await agent
+            .post(`/etudes/supprimer/${etudeId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que l'étude n'existe plus
+        const etudesResponseAfter = await agent.get("/etudes").set("Cookie", cookies);
+        const $$ = cheerio.load(etudesResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const etudeExisteEncore = $$(`button[data-id="${etudeId}"]`).length > 0;
+        expect(etudeExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'une étude avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer une étude avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/etudes/supprimer/99999`) // 👉 Ajout de l'ID invalide dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'une étude inexistante
+     */
+    it("❌ Devrait refuser de modifier une étude inexistante", async () => {
+        const response = await agent
+            .post("/etudes/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Étude Fictive",
+                description: "Description fictive",
+                adresse: "Lieu fictif",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "https://example.com/fake-document.pdf",
+                etat: "Planifié",
+                iconpath: "https://example.com/fake-image.jpg",
+                buildingpath: "https://example.com/fake-building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'une étude sans titre", async () => {
+        const response = await agent
+            .post("/etudes/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description de l'étude",
+                adresse: "Adresse de l'étude",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/document.pdf",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                buildingpath: "https://example.com/building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+});
+
+describe("📝 Tests CRUD des Diplômes", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let diplomeId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        // 1️⃣ Récupération de la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 2️⃣ Extraction du CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 3️⃣ Extraction des cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 4️⃣ Simulation de connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'un diplôme
+     */
+    it("✅ Devrait ajouter un diplôme avec succès", async () => {
+        const response = await agent
+            .post("/diplome/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Master Informatique",
+                niveau_etude: "Bac+5",
+                delivrepar: "6",
+                etudeId: "6",
+                annee_obtention: "2025-02-12",
+                image_path: "https://example.com/diplome.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des diplômes pour obtenir l'ID du diplôme ajouté
+        const diplomeResponse = await agent.get("/").set("Cookie", cookies);
+        expect(diplomeResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(diplomeResponse.text);
+        diplomeId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du diplôme ajouté
+        expect(diplomeId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'un diplôme
+     */
+    it("✅ Devrait modifier un diplôme avec succès", async () => {
+        expect(diplomeId).toBeDefined(); // Vérifie que l'ID du diplôme existe
+
+        const response = await agent
+            .post("/diplome/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: diplomeId,
+                titre: "Master Informatique - Modifié",
+                niveau_etude: "Bac+5",
+                annee_obtention: "2026-05-20",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le diplôme a bien été modifié
+        const diplomeResponse = await agent.get("/").set("Cookie", cookies);
+        expect(diplomeResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(diplomeResponse.text);
+        expect($$("p strong:contains('Titre :')").parent().text()).toContain("Master Informatique - Modifié");
+
+    });
+
+    /**
+     * ✅ Test de suppression d'un diplôme
+     */
+    it("✅ Devrait supprimer un diplôme avec succès", async () => {
+        expect(diplomeId).toBeDefined(); // Vérifie que l'ID du diplôme existe
+
+        const response = await agent
+            .post(`/diplome/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: diplomeId, _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que le diplôme n'existe plus
+        const diplomeResponseAfter = await agent.get("/").set("Cookie", cookies);
+        const $$ = cheerio.load(diplomeResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const diplomeExisteEncore = $$(`button[data-id="${diplomeId}"]`).length > 0;
+        expect(diplomeExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'un diplôme avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un diplôme avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/diplome/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: "99999", _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un diplôme inexistant
+     */
+    it("❌ Devrait refuser de modifier un diplôme inexistant", async () => {
+        const response = await agent
+            .post("/diplome/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Diplôme Fictif",
+                niveau_etude: "Bac+3",
+                annee_obtention: "2025-09-15",
+                image_path: "https://example.com/fake-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un diplôme sans titre", async () => {
+        const response = await agent
+            .post("/diplome/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                niveau_etude: "Bac+5",
+                delivrepar: "6",
+                etudeId: "6",
+                annee_obtention: "2025-02-12",
+                image_path: "https://example.com/diplome.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+});
+
+describe("📝 Tests CRUD des Certifications", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let certificationId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        // 1️⃣ Récupération de la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 2️⃣ Extraction du CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 3️⃣ Extraction des cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 4️⃣ Simulation de connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'une certification
+     */
+    it("✅ Devrait ajouter une certification avec succès", async () => {
+        const response = await agent
+            .post("/certification/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "AWS Certified Developer",
+                delivrepar: "Amazon Web Services",
+                annee_obtention: "2024-05-10",
+                image_path: "https://example.com/aws-cert.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des certifications pour obtenir l'ID
+        const certificationResponse = await agent.get("/").set("Cookie", cookies);
+        expect(certificationResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(certificationResponse.text);
+        certificationId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID de la certification ajoutée
+        expect(certificationId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'une certification
+     */
+    it("✅ Devrait modifier une certification avec succès", async () => {
+        expect(certificationId).toBeDefined(); // Vérifie que l'ID de la certification existe
+        
+        const response = await agent
+            .post("/certification/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: certificationId,
+                titre: "AWS Certified Solutions Architect",
+                delivrepar: "AWS",
+                annee_obtention: "2024-06-01",
+                image_path: "https://example.com/aws-solutions.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que la certification a bien été modifiée
+        const certificationResponse = await agent.get("/").set("Cookie", cookies);
+        expect(certificationResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(certificationResponse.text);
+        expect($$("p strong:contains('Titre :')").parent().text()).toContain("AWS Certified Solutions Architect");
+    });
+
+    /**
+     * ✅ Test de suppression d'une certification
+     */
+    it("✅ Devrait supprimer une certification avec succès", async () => {
+        expect(certificationId).toBeDefined(); // Vérifie que l'ID de la certification existe
+
+        const response = await agent
+            .post(`/certification/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: certificationId, _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que la certification n'existe plus
+        const certificationResponseAfter = await agent.get("/").set("Cookie", cookies);
+        const $$ = cheerio.load(certificationResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const certificationExisteEncore = $$(`button[data-id="${certificationId}"]`).length > 0;
+        expect(certificationExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'une certification avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer une certification avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/certification/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: "99999", _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'une certification inexistante
+     */
+    it("❌ Devrait refuser de modifier une certification inexistante", async () => {
+        const response = await agent
+            .post("/certification/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Certification Fictive",
+                delivrepar: "Fake Institute",
+                annee_obtention: "2025-09-15",
+                image_path: "https://example.com/fake-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'une certification sans titre", async () => {
+        const response = await agent
+            .post("/certification/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                delivrepar: "Amazon Web Services",
+                annee_obtention: "2024-05-10",
+                image_path: "https://example.com/aws-cert.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
     });
 });
