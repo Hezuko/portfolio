@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
 // 🔹 Limiteur de requêtes : max 5 tentatives par minute
 const loginLimiter = rateLimit({
     windowMs: 60 * 1000, 
-    max: 20, 
+    max: 1000, 
     message: "⛔ Trop de tentatives de connexion. Réessayez plus tard.",
     standardHeaders: true, 
     legacyHeaders: false, 

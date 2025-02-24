@@ -2,6 +2,7 @@ const request = require("supertest");
 const cheerio = require("cheerio");
 const he = require("he");
 const app = require("../app");
+const { raw } = require("express");
 
 describe("🔍 Tests de l'application", () => {
     let agent;
@@ -627,4 +628,183 @@ describe("📝 Tests CRUD des jobs", () => {
         expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
     });
 
+});
+describe("📝 Tests CRUD des Études", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let etudeId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'une étude
+     */
+    it("✅ Devrait ajouter une étude avec succès", async () => {
+        const response = await agent
+            .post("/etudes/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Université de Technologie de Compiègne",
+                description: "Formation en ingénierie informatique",
+                adresse: "Compiègne, France",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-12",
+                document: "https://example.com/document.pdf",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                buildingpath: "https://example.com/building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des études pour obtenir l'ID de l'étude ajoutée
+        const etudeResponse = await agent.get("/etudes").set("Cookie", cookies);
+        expect(etudeResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(etudeResponse.text);
+        etudeId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID de l'étude ajoutée
+        expect(etudeId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'une étude
+     */
+    it("✅ Devrait modifier une étude avec succès", async () => {
+        expect(etudeId).toBeDefined(); // Vérifie que l'ID de l'étude existe
+
+        const response = await agent
+            .post("/etudes/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: etudeId,
+                titre: "Université de Technologie de Compiègne - Modifié",
+                description: "Formation avancée en ingénierie informatique",
+                adresse: "Compiègne, France",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "https://example.com/new-document.pdf",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                buildingpath: "https://example.com/new-building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que l'étude a bien été modifiée
+        const etudesResponse = await agent.get("/etudes").set("Cookie", cookies);
+        expect(etudesResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(etudesResponse.text);
+        expect($$("h1.section-h1").text()).toContain("Université de Technologie de Compiègne - Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression d'une étude
+     */
+    it("✅ Devrait supprimer une étude avec succès", async () => {
+        expect(etudeId).toBeDefined(); // Vérifie que l'ID de l'étude existe
+
+        const response = await agent
+            .post(`/etudes/supprimer/${etudeId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que l'étude n'existe plus
+        const etudesResponseAfter = await agent.get("/etudes").set("Cookie", cookies);
+        const $$ = cheerio.load(etudesResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const etudeExisteEncore = $$(`button[data-id="${etudeId}"]`).length > 0;
+        expect(etudeExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'une étude avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer une étude avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/etudes/supprimer/99999`) // 👉 Ajout de l'ID invalide dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'une étude inexistante
+     */
+    it("❌ Devrait refuser de modifier une étude inexistante", async () => {
+        const response = await agent
+            .post("/etudes/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Étude Fictive",
+                description: "Description fictive",
+                adresse: "Lieu fictif",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                document: "https://example.com/fake-document.pdf",
+                etat: "Planifié",
+                iconpath: "https://example.com/fake-image.jpg",
+                buildingpath: "https://example.com/fake-building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'une étude sans titre", async () => {
+        const response = await agent
+            .post("/etudes/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description de l'étude",
+                adresse: "Adresse de l'étude",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                document: "https://example.com/document.pdf",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                buildingpath: "https://example.com/building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
 });

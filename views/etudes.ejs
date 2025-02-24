@@ -1,31 +1,47 @@
 <% if (etudes.length > 0) { %> 
   <% etudes.forEach(function(etude) { %>
     <section class="content">
-
       <% if (typeof user !== "undefined" && user.role === "admin") { %>
         <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-          <a href="/etudes/ajouter" class="custom-btn add-btn">
-              ➕
-          </a>
-          <a href="/etudes/modifier/<%= etude.id %>" class="custom-btn edit-btn">
+          <!-- Bouton Ajouter -->
+          <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+            ➕
+          </button>
+
+          <!-- Bouton Modifier -->
+          <button class="custom-btn edit-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalModifier"
+                  data-id="<%= etude.id %>"
+                  data-titre="<%= etude.titre %>"
+                  data-description="<%= etude.description %>"
+                  data-adresse="<%= etude.adresse %>"
+                  data-date_debut="<%= etude.date_debut.toISOString().slice(0,10) %>"
+                  data-date_fin="<%= etude.date_fin.toISOString().slice(0,10) %>"
+                  data-etat="<%= etude.etat %>"
+                  data-iconpath="<%= etude.iconpath %>"
+                  data-buildingpath="<%= etude.buildingpath %>">
               📝
-          </a>
-          <form action="/etudes/supprimer/<%= etude.id %>" method="POST" class="d-inline">
-              <button type="submit" class="custom-btn delete-btn" 
-                      onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette étude ?');">
-                  ❌
-              </button>
-          </form>
+          </button>
+
+          <!-- Bouton Supprimer -->
+          <button class="custom-btn delete-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalSupprimer"
+                  data-id="<%= etude.id %>"
+                  data-titre="<%= etude.titre %>">
+              ❌
+          </button>
         </div>
       <% } %>
 
       <div class="col-md-12 text-center">
         <div class="d-flex align-items-center">
-          <img src="<%= etude.iconpath %>" alt="Logo de l'école" class="diplome-image custom-image">
+          <img src="<%= etude.iconpath %>" alt="Logo du etude" class="job-image custom-image">
           <h1 class="section-h1">
             <%= etude.titre %> - 
-            <%= new Date(etude.date_debut).getFullYear() %> - 
-            <%= new Date(etude.date_fin).getFullYear() %>
+            <%= etude.date_debut.toLocaleString('fr-FR', { month: 'long' }) %> <%= etude.date_debut.getFullYear() %> à
+            <%= etude.date_fin.toLocaleString('fr-FR', { month: 'long' }) %> <%= etude.date_fin.getFullYear() %>
           </h1>
         </div>
         <div class="horizontal_line"></div>
@@ -37,21 +53,22 @@
   <% }); %>
 <% } else { %>
   <section class="content">
-
     <% if (typeof user !== "undefined" && user.role === "admin") { %>
       <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-        <a href="/etudes/ajouter" class="custom-btn add-btn">
-          ➕ 
-        </a>
+        <!-- Bouton Ajouter lorsqu'il n'y a aucun etude -->
+        <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+          ➕
+        </button>
       </div>
     <% } %>
-    
     <div class="col-md-12 text-center">
       <div class="d-flex flex-column align-items-center">
-          <h1 class="section-h1">Aucune étude trouvée</h1>
-          <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" 
-               class="img-fluid" style="max-width: 50%; height: auto;">
+        <h1 class="section-h1">Aucun etude trouvé</h1>
+        <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
       </div>
     </div>
   </section>
 <% } %>
+
+<!-- Inclusion des modals pour l'ajout et la modification -->
+<%- include('forms/etude-ajout-modif-suppression') %>

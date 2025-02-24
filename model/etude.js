@@ -25,13 +25,24 @@ async function getEtudeById(id) {
 // 🟢 Ajouter une étude
 async function addEtude(titre, description, adresse, date_debut, date_fin, document, etat, iconpath, buildingpath) {
     try {
+        // Remplace les valeurs vides par NULL
+        document = document || null;
+        iconpath = iconpath || null;
+        buildingpath = buildingpath || null;
+
+        console.log(`📌 Requête SQL exécutée : 
+            INSERT INTO etude (titre, description, adresse, date_debut, date_fin, document, etat, iconpath, buildingpath) 
+            VALUES ('${titre}', '${description}', '${adresse}', '${date_debut}', '${date_fin}', '${document}', '${etat}', '${iconpath}', '${buildingpath}')`);
+
         const res = await pool.query(
-            "INSERT INTO etude (titre, description, adresse, date_debut, date_fin, document, etat, iconpath, buildingpath) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+            `INSERT INTO etude (titre, description, adresse, date_debut, date_fin, document, etat, iconpath, buildingpath) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+             RETURNING *`, 
             [titre, description, adresse, date_debut, date_fin, document, etat, iconpath, buildingpath]
-        );
-        return res.rows[0];
+        );        
+        return res.rows[0]; // Retourne l'élément inséré
     } catch (err) {
-        console.error("❌ Erreur lors de l'ajout de l'étude :", err);
+        console.error("❌ Erreur lors de l'ajout du projet :", err);
         throw err;
     }
 }
