@@ -243,3 +243,191 @@ describe("📝 Tests du formulaire de contact", () => {
         expect(response.text).toContain("Invalid CSRF token.");
     });
 });
+
+
+describe("📝 Tests CRUD des Projets", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let projetId; // Stocke l'ID du projet ajouté pour les tests suivants
+
+    beforeEach(async () => {
+        agent = request.agent(app); // Crée un agent pour stocker la session
+
+        // 🔹 1. Récupérer la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 🔹 2. Extraire le CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 🔹 3. Extraire les cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 🔹 4. Simuler une connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout de projet
+     */
+    it("✅ Devrait ajouter un projet avec succès", async () => {
+        const response = await agent
+            .post("/projets/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Test Projet",
+                description: "Description du projet test",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des projets pour obtenir l'ID du projet ajouté
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        expect(projetsResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(projetsResponse.text);
+        projetId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du projet ajouté
+        expect(projetId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification de projet
+     */
+    it("✅ Devrait modifier un projet avec succès", async () => {
+        expect(projetId).toBeDefined(); // Vérifie que l'ID du projet existe
+
+        const response = await agent
+            .post("/projets/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: projetId,
+                titre: "Projet Modifié",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le projet a bien été modifié
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        expect(projetsResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(projetsResponse.text);
+        expect($$("h1.section-h1").text()).toContain("Projet Modifié");
+    });
+
+    /**
+     * ✅ Test de suppression de projet
+     */
+    it("✅ Devrait supprimer un projet avec succès", async () => {
+        // 🔹 1. Récupérer la liste des projets
+        const projetsResponse = await agent.get("/projets").set("Cookie", cookies);
+        const $ = cheerio.load(projetsResponse.text);
+    
+        // 🔹 2. Extraire l'ID du premier projet existant
+        const projetId = $("button[data-id]").first().attr("data-id");
+    
+        expect(projetId).toBeDefined(); // Vérifie que l'ID est bien récupéré
+    
+        // 🔹 3. Envoyer la requête de suppression
+        const response = await agent
+            .post(`/projets/supprimer/${projetId}`) // 👉 Ajout de l'ID dans l'URL
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+    
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+    
+        // 🔹 4. Vérifier que le projet n'existe plus
+        const projetsResponseAfter = await agent.get("/projets").set("Cookie", cookies);
+        const $$ = cheerio.load(projetsResponseAfter.text);
+    
+        // 🔹 5. Vérifier que l'ID supprimé n'apparaît plus
+        const projetExisteEncore = $$(`button[data-id="${projetId}"]`).length > 0;
+        expect(projetExisteEncore).toBe(false);
+    });
+    
+
+    /**
+     * ❌ Test suppression d'un projet avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un projet avec un ID invalide", async () => {
+        const response = await agent
+                .post(`/projets/supprimer/999`) // 👉 Ajout de l'ID dans l'URL
+                .set("Cookie", cookies)
+                .set("X-CSRF-Token", csrfToken)
+                .send({ _csrf: csrfToken }); // ❌ Plus besoin d'envoyer l'ID dans le body
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un projet inexistant
+     */
+    it("❌ Devrait refuser de modifier un projet inexistant", async () => {
+        const response = await agent
+            .post("/projets/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Projet Fictif",
+                description: "Nouvelle description",
+                adresse: "Nouvelle adresse",
+                date_debut: "2025-02-01",
+                date_fin: "2025-11-30",
+                etat: "Terminé",
+                iconpath: "https://example.com/new-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un projet sans titre", async () => {
+        const response = await agent
+            .post("/projets/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                description: "Description du projet test",
+                adresse: "Adresse fictive",
+                date_debut: "2025-01-01",
+                date_fin: "2025-12-31",
+                etat: "En cours",
+                iconpath: "https://example.com/image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+
+});

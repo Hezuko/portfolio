@@ -1,23 +1,37 @@
-<% if(projets.length > 0) { %> 
+<% if (projets.length > 0) { %> 
   <% projets.forEach(function(projet) { %>
     <section class="content">
       <% if (typeof user !== "undefined" && user.role === "admin") { %>
-
         <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-          <a href="/projets/ajouter" class="custom-btn add-btn">
-              ➕
-          </a>
-          <a href="/projets/modifier/<%= projet.id %>" class="custom-btn edit-btn">
+          <!-- Bouton Ajouter -->
+          <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+            ➕
+          </button>
+
+          <!-- Bouton Modifier -->
+          <button class="custom-btn edit-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalModifier"
+                  data-id="<%= projet.id %>"
+                  data-titre="<%= projet.titre %>"
+                  data-description="<%= projet.description %>"
+                  data-adresse="<%= projet.adresse %>"
+                  data-date_debut="<%= projet.date_debut.toISOString().slice(0,10) %>"
+                  data-date_fin="<%= projet.date_fin.toISOString().slice(0,10) %>"
+                  data-etat="<%= projet.etat %>"
+                  data-iconpath="<%= projet.iconpath %>">
               📝
-          </a>
-          <form action="/projets/supprimer/<%= projet.id %>" method="POST" class="d-inline">
-              <button type="submit" class="custom-btn delete-btn" 
-                      onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');">
-                  ❌
-              </button>
-          </form>
-      </div>
-      
+          </button>
+
+          <!-- Bouton Supprimer -->
+          <button class="custom-btn delete-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#modalSupprimer"
+                  data-id="<%= projet.id %>"
+                  data-titre="<%= projet.titre %>">
+              ❌
+          </button>
+        </div>
       <% } %>
 
       <div class="col-md-12 text-center">
@@ -35,23 +49,25 @@
         </div>
       </div>
     </section>
-
-
   <% }); %>
 <% } else { %>
   <section class="content">
     <% if (typeof user !== "undefined" && user.role === "admin") { %>
       <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-        <a href="/projets/ajouter">
-          ➕ 
-        </a>
+        <!-- Bouton Ajouter lorsqu'il n'y a aucun projet -->
+        <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+          ➕
+        </button>
       </div>
     <% } %>
     <div class="col-md-12 text-center">
       <div class="d-flex flex-column align-items-center">
-          <h1 class="section-h1">Aucun projet trouvé</h1>
-          <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
-        </div>
+        <h1 class="section-h1">Aucun projet trouvé</h1>
+        <img src="https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740308748/nothing-here.webp" class="img-fluid" style="max-width: 50%; height: auto;">
+      </div>
     </div>
-</section>
+  </section>
 <% } %>
+
+<!-- Inclusion des modals pour l'ajout et la modification -->
+<%- include('forms/projet-ajout-modif-suppression') %>

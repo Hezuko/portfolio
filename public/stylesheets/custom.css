@@ -12304,7 +12304,14 @@ S .content.active {
 
 .add-btn {
   color: green !important;
-  border: green;
+  border: none;
+  background: none;
+}
+
+.edit-btn {
+  color: blue;
+  border: none;
+  background: none;
 }
 
 .delete-btn {
