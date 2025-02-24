@@ -3,7 +3,7 @@
 
     <div class="d-flex flex-grow-1">
       <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="/images/came.png" alt="Logo" class="me-2" style="height: 40px;"> 
+        <img src="/images/came.png" alt="Logo" class="me-2" style="height: 50px;"> 
         <span class="portfolio-font fw-bold">PORTFOLIO</span>
       </a>   
     </div>
@@ -13,22 +13,32 @@
     </button>
     
     <% if (user && user.id) { %> 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" href="/projets">📂 Projets</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="/etudes">📚 Etudes</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="/jobs">💼 Jobs</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" href="/contact">📩 Contact</a>
-        </li>
-      </ul>
-    </div>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav align-items-center">
+          <li class="nav-item">
+            <a class="nav-link active" href="/projets">📂 Projets</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/etudes">📚 Etudes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/jobs">💼 Jobs</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/contact">📩 Contact</a>
+          </li>
+          <li class="nav-item">
+            <form action="/desauthentification" method="POST" class="d-inline">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="nav-link btn btn-link text-decoration-none p-0 border-0 d-inline-flex align-items-center">
+                🔓 Désauthentification
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+      
+      
      <% } %>
 
     <div class="d-flex align-items-center social-icons">
