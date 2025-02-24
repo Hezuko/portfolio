@@ -23,7 +23,7 @@
                   <p><strong>Titre :</strong> <%= diplome.titre %></p>
                   <p><strong>Etablissement :</strong> <%= diplome.delivrepar %></p>
                   <p><strong>Niveau :</strong> <%= diplome.niveau_etude %></p>
-                  <p><strong>Année d'obtention :</strong> <%= diplome.annee_obtention %></p>
+                  <p><strong>Année d'obtention :</strong> <%= diplome.annee_obtention.toLocaleString('fr-FR', { month: 'long' }) %> <%= diplome.annee_obtention.getFullYear() %> </p>
                 </div>
                 <% if (typeof user !== "undefined" && user.role === "admin") { %>
                   <div class="d-flex gap-2 ms-3">

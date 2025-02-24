@@ -150,4 +150,105 @@ router.post('/diplome/supprimer', async function(req, res, next) {
   }
 });
 
+
+// ✅ Route pour ajouter une certification
+router.post('/certification/ajouter', async function(req, res, next) {
+  try {
+    const { titre, delivrepar, annee_obtention, image_path } = req.body;
+
+    if (!titre || !delivrepar || !annee_obtention) {
+      return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
+    }
+
+    console.log("📌 Données de la certification à insérer :", {
+      titre, delivrepar, annee_obtention, image_path
+    });
+
+    await certification.addCertification(
+      titre,
+      delivrepar,
+      annee_obtention,
+      image_path || null
+    );
+
+    res.status(201).redirect('/');
+  } catch (error) {
+    console.error("❌ Erreur lors de l'ajout de la certification :", error);
+    res.status(500).render("certifications", {
+      message: "Une erreur est survenue lors de l'ajout de la certification.",
+      success: false
+    });
+  }
+});
+
+// ✅ Route pour modifier une certification
+router.post('/certification/modifier', async function(req, res, next) {
+  try {
+    const { id, titre, delivrepar, annee_obtention, image_path } = req.body;
+
+    if (!id || !titre || !delivrepar || !annee_obtention) {
+      return res.status(400).json({ message: "Tous les champs sont obligatoires." });
+    }
+
+    // Vérifier si la certification existe
+    const existingCertification = await certification.getCertificationById(id);
+    if (!existingCertification) {
+      return res.status(404).json({ message: "Certification introuvable." });
+    }
+
+    console.log("✅ Données mises à jour :", {
+      id, titre, delivrepar, annee_obtention, image_path
+    });
+
+    // Mise à jour de la certification
+    await certification.updateCertification(
+      id,
+      titre,
+      delivrepar,
+      annee_obtention,
+      image_path
+    );
+
+    res.status(200).redirect('/');
+  } catch (error) {
+    console.error("❌ Erreur lors de la modification de la certification :", error);
+    res.status(500).render("certifications", {
+      message: "Une erreur est survenue lors de la modification de la certification.",
+      success: false
+    });
+  }
+});
+
+// ✅ Route pour supprimer une certification
+router.post('/certification/supprimer', async function(req, res, next) {
+  try {
+    const { id } = req.body;
+
+    console.log("ID :",id);
+
+    if (!id) {
+      return res.status(400).json({ message: "ID de la certification manquant." });
+    }
+
+    // Vérifier si la certification existe avant de la supprimer
+    const existingCertification = await certification.getCertificationById(id);
+    if (!existingCertification) {
+      return res.status(404).json({ message: "Certification introuvable." });
+    }
+
+    console.log("📌 Suppression de la certification ID :", id);
+
+    await certification.deleteCertification(id);
+
+    res.status(200).redirect('/');
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression de la certification :", error);
+    res.status(500).render("certifications", {
+      message: "Une erreur est survenue lors de la suppression de la certification.",
+      success: false
+    });
+  }
+});
+
+
 module.exports = router;

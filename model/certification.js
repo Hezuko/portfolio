@@ -1,9 +1,9 @@
-const pool = require("./db");
+const pool = require('./db.js');
 
 // 🟢 Récupérer toutes les certifications
 async function getCertifications() {
     try {
-        const res = await pool.query("SELECT * FROM certification ORDER BY id DESC");
+        const res = await pool.query("SELECT * FROM certification ORDER BY annee_obtention DESC");
         return res.rows;
     } catch (err) {
         console.error("❌ Erreur lors de la récupération des certifications :", err);
@@ -23,11 +23,11 @@ async function getCertificationById(id) {
 }
 
 // 🟢 Ajouter une certification
-async function addCertification(titre, delivrepar) {
+async function addCertification(titre, delivrepar, annee_obtention, image_path) {
     try {
         const res = await pool.query(
-            "INSERT INTO certification (titre, delivrepar) VALUES ($1, $2) RETURNING *",
-            [titre, delivrepar]
+            "INSERT INTO certification (titre, delivrepar, annee_obtention, image_path) VALUES ($1, $2, $3, $4) RETURNING *",
+            [titre, delivrepar, annee_obtention, image_path]
         );
         return res.rows[0];
     } catch (err) {
@@ -37,11 +37,11 @@ async function addCertification(titre, delivrepar) {
 }
 
 // 🟢 Mettre à jour une certification
-async function updateCertification(id, titre, delivrepar) {
+async function updateCertification(id, titre, delivrepar, annee_obtention, image_path) {
     try {
         const res = await pool.query(
-            "UPDATE certification SET titre=$1, delivrepar=$2 WHERE id=$3 RETURNING *",
-            [titre, delivrepar, id]
+            "UPDATE certification SET titre=$1, delivrepar=$2, annee_obtention=$3, image_path=$4 WHERE id=$5 RETURNING *",
+            [titre, delivrepar, annee_obtention, image_path, id]
         );
         return res.rows[0];
     } catch (err) {  
@@ -53,8 +53,8 @@ async function updateCertification(id, titre, delivrepar) {
 // 🟢 Supprimer une certification
 async function deleteCertification(id) {
     try {
-        await pool.query("DELETE FROM certification WHERE id = $1", [id]);
-        return { message: "✅ Certification supprimée avec succès" };
+        const res = await pool.query("DELETE FROM certification WHERE id=$1 RETURNING *", [id]);
+        return res.rows[0];
     } catch (err) {
         console.error("❌ Erreur lors de la suppression de la certification :", err);
         throw err;

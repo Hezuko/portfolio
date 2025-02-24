@@ -1,0 +1,142 @@
+<!-- ✅ Modal pour Ajouter une certification -->
+<div class="modal fade" id="modalCertificationAjout" tabindex="-1" aria-labelledby="modalAjoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAjoutLabel">Ajouter une certification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/certification/ajouter" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titre" name="titre" class="form-control" placeholder="Titre de la certification" required>
+                    </div>
+                
+                    <!-- Délivré par -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        <input type="text" id="delivrepar" name="delivrepar" class="form-control" placeholder="Organisme de certification" required>
+                    </div>
+
+                    <!-- Année d'obtention -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="date" id="annee_obtention" name="annee_obtention" class="form-control" required>
+                    </div>
+
+                    <!-- Lien de l'image -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="text" id="image_path" name="image_path" class="form-control" placeholder="URL de l'image">
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-3">
+                        <i class="bi bi-plus-lg"></i> Ajouter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Modifier une Certification -->
+<div class="modal fade" id="modalCertificationModifier" tabindex="-1" aria-labelledby="modalModifierLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalModifierLabel">Modifier la Certification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formModifier" action="/certification/modifier" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="certificationIdModif" name="id">
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titreModif" name="titre" class="form-control" placeholder="Titre de la certification" required>
+                    </div>
+
+                    <!-- Délivré par -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        <input type="text" id="delivreparModif" name="delivrepar" class="form-control" placeholder="Organisme de certification" required>
+                    </div>
+                
+                    <!-- Année d'obtention -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="date" id="annee_obtentionModif" name="annee_obtention" class="form-control" required>
+                    </div>
+                    
+                     <!-- Lien de l'image -->
+                     <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-image"></i></span>
+                        <input type="text" id="image_path" name="image_path" class="form-control" placeholder="URL de l'image">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="bdiplomei bi-save"></i> Modifier
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Supprimer une Certification -->
+<div class="modal fade" id="modalCertificationSupprimer" tabindex="-1" aria-labelledby="modalSupprimerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSupprimerLabel">Confirmer la Suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer la certification <strong id="nomCertificationSuppr"></strong> ?</p>
+                <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="formSupprimer" action="/certification/supprimer" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="certificationIdSuppr" name="id">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Gestion du modal Modifier
+        const modalModifier = document.getElementById("modalCertificationModifier");
+        if (modalModifier) {
+            modalModifier.addEventListener("show.bs.modal", function (event) {
+                const button = event.relatedTarget;
+                document.getElementById("certificationIdModif").value = button.getAttribute("data-id");
+                document.getElementById("titreModif").value = button.getAttribute("data-titre");
+                document.getElementById("delivreparModif").value = button.getAttribute("data-delivrepar");
+                document.getElementById("annee_obtentionModif").value = button.getAttribute("data-annee");
+                document.getElementById("image_pathModif").value = button.getAttribute("data-image");
+            });
+        }
+
+        // Gestion du modal Supprimer
+        const modalSupprimer = document.getElementById("modalCertificationSupprimer");
+        if (modalSupprimer) {
+            modalSupprimer.addEventListener("show.bs.modal", function (event) {
+                const button = event.relatedTarget;
+                document.getElementById("certificationIdSuppr").value = button.getAttribute("data-id");
+                document.getElementById("nomCertificationSuppr").textContent = button.getAttribute("data-titre");
+            });
+        }
+    });
+</script>

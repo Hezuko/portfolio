@@ -978,3 +978,167 @@ describe("📝 Tests CRUD des Diplômes", () => {
         expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
     });
 });
+
+describe("📝 Tests CRUD des Certifications", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let certificationId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        // 1️⃣ Récupération de la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 2️⃣ Extraction du CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 3️⃣ Extraction des cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 4️⃣ Simulation de connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'une certification
+     */
+    it("✅ Devrait ajouter une certification avec succès", async () => {
+        const response = await agent
+            .post("/certification/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "AWS Certified Developer",
+                delivrepar: "Amazon Web Services",
+                annee_obtention: "2024-05-10",
+                image_path: "https://example.com/aws-cert.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des certifications pour obtenir l'ID
+        const certificationResponse = await agent.get("/").set("Cookie", cookies);
+        expect(certificationResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(certificationResponse.text);
+        certificationId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID de la certification ajoutée
+        expect(certificationId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'une certification
+     */
+    it("✅ Devrait modifier une certification avec succès", async () => {
+        expect(certificationId).toBeDefined(); // Vérifie que l'ID de la certification existe
+
+        const response = await agent
+            .post("/certification/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: certificationId,
+                titre: "AWS Certified Solutions Architect",
+                delivrepar: "AWS",
+                annee_obtention: "2024-06-01",
+                image_path: "https://example.com/aws-solutions.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que la certification a bien été modifiée
+        const certificationResponse = await agent.get("/").set("Cookie", cookies);
+        expect(certificationResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(certificationResponse.text);
+        expect($$("p strong:contains('Titre :')").parent().text()).toContain("AWS Certified Solutions Architect");
+    });
+
+    /**
+     * ✅ Test de suppression d'une certification
+     */
+    it("✅ Devrait supprimer une certification avec succès", async () => {
+        expect(certificationId).toBeDefined(); // Vérifie que l'ID de la certification existe
+
+        const response = await agent
+            .post(`/certification/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: certificationId, _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que la certification n'existe plus
+        const certificationResponseAfter = await agent.get("/").set("Cookie", cookies);
+        const $$ = cheerio.load(certificationResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const certificationExisteEncore = $$(`button[data-id="${certificationId}"]`).length > 0;
+        expect(certificationExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'une certification avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer une certification avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/certification/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: "99999", _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'une certification inexistante
+     */
+    it("❌ Devrait refuser de modifier une certification inexistante", async () => {
+        const response = await agent
+            .post("/certification/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Certification Fictive",
+                delivrepar: "Fake Institute",
+                annee_obtention: "2025-09-15",
+                image_path: "https://example.com/fake-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'une certification sans titre", async () => {
+        const response = await agent
+            .post("/certification/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                delivrepar: "Amazon Web Services",
+                annee_obtention: "2024-05-10",
+                image_path: "https://example.com/aws-cert.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+});
