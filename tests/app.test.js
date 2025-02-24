@@ -629,6 +629,8 @@ describe("📝 Tests CRUD des jobs", () => {
     });
 
 });
+
+
 describe("📝 Tests CRUD des Études", () => {
     let agent;
     let csrfToken;
@@ -801,6 +803,174 @@ describe("📝 Tests CRUD des Études", () => {
                 etat: "En cours",
                 iconpath: "https://example.com/image.jpg",
                 buildingpath: "https://example.com/building.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toContain("Veuillez remplir tous les champs obligatoires.");
+    });
+});
+
+describe("📝 Tests CRUD des Diplômes", () => {
+    let agent;
+    let csrfToken;
+    let cookies;
+    let diplomeId;
+
+    beforeEach(async () => {
+        agent = request.agent(app);
+
+        // 1️⃣ Récupération de la page d'authentification
+        const getLoginPage = await agent.get("/authentification");
+        expect(getLoginPage.statusCode).toBe(200);
+
+        // 2️⃣ Extraction du CSRF token
+        const $ = cheerio.load(getLoginPage.text);
+        csrfToken = $('input[name="_csrf"]').val();
+        expect(csrfToken).toBeDefined();
+
+        // 3️⃣ Extraction des cookies
+        const rawCookies = getLoginPage.headers["set-cookie"];
+        expect(rawCookies).toBeDefined();
+        cookies = rawCookies.map(cookie => cookie.split(";")[0]).join("; ");
+
+        // 4️⃣ Simulation de connexion
+        const loginResponse = await agent
+            .post("/authentification")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ pseudo: "admin", password: "0000", _csrf: csrfToken });
+
+        expect(loginResponse.statusCode).toBe(302);
+    });
+
+    /**
+     * ✅ Test d'ajout d'un diplôme
+     */
+    it("✅ Devrait ajouter un diplôme avec succès", async () => {
+        const response = await agent
+            .post("/diplome/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                titre: "Master Informatique",
+                niveau_etude: "Bac+5",
+                delivrepar: "6",
+                etudeId: "6",
+                annee_obtention: "2025-02-12",
+                image_path: "https://example.com/diplome.png",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après ajout
+
+        // Récupérer la liste des diplômes pour obtenir l'ID du diplôme ajouté
+        const diplomeResponse = await agent.get("/").set("Cookie", cookies);
+        expect(diplomeResponse.statusCode).toBe(200);
+
+        const $$ = cheerio.load(diplomeResponse.text);
+        diplomeId = $$("button[data-id]").attr("data-id"); // Récupérer l'ID du diplôme ajouté
+        expect(diplomeId).toBeDefined();
+    });
+
+    /**
+     * ✅ Test de modification d'un diplôme
+     */
+    it("✅ Devrait modifier un diplôme avec succès", async () => {
+        expect(diplomeId).toBeDefined(); // Vérifie que l'ID du diplôme existe
+
+        const response = await agent
+            .post("/diplome/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: diplomeId,
+                titre: "Master Informatique - Modifié",
+                niveau_etude: "Bac+5",
+                annee_obtention: "2026-05-20",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(302); // ✅ Redirection après modification
+
+        // Vérifier que le diplôme a bien été modifié
+        const diplomeResponse = await agent.get("/").set("Cookie", cookies);
+        expect(diplomeResponse.statusCode).toBe(200);
+        const $$ = cheerio.load(diplomeResponse.text);
+        expect($$("p strong:contains('Titre :')").parent().text()).toContain("Master Informatique - Modifié");
+
+    });
+
+    /**
+     * ✅ Test de suppression d'un diplôme
+     */
+    it("✅ Devrait supprimer un diplôme avec succès", async () => {
+        expect(diplomeId).toBeDefined(); // Vérifie que l'ID du diplôme existe
+
+        const response = await agent
+            .post(`/diplome/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: diplomeId, _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(302); // ✅ Vérifie la redirection après suppression
+
+        // Vérifier que le diplôme n'existe plus
+        const diplomeResponseAfter = await agent.get("/").set("Cookie", cookies);
+        const $$ = cheerio.load(diplomeResponseAfter.text);
+
+        // Vérifier que l'ID supprimé n'apparaît plus
+        const diplomeExisteEncore = $$(`button[data-id="${diplomeId}"]`).length > 0;
+        expect(diplomeExisteEncore).toBe(false);
+    });
+
+    /**
+     * ❌ Test suppression d'un diplôme avec un ID invalide
+     */
+    it("❌ Devrait refuser de supprimer un diplôme avec un ID invalide", async () => {
+        const response = await agent
+            .post(`/diplome/supprimer`)
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({ id: "99999", _csrf: csrfToken });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test modification d'un diplôme inexistant
+     */
+    it("❌ Devrait refuser de modifier un diplôme inexistant", async () => {
+        const response = await agent
+            .post("/diplome/modifier")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                id: "99999",
+                titre: "Diplôme Fictif",
+                niveau_etude: "Bac+3",
+                annee_obtention: "2025-09-15",
+                image_path: "https://example.com/fake-image.jpg",
+                _csrf: csrfToken
+            });
+
+        expect(response.statusCode).toBe(404); // 🔴 Erreur attendue
+    });
+
+    /**
+     * ❌ Test d'ajout avec un champ manquant
+     */
+    it("❌ Devrait refuser l'ajout d'un diplôme sans titre", async () => {
+        const response = await agent
+            .post("/diplome/ajouter")
+            .set("Cookie", cookies)
+            .set("X-CSRF-Token", csrfToken)
+            .send({
+                niveau_etude: "Bac+5",
+                delivrepar: "6",
+                etudeId: "6",
+                annee_obtention: "2025-02-12",
+                image_path: "https://example.com/diplome.png",
                 _csrf: csrfToken
             });
 

@@ -1,0 +1,190 @@
+<!-- ✅ Modal pour Ajouter un diplome -->
+<div class="modal fade" id="modalAjout" tabindex="-1" aria-labelledby="modalAjoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAjoutLabel">Ajouter un diplôme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/diplome/ajouter" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titre" name="titre" class="form-control" placeholder="Titre du diplôme" required>
+                    </div>
+                
+                    <!-- Niveau d'étude -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-chat-text"></i></span>
+                        <input id="niveau_etude" name="niveau_etude" class="form-control" placeholder="Niveau d'étude du diplôme" required>
+                    </div>
+                
+                    <!-- Délivré par .. -->
+                    <div class="input-group mb-3">
+                        <% if (etudes.length > 0) { %> 
+                            <select id="delivrepar" name="delivrepar" class="form-control" required onchange="updateFields()">
+                                <option value="" disabled selected>📌 Sélectionnez une étude</option>
+                                <% etudes.forEach(function(etude) { %>
+                                    <option value="<%= etude.titre %>" 
+                                            data-id="<%= etude.id %>"
+                                            data-iconpath="<%= etude.iconpath %>">
+                                        <%= etude.titre %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        <%} else { %> 
+                            <div class="form-control text-center bg-light text-muted">
+                                ❌ Aucune étude trouvée.
+                            </div>
+                        <%} %>
+                    </div>
+
+                    <!-- Champs cachés pour l'ID de l'étude et le lien de l'image -->
+                    <input type="hidden" id="etudeId" name="etudeId">
+                    <input type="hidden" id="image_path" name="image_path">
+
+                    <!-- Année d'obtention -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <div class="form-floating">
+                            <input type="date" id="annee_obtention" name="annee_obtention" class="form-control">
+                            <label for="annee_obtention">📅 Année d'obtention</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-3" id="btnAjouterDiplome" 
+                            <% if (etudes.length === 0) { %> disabled <% } %>>
+                        <i class="bi bi-plus-lg"></i> Ajouter
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Modifier un Diplôme -->
+<div class="modal fade" id="modalModifier" tabindex="-1" aria-labelledby="modalModifierLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalModifierLabel">Modifier le Diplôme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formModifier" action="/diplome/modifier" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="diplomeIdModif" name="id">
+
+                    <!-- Titre -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                        <input type="text" id="titreModif" name="titre" class="form-control" placeholder="Titre du diplôme" required>
+                    </div>
+                
+                    <!-- Niveau d'étude -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-chat-text"></i></span>
+                        <input type="text" id="niveau_etudeModif" name="niveau_etude" class="form-control" placeholder="Niveau d'étude du diplôme" required>
+                    </div>
+                
+                    <!-- Année d'obtention -->
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                        <input type="date" id="annee_obtentionModif" name="annee_obtention" class="form-control" required>
+                    </div>
+
+                    <!-- Lien de l'image -->
+                    <input type="hidden" id="image_pathModif" name="image_path">
+
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="bi bi-save"></i> Modifier
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal pour Supprimer un Diplôme -->
+<div class="modal fade" id="modalSupprimer" tabindex="-1" aria-labelledby="modalSupprimerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSupprimerLabel">Confirmer la Suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le diplôme <strong id="nomDiplomeSuppr"></strong> ?</p>
+                <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="formSupprimer" action="/diplome/supprimer" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" id="diplomeIdSuppr" name="id">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateFields() {
+        var select = document.getElementById("delivrepar");
+        var selectedOption = select.options[select.selectedIndex];
+
+        if (selectedOption) {
+            var etudeId = selectedOption.getAttribute("data-id");
+            var imagePath = selectedOption.getAttribute("data-iconpath");
+
+            // Mise à jour des champs cachés
+            document.getElementById("etudeId").value = etudeId;
+            document.getElementById("image_path").value = imagePath;
+        }
+    }
+
+    // Exécute la fonction au chargement si une option est sélectionnée par défaut
+    document.addEventListener("DOMContentLoaded", function () {
+        updateFields();
+
+        if (modalModifier) {
+        modalModifier.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+            
+            // Récupérer les données du diplôme
+            const diplomeId = button.getAttribute("data-id");
+            const titre = button.getAttribute("data-titre");
+            const niveau = button.getAttribute("data-niveau");
+            const annee = button.getAttribute("data-annee");
+            const image = button.getAttribute("data-image");
+
+            // Remplir le formulaire avec les valeurs récupérées
+            document.getElementById("diplomeIdModif").value = diplomeId;
+            document.getElementById("titreModif").value = titre;
+            document.getElementById("niveau_etudeModif").value = niveau;
+            document.getElementById("annee_obtentionModif").value = annee;
+            document.getElementById("image_pathModif").value = image;
+        });
+    }
+
+    if (modalSupprimer) {
+        modalSupprimer.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Bouton qui a déclenché le modal
+            
+            // Récupérer les données du diplôme
+            const diplomeId = button.getAttribute("data-id");
+            const titre = button.getAttribute("data-titre");
+
+            // Remplir les champs du formulaire de suppression
+            document.getElementById("diplomeIdSuppr").value = diplomeId;
+            document.getElementById("nomDiplomeSuppr").textContent = titre;
+        });
+    }
+    
+    });
+</script>

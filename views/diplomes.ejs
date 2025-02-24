@@ -1,12 +1,12 @@
 <% if (diplomes.length) { %>
-  <% for (let i = 0; i < diplomes.length; i += 3) { %> 
+  <% for (let i = 0; i < diplomes.length; i += 2) { %> 
     <section class="content">
 
       <% if (typeof user !== "undefined" && user.role === "admin") { %>
         <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-          <a href="/diplomes/ajouter" class="custom-btn add-btn">
-              ➕
-          </a>
+          <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+            ➕
+          </button>
         </div>
       <% } %>
 
@@ -15,7 +15,7 @@
         <div class="horizontal_line"></div>
 
         <ul class="list-unstyled diplomes-list">
-          <% diplomes.slice(i, i + 3).forEach(function(diplome) { %>  
+          <% diplomes.slice(i, i + 2).forEach(function(diplome) { %>  
             <li class="card custom-card mb-3">
               <div class="d-flex align-items-center">
                 <img src="<%= diplome.image_path %>" alt="Image du diplôme" class="diplome-image">
@@ -27,15 +27,26 @@
                 </div>
                 <% if (typeof user !== "undefined" && user.role === "admin") { %>
                   <div class="d-flex gap-2 ms-3">
-                    <a href="/diplomes/modifier/<%= diplome.id %>" class="custom-btn edit-btn">
+                    <!-- Bouton Modifier -->
+                    <button class="custom-btn edit-btn" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalModifier"
+                            data-id="<%= diplome.id %>"
+                            data-titre="<%= diplome.titre %>"
+                            data-niveau="<%= diplome.niveau_etude %>"
+                            data-annee="<%= diplome.annee_obtention %>"
+                            data-image="<%= diplome.image_path %>">
                         📝
-                    </a>
-                    <form action="/diplomes/supprimer/<%= diplome.id %>" method="POST" class="d-inline">
-                        <button type="submit" class="custom-btn delete-btn" 
-                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce diplôme ?');">
-                            ❌
-                        </button>
-                    </form>
+                    </button>
+            
+                    <!-- Bouton Supprimer -->
+                    <button class="custom-btn delete-btn" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalSupprimer"
+                            data-id="<%= diplome.id %>"
+                            data-titre="<%= diplome.titre %>">
+                        ❌
+                    </button>
                   </div>
                 <% } %>
               </div>
@@ -49,9 +60,10 @@
   <section class="content">
     <% if (typeof user !== "undefined" && user.role === "admin") { %>
       <div class="position-absolute top-0 end-0 p-3 d-flex gap-2">
-        <a href="/diplomes/ajouter" class="custom-btn add-btn">
-          ➕ 
-        </a>
+        <!-- Bouton Ajouter lorsqu'il n'y a aucun projet -->
+        <button class="custom-btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAjout">
+          ➕
+        </button>
       </div>
     <% } %>
     
@@ -62,3 +74,5 @@
     </div>
   </section>
 <% } %>
+
+<%- include('forms/diplome-ajout-modif-suppresion') %>
