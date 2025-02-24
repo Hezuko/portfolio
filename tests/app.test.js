@@ -1044,7 +1044,7 @@ describe("📝 Tests CRUD des Certifications", () => {
      */
     it("✅ Devrait modifier une certification avec succès", async () => {
         expect(certificationId).toBeDefined(); // Vérifie que l'ID de la certification existe
-
+        
         const response = await agent
             .post("/certification/modifier")
             .set("Cookie", cookies)
