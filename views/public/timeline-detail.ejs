@@ -1,0 +1,19 @@
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow"><%= type === 'education' ? 'Formation' : 'Experience' %></p>
+    <h1><%= item.title %></h1>
+    <p>
+      <% if (type === 'education') { %>
+        <%= [item.school_name, item.degree, item.field].filter(Boolean).join(' - ') %>
+      <% } else { %>
+        <%= [item.company_name, formatContractType(item.contract_type)].filter(Boolean).join(' - ') %>
+      <% } %>
+    </p>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container">
+    <%- include('../partials/timeline-list', { items: [item], type, compact: false }) %>
+  </div>
+</section>

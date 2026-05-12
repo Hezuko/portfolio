@@ -24,7 +24,7 @@ describe("vision visiteur", () => {
     const response = await request(app).get("/projets");
     expect(response.statusCode).toBe(200);
     expect(response.text).toContain("Projets");
-    expect(response.text).toMatch(/Portfolio administrable|Aucun projet n'a encore ete publie/);
+    expect(response.text).toMatch(/project-card|Aucun projet n'a encore ete publie/);
   });
 
   it("redirige l'admin non connecte vers le login", async () => {

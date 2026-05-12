@@ -36,7 +36,7 @@
   </div>
   <div class="container card-grid">
     <% projects.slice(0, 3).forEach((project) => { %>
-      <%- include('../partials/project-card', { project }) %>
+      <%- include('../partials/project-card', { project, compact: true }) %>
     <% }) %>
     <% if (!projects.length) { %><p class="empty-state">Aucun projet pour le moment.</p><% } %>
   </div>
@@ -49,14 +49,14 @@
         <p class="eyebrow">Parcours</p>
         <h2>Etudes</h2>
       </div>
-      <%- include('../partials/timeline-list', { items: educations, type: 'education' }) %>
+      <%- include('../partials/timeline-list', { items: educations.slice(0, 3), type: 'education', compact: true }) %>
     </div>
     <div>
       <div class="section-heading compact">
         <p class="eyebrow">Terrain</p>
         <h2>Experiences</h2>
       </div>
-      <%- include('../partials/timeline-list', { items: jobs, type: 'job' }) %>
+      <%- include('../partials/timeline-list', { items: jobs.slice(0, 3), type: 'job', compact: true }) %>
     </div>
   </div>
 </section>
@@ -68,7 +68,7 @@
   </div>
   <div class="container skill-cloud">
     <% skills.forEach((skill) => { %>
-      <span><%= skill.name %><small><%= skill.category %></small></span>
+      <button class="skill-badge" type="button" data-knowledge-type="skill" data-knowledge-id="<%= skill.id %>" aria-label="Afficher la fiche de <%= skill.name %>"><%= skill.name %><small><%= skill.category %></small></button>
     <% }) %>
   </div>
 </section>

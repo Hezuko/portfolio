@@ -1,19 +1,23 @@
-<article class="project-card">
+<% const isCompact = Boolean(typeof compact !== 'undefined' && compact); %>
+<% const projectHref = project.slug ? `/projets/${project.slug}` : ''; %>
+<article class="project-card <%= isCompact ? 'project-card--compact clickable-card' : '' %>" <% if (isCompact && projectHref) { %>data-card-href="<%= projectHref %>" tabindex="0" role="link" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
   <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
   <div>
     <div class="card-meta">
-      <span><%= project.status || project.etat || 'Projet' %></span>
-      <% if (project.category) { %><span><%= project.category %></span><% } %>
+      <span><%= formatStatus(project.status || project.etat, 'default') %></span>
+      <% if (project.category) { %><span><%= formatProjectCategory(project.category) %></span><% } %>
     </div>
     <h3><%= project.name || project.titre %></h3>
     <p><%= project.short_description || project.description || 'Description a completer.' %></p>
     <div class="tag-row">
-      <% formatList(project.technologies).slice(0, 5).forEach((tech) => { %><span><%= tech %></span><% }) %>
+      <% formatList(project.technologies).slice(0, isCompact ? 4 : 5).forEach((tech) => { %>
+        <button class="skill-badge" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><%= tech %></button>
+      <% }) %>
     </div>
     <div class="card-actions">
       <% if (project.github_url) { %><a href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
       <% if (project.demo_url) { %><a href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Demo</a><% } %>
-      <% if (project.slug) { %><a href="/projets/<%= project.slug %>">Voir plus</a><% } %>
+      <% if (project.slug) { %><a href="/projets/<%= project.slug %>"><%= isCompact ? 'Voir le projet' : 'Voir plus' %></a><% } %>
     </div>
   </div>
 </article>

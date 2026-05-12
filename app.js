@@ -7,6 +7,7 @@ var logger = require("morgan");
 var expressLayouts = require("express-ejs-layouts");
 var session = require("./config/session");
 var portfolioRepository = require("./model/portfolioRepository");
+var { formatContractType, formatDateRange, formatLevel, formatProjectCategory, formatStatus } = require("./utils/formatters");
 const csrf = require("csurf");
 
 // Import des routes
@@ -52,6 +53,11 @@ app.use((req, res, next) => {
     return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(new Date(date));
   };
   res.locals.formatList = (value) => Array.isArray(value) ? value.filter(Boolean) : [];
+  res.locals.formatDateRange = formatDateRange;
+  res.locals.formatContractType = formatContractType;
+  res.locals.formatLevel = formatLevel;
+  res.locals.formatProjectCategory = formatProjectCategory;
+  res.locals.formatStatus = formatStatus;
   next();
 });
 

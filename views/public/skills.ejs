@@ -13,7 +13,9 @@
         <h2><%= category %></h2>
         <div class="skill-cloud inline">
           <% skills.filter((skill) => skill.category === category).forEach((skill) => { %>
-            <span><%= skill.name %><small><%= skill.level %></small></span>
+            <button class="skill-badge" type="button" data-knowledge-type="skill" data-knowledge-id="<%= skill.id %>" aria-label="Afficher la fiche de <%= skill.name %>">
+              <%= skill.name %><small><%= formatLevel(skill.level) %></small>
+            </button>
           <% }) %>
         </div>
       </article>

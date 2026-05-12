@@ -14,6 +14,7 @@ ALTER TABLE schools ALTER COLUMN slug SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS schools_slug_unique ON schools(slug);
 
 ALTER TABLE educations ADD COLUMN IF NOT EXISTS display_order INTEGER;
+ALTER TABLE skills ADD COLUMN IF NOT EXISTS description TEXT;
 
 CREATE TABLE IF NOT EXISTS technologies (
     id SERIAL PRIMARY KEY,

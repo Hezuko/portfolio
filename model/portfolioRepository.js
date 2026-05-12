@@ -15,7 +15,7 @@ const ENTITY_CONFIG = {
   skills: {
     table: "skills",
     orderBy: "category ASC, name ASC",
-    fields: ["name", "category", "icon", "level"],
+    fields: ["name", "category", "description", "icon", "level"],
   },
   technologies: {
     table: "technologies",
@@ -126,6 +126,38 @@ async function findById(entity, id) {
   return signMediaFields(result.rows)[0] || null;
 }
 
+async function getEducationDetail(id) {
+  const educations = await listEducations();
+  return educations.find((education) => Number(education.id) === Number(id)) || null;
+}
+
+async function getJobDetail(id) {
+  const result = await pool.query(
+    `SELECT j.*,
+            c.name AS company_name,
+            c.logo AS company_logo,
+            c.city AS company_city,
+            c.country AS company_country,
+            c.website AS company_website,
+            c.description AS company_description,
+            c.industry AS company_industry,
+            c.size AS company_size,
+            c.type AS company_type,
+            COALESCE(
+              array_agg(other_jobs.title ORDER BY other_jobs.start_date DESC NULLS LAST)
+              FILTER (WHERE other_jobs.id IS NOT NULL),
+              '{}'
+            ) AS company_job_titles
+     FROM jobs j
+     LEFT JOIN companies c ON c.id = j.company_id
+     LEFT JOIN jobs other_jobs ON other_jobs.company_id = c.id
+     WHERE j.id = $1
+     GROUP BY j.id, c.id`,
+    [id]
+  );
+  return signMediaFields(result.rows)[0] || null;
+}
+
 async function findProjectBySlug(slug) {
   const result = await pool.query(
     `SELECT p.*, s.name AS school_name, c.name AS company_name, j.title AS job_title
@@ -187,9 +219,25 @@ async function getPublicData() {
                 LEFT JOIN companies c ON c.id = p.company_id
                 ORDER BY p.start_date DESC NULLS LAST, p.name ASC`),
     listEducations(),
-    pool.query(`SELECT j.*, c.name AS company_name, c.logo AS company_logo, c.city AS company_city, c.country AS company_country
+    pool.query(`SELECT j.*,
+                       c.name AS company_name,
+                       c.logo AS company_logo,
+                       c.city AS company_city,
+                       c.country AS company_country,
+                       c.website AS company_website,
+                       c.description AS company_description,
+                       c.industry AS company_industry,
+                       c.size AS company_size,
+                       c.type AS company_type,
+                       COALESCE(
+                         array_agg(other_jobs.title ORDER BY other_jobs.start_date DESC NULLS LAST)
+                         FILTER (WHERE other_jobs.id IS NOT NULL),
+                         '{}'
+                       ) AS company_job_titles
                 FROM jobs j
                 LEFT JOIN companies c ON c.id = j.company_id
+                LEFT JOIN jobs other_jobs ON other_jobs.company_id = c.id
+                GROUP BY j.id, c.id
                 ORDER BY j.start_date DESC NULLS LAST, j.title ASC`),
     listSchools(),
     list("companies"),
@@ -251,6 +299,7 @@ function signMediaFields(rows) {
     const signed = { ...row };
     if (signed.logo) signed.logo_url = signMediaValue(signed.logo);
     if (signed.school_logo) signed.school_logo_url = signMediaValue(signed.school_logo);
+    if (signed.company_logo) signed.company_logo_url = signMediaValue(signed.company_logo);
     if (signed.main_image) signed.main_image_url = signMediaValue(signed.main_image);
     if (Array.isArray(signed.images)) {
       signed.image_urls = signed.images.map(signMediaValue).filter(Boolean);
@@ -282,8 +331,25 @@ async function listEducations() {
             s.logo AS school_logo,
             s.city AS school_city,
             s.country AS school_country,
+            s.website AS school_website,
+            s.description AS school_description,
+            COALESCE(
+              array_agg(DISTINCT school_educations.title)
+              FILTER (WHERE school_educations.id IS NOT NULL),
+              '{}'
+            ) AS school_education_titles,
             COALESCE(array_agg(DISTINCT t.name) FILTER (WHERE t.id IS NOT NULL), '{}') AS technologies,
+            COALESCE(
+              jsonb_agg(DISTINCT jsonb_build_object('id', t.id, 'name', t.name, 'category', t.category))
+              FILTER (WHERE t.id IS NOT NULL),
+              '[]'::jsonb
+            ) AS technology_details,
             COALESCE(array_agg(DISTINCT sk.name) FILTER (WHERE sk.id IS NOT NULL), '{}') AS skills,
+            COALESCE(
+              jsonb_agg(DISTINCT jsonb_build_object('id', sk.id, 'name', sk.name, 'category', sk.category, 'level', sk.level))
+              FILTER (WHERE sk.id IS NOT NULL),
+              '[]'::jsonb
+            ) AS skill_details,
             COALESCE(array_agg(DISTINCT p.name) FILTER (WHERE p.id IS NOT NULL), '{}') AS project_names,
             COALESCE(
               jsonb_agg(DISTINCT jsonb_build_object('id', p.id, 'name', p.name, 'slug', p.slug))
@@ -292,6 +358,7 @@ async function listEducations() {
             ) AS projects
      FROM educations e
      LEFT JOIN schools s ON s.id = e.school_id
+     LEFT JOIN educations school_educations ON school_educations.school_id = s.id
      LEFT JOIN education_technologies et ON et.education_id = e.id
      LEFT JOIN technologies t ON t.id = et.technology_id
      LEFT JOIN education_skills es ON es.education_id = e.id
@@ -336,14 +403,124 @@ async function syncEducationRelations(educationId, body) {
   }
 }
 
+async function getSkillDetails(idOrName) {
+  const byId = Number.isInteger(Number.parseInt(idOrName, 10));
+  const skillResult = await pool.query(
+    `SELECT * FROM skills WHERE ${byId ? "id = $1" : "lower(name) = lower($1)"} LIMIT 1`,
+    [idOrName]
+  );
+  const skill = skillResult.rows[0] || null;
+  if (!skill) return null;
+  return buildKnowledgeDetails("skill", skill);
+}
+
+async function getTechnologyDetails(idOrName) {
+  const byId = Number.isInteger(Number.parseInt(idOrName, 10));
+  const technologyResult = await pool.query(
+    `SELECT * FROM technologies WHERE ${byId ? "id = $1" : "lower(name) = lower($1)"} LIMIT 1`,
+    [idOrName]
+  );
+  const technology = technologyResult.rows[0] || null;
+  if (!technology) return null;
+  return buildKnowledgeDetails("technology", technology);
+}
+
+async function getKnowledgeDetailsByName(name) {
+  return (await getSkillDetails(name)) || (await getTechnologyDetails(name)) || getAdHocKnowledgeDetails(name);
+}
+
+async function buildKnowledgeDetails(kind, item) {
+  const name = item.name;
+  const educationRelation = kind === "technology"
+    ? `JOIN education_technologies rel ON rel.education_id = e.id AND rel.technology_id = $1`
+    : `JOIN education_skills rel ON rel.education_id = e.id AND rel.skill_id = $1`;
+
+  const [projects, educations, jobs] = await Promise.all([
+    pool.query(
+      `SELECT id, name, slug, short_description
+       FROM projects
+       WHERE EXISTS (SELECT 1 FROM unnest(technologies) AS value WHERE lower(value) = lower($1))
+       ORDER BY start_date DESC NULLS LAST, name ASC`,
+      [name]
+    ),
+    pool.query(
+      `SELECT e.id, e.title, e.degree, e.field, s.name AS school_name
+       FROM educations e
+       ${educationRelation}
+       LEFT JOIN schools s ON s.id = e.school_id
+       ORDER BY e.display_order ASC NULLS LAST, e.start_date DESC NULLS LAST`,
+      [item.id]
+    ),
+    pool.query(
+      `SELECT j.id, j.title, c.name AS company_name
+       FROM jobs j
+       LEFT JOIN companies c ON c.id = j.company_id
+       WHERE EXISTS (SELECT 1 FROM unnest(j.technologies) AS value WHERE lower(value) = lower($1))
+       ORDER BY j.start_date DESC NULLS LAST, j.title ASC`,
+      [name]
+    ),
+  ]);
+
+  return {
+    type: kind,
+    id: item.id,
+    name: item.name,
+    category: item.category || null,
+    level: item.level || null,
+    description: item.description || null,
+    projects: projects.rows,
+    studies: educations.rows,
+    experiences: jobs.rows,
+  };
+}
+
+async function getAdHocKnowledgeDetails(name) {
+  const [projects, jobs] = await Promise.all([
+    pool.query(
+      `SELECT id, name, slug, short_description
+       FROM projects
+       WHERE EXISTS (SELECT 1 FROM unnest(technologies) AS value WHERE lower(value) = lower($1))
+       ORDER BY start_date DESC NULLS LAST, name ASC`,
+      [name]
+    ),
+    pool.query(
+      `SELECT j.id, j.title, c.name AS company_name
+       FROM jobs j
+       LEFT JOIN companies c ON c.id = j.company_id
+       WHERE EXISTS (SELECT 1 FROM unnest(j.technologies) AS value WHERE lower(value) = lower($1))
+       ORDER BY j.start_date DESC NULLS LAST, j.title ASC`,
+      [name]
+    ),
+  ]);
+
+  if (!projects.rows.length && !jobs.rows.length) return null;
+
+  return {
+    type: "technology",
+    id: null,
+    name,
+    category: null,
+    level: null,
+    description: null,
+    projects: projects.rows,
+    studies: [],
+    experiences: jobs.rows,
+  };
+}
+
 module.exports = {
   ENTITY_CONFIG,
   create,
   findById,
   findProjectBySlug,
   getAdminStats,
+  getEducationDetail,
+  getJobDetail,
   getPublicData,
+  getKnowledgeDetailsByName,
   getSettingsMap,
+  getSkillDetails,
+  getTechnologyDetails,
   list,
   remove,
   signMediaValue,

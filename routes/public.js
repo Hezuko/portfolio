@@ -3,6 +3,7 @@ var router = express.Router();
 var validator = require("validator");
 var contact = require("../model/contact");
 var repo = require("../model/portfolioRepository");
+var { formatLevel } = require("../utils/formatters");
 
 const profile = {
   name: "Henoc Mukumbi",
@@ -106,6 +107,20 @@ router.get("/etudes", async function (req, res, next) {
   }
 });
 
+router.get("/etudes/:id", async function (req, res, next) {
+  try {
+    const item = await repo.getEducationDetail(req.params.id);
+    if (!item) return res.status(404).render("errors/404", { title: "Formation introuvable" });
+    res.render("public/timeline-detail", {
+      title: item.title,
+      item,
+      type: "education",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/jobs", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
@@ -121,10 +136,54 @@ router.get("/jobs", async function (req, res, next) {
   }
 });
 
+router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
+  try {
+    const item = await repo.getJobDetail(req.params.id);
+    if (!item) return res.status(404).render("errors/404", { title: "Experience introuvable" });
+    res.render("public/timeline-detail", {
+      title: item.title,
+      item,
+      type: "job",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/competences", async function (req, res, next) {
   try {
     const skills = await repo.list("skills");
     res.render("public/skills", { title: "Competences", skills });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/api/skills/:id", async function (req, res, next) {
+  try {
+    const skill = await repo.getSkillDetails(req.params.id);
+    if (!skill) return res.status(404).json({ error: "Competence introuvable" });
+    res.json({ ...skill, level_label: formatLevel(skill.level) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/api/technologies/:id", async function (req, res, next) {
+  try {
+    const technology = await repo.getTechnologyDetails(req.params.id);
+    if (!technology) return res.status(404).json({ error: "Technologie introuvable" });
+    res.json({ ...technology, level_label: formatLevel(technology.level) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/api/knowledge/:name", async function (req, res, next) {
+  try {
+    const knowledge = await repo.getKnowledgeDetailsByName(req.params.name);
+    if (!knowledge) return res.status(404).json({ error: "Element introuvable" });
+    res.json({ ...knowledge, level_label: formatLevel(knowledge.level) });
   } catch (err) {
     next(err);
   }

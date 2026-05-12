@@ -110,6 +110,7 @@ const ENTITY_META = {
     fields: [
       ["name", "Nom", "text"],
       ["category", "Categorie", "select:Frontend,Backend,Base de donnees,DevOps,Systemes embarques,IA / Machine Learning,Outils"],
+      ["description", "Description", "textarea"],
       ["icon", "Icone", "text"],
       ["level", "Niveau", "select:debutant,intermediaire,avance,expert"],
     ],

@@ -110,6 +110,7 @@ CREATE TABLE skills (
     id SERIAL PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
     category VARCHAR(120) NOT NULL,
+    description TEXT,
     icon VARCHAR(120),
     level VARCHAR(40),
     created_at TIMESTAMP NOT NULL DEFAULT now(),

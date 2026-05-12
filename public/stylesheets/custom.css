@@ -173,9 +173,31 @@ a {
   box-shadow: 0 8px 30px rgba(30, 28, 24, 0.06);
 }
 
+.clickable-card {
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.clickable-card:hover,
+.clickable-card:focus {
+  border-color: rgba(36, 92, 79, 0.45);
+  box-shadow: 0 12px 36px rgba(30, 28, 24, 0.11);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.clickable-card:focus-visible {
+  outline: 3px solid rgba(36, 92, 79, 0.24);
+  outline-offset: 3px;
+}
+
 .project-card img {
   aspect-ratio: 16 / 10;
   background: var(--surface-2);
+}
+
+.project-card--compact img {
+  aspect-ratio: 16 / 7;
 }
 
 .project-card > div {
@@ -190,7 +212,8 @@ a {
 }
 
 .card-meta span,
-.tag-row span {
+.tag-row span,
+.skill-badge {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 5px 10px;
@@ -198,6 +221,26 @@ a {
   background: #faf9f6;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.skill-badge:hover,
+.skill-badge:focus {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.skill-badge small {
+  color: var(--muted);
+  font-weight: 650;
 }
 
 .project-card h3 {
@@ -211,6 +254,18 @@ a {
 .detail-content p {
   color: var(--muted);
   line-height: 1.65;
+}
+
+.project-card--compact p {
+  display: -webkit-box;
+  min-height: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-card--compact > div {
+  padding: 18px;
 }
 
 .card-actions a {
@@ -231,18 +286,54 @@ a {
 }
 
 .timeline-item {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
-  gap: 18px;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
 }
 
+.timeline-item--compact {
+  padding: 18px;
+}
+
+.timeline-item--compact .timeline-card-header {
+  margin-bottom: 10px;
+}
+
+.timeline-item--compact .timeline-heading {
+  gap: 3px;
+}
+
+.timeline-item--compact .timeline-logo {
+  width: 86px;
+  height: 86px;
+}
+
+.timeline-item--compact .tag-row {
+  margin-top: 12px;
+}
+
+.timeline-body {
+  min-width: 0;
+}
+
+.timeline-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
 .timeline-date,
 .muted {
   color: var(--muted);
+}
+
+.timeline-date {
+  margin: 0;
+  font-weight: 850;
+  line-height: 1.35;
 }
 
 .timeline-item h3 {
@@ -251,13 +342,86 @@ a {
   font-weight: 800;
 }
 
+.timeline-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.entity-line {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.entity-logo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #faf9f6;
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.timeline-logo {
+  width: 112px;
+  height: 112px;
+  justify-self: end;
+  font-size: 1.5rem;
+}
+
+.entity-logo.large {
+  width: 64px;
+  height: 64px;
+}
+
+.entity-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.entity-name {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+
+.info-button {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.info-button:hover,
+.info-button:focus {
+  border-color: var(--accent);
+  background: #f7faf8;
+}
+
 .skill-cloud {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.skill-cloud span {
+.skill-cloud span,
+.skill-cloud .skill-badge {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -271,6 +435,83 @@ a {
 .skill-cloud small {
   color: var(--muted);
   font-weight: 650;
+}
+
+.info-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.info-modal.is-open {
+  display: flex;
+}
+
+.info-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(23, 23, 23, 0.52);
+}
+
+.info-modal__panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: min(760px, 90vh);
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 26px;
+}
+
+.info-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.info-card {
+  display: grid;
+  gap: 14px;
+}
+
+.info-card h2,
+.info-card h3 {
+  margin: 0;
+}
+
+.info-card a {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.info-list {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 14px;
+  margin: 0;
+}
+
+.info-list dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.info-list dd {
+  margin: 0;
 }
 
 .skill-sections {
@@ -660,6 +901,20 @@ select:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .timeline-card-header {
+    grid-template-columns: minmax(0, 1fr) 88px;
+  }
+
+  .timeline-logo {
+    width: 88px;
+    height: 88px;
+  }
+
+  .timeline-item--compact .timeline-logo {
+    width: 80px;
+    height: 80px;
+  }
+
   .admin-sidebar {
     position: static;
     height: auto;
@@ -679,13 +934,32 @@ select:focus {
   .form-row,
   .form-grid,
   .media-upload-form,
-  .timeline-item,
   .table-row {
     grid-template-columns: 1fr;
   }
 
   .admin-content {
     padding: 20px;
+  }
+
+  .timeline-card-header {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-logo {
+    width: 72px;
+    height: 72px;
+    justify-self: start;
+    order: -1;
+  }
+
+  .timeline-item--compact .timeline-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .project-card--compact img {
+    aspect-ratio: 16 / 9;
   }
 
   .admin-header {
