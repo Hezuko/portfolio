@@ -1,0 +1,111 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-sidebar', { entities }) %>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div>
+        <p class="eyebrow"><%= meta.label %></p>
+        <h1><%= item.id ? 'Modifier' : 'Creer' %> <%= meta.singular %></h1>
+      </div>
+      <a class="btn btn-outline-dark" href="/admin/<%= entity %>">Retour</a>
+    </div>
+
+    <% const settingInfo = entity === 'settings' ? (meta.descriptions[item.setting_key] || {}) : {}; %>
+    <% if (entity === 'settings') { %>
+      <section class="admin-note">
+        <strong><%= settingInfo.label || item.setting_key || 'Nouveau parametre' %></strong>
+        <span><%= settingInfo.help || "Parametre global du site. La cle sert au code, la valeur sert a l'affichage." %></span>
+      </section>
+    <% } %>
+
+    <form class="admin-form" method="POST" action="<%= item.id ? `/admin/${entity}/${item.id}` : `/admin/${entity}` %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="form-grid">
+        <% meta.fields.forEach(([name, label, type]) => { 
+          const value = item[name];
+          const printable = Array.isArray(value) ? value.join('\n') : (value instanceof Date ? value.toISOString().slice(0,10) : (value || ''));
+          const urlSettingKeys = ['github_url', 'linkedin_url', 'cv_url', 'legal_hosting_website'];
+          const emailSettingKeys = ['contact_email'];
+          const fieldType = entity === 'settings' && item.setting_key === 'profile_photo' && name === 'setting_value'
+            ? 'media'
+            : (entity === 'settings' && name === 'setting_value' && urlSettingKeys.includes(item.setting_key)
+              ? 'url'
+              : (entity === 'settings' && name === 'setting_value' && emailSettingKeys.includes(item.setting_key) ? 'email' : type));
+          const fieldLabel = entity === 'settings' && name === 'setting_value' && settingInfo.label ? settingInfo.label : label;
+          const placeholder = entity === 'settings' && name === 'setting_value' && settingInfo.placeholder ? settingInfo.placeholder : '';
+          const isLockedKey = entity === 'settings' && name === 'setting_key' && item.id;
+        %>
+          <label>
+            <span><%= fieldLabel %></span>
+            <% if (fieldType === 'textarea') { %>
+              <textarea name="<%= name %>" rows="4" placeholder="<%= placeholder %>"><%= printable %></textarea>
+            <% } else if (fieldType.startsWith('select:')) { %>
+              <select name="<%= name %>">
+                <option value="">Choisir</option>
+                <% fieldType.replace('select:', '').split(',').forEach((option) => { %>
+                  <option value="<%= option %>" <%= value === option ? 'selected' : '' %>><%= option %></option>
+                <% }) %>
+              </select>
+            <% } else if (fieldType === 'media') { %>
+              <select name="<%= name %>">
+                <option value="">Aucun media</option>
+                <% options.mediaAssets.filter((asset) => asset.resource_type === 'image').forEach((asset) => { %>
+                  <option value="<%= asset.public_id %>" <%= value === asset.public_id ? 'selected' : '' %>><%= asset.label || asset.public_id %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Choisis une image deja uploadee. <a href="/admin/media" target="_blank">Uploader ou voir les medias prives</a></small>
+            <% } else if (fieldType === 'media-multiple') { %>
+              <select name="<%= name %>" multiple size="6">
+                <% options.mediaAssets.filter((asset) => asset.resource_type === 'image').forEach((asset) => { %>
+                  <option value="<%= asset.public_id %>" <%= Array.isArray(value) && value.includes(asset.public_id) ? 'selected' : '' %>><%= asset.label || asset.public_id %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Maintiens Cmd/Ctrl pour selectionner plusieurs images. <a href="/admin/media" target="_blank">Gerer les medias</a></small>
+            <% } else if (fieldType === 'school') { %>
+              <select name="<%= name %>">
+                <option value="">Aucune ecole</option>
+                <% options.schools.forEach((school) => { %><option value="<%= school.id %>" <%= value === school.id ? 'selected' : '' %>><%= school.name %></option><% }) %>
+              </select>
+            <% } else if (fieldType === 'company') { %>
+              <select name="<%= name %>">
+                <option value="">Aucune entreprise</option>
+                <% options.companies.forEach((company) => { %><option value="<%= company.id %>" <%= value === company.id ? 'selected' : '' %>><%= company.name %></option><% }) %>
+              </select>
+            <% } else if (fieldType === 'job') { %>
+              <select name="<%= name %>">
+                <option value="">Aucune experience</option>
+                <% options.jobs.forEach((job) => { %><option value="<%= job.id %>" <%= value === job.id ? 'selected' : '' %>><%= job.title %></option><% }) %>
+              </select>
+            <% } else if (fieldType === 'technologies') { %>
+              <select name="<%= name %>" multiple size="8">
+                <% options.technologies.forEach((technology) => { %>
+                  <option value="<%= technology.id %>" <%= Array.isArray(value) && value.includes(technology.id) ? 'selected' : '' %>><%= technology.name %><%= technology.category ? ` - ${technology.category}` : '' %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Maintiens Cmd/Ctrl pour selectionner plusieurs technologies ou matieres.</small>
+            <% } else if (fieldType === 'skills-multiple') { %>
+              <select name="<%= name %>" multiple size="8">
+                <% options.skills.forEach((skill) => { %>
+                  <option value="<%= skill.id %>" <%= Array.isArray(value) && value.includes(skill.id) ? 'selected' : '' %>><%= skill.name %><%= skill.category ? ` - ${skill.category}` : '' %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Maintiens Cmd/Ctrl pour selectionner plusieurs competences.</small>
+            <% } else if (fieldType === 'projects-multiple') { %>
+              <select name="<%= name %>" multiple size="8">
+                <% options.projects.forEach((project) => { %>
+                  <option value="<%= project.id %>" <%= Array.isArray(value) && value.includes(project.id) ? 'selected' : '' %>><%= project.name %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Maintiens Cmd/Ctrl pour lier plusieurs projets.</small>
+            <% } else { %>
+              <input type="<%= fieldType %>" name="<%= name %>" value="<%= printable %>" placeholder="<%= placeholder %>" <%= isLockedKey ? 'readonly' : '' %>>
+              <% if (isLockedKey) { %>
+                <small class="field-help">Cle technique utilisee par le site. Modifie seulement la valeur.</small>
+              <% } %>
+            <% } %>
+          </label>
+        <% }) %>
+      </div>
+      <button class="btn btn-dark" type="submit"><%= item.id ? 'Enregistrer' : 'Creer' %></button>
+    </form>
+  </div>
+</section>

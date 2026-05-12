@@ -30,7 +30,7 @@ async function addDiplome(titre, niveau_etude, delivrepar, etude_id, annee_obten
         
         const res = await pool.query(
             "INSERT INTO diplome (titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            [titre, niveau_etude, delivrepar, etude_id, image_path, annee_obtention]
+            [titre, niveau_etude, delivrepar, etude_id, annee_obtention, image_path]
         );
         return res.rows[0];
     } catch (err) {

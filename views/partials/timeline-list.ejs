@@ -1,0 +1,54 @@
+<div class="timeline-list">
+  <% items.forEach((item) => { %>
+    <article class="timeline-item">
+      <div class="timeline-date"><%= formatDate(item.start_date) %> - <%= item.end_date ? formatDate(item.end_date) : 'Aujourd hui' %></div>
+      <div>
+        <h3><%= item.title %></h3>
+        <p class="muted">
+          <% if (type === 'education') { %>
+            <%= item.school_name || 'Ecole a renseigner' %>
+            <% if (item.degree || item.field) { %><br><%= [item.degree, item.field].filter(Boolean).join(' - ') %><% } %>
+            <% if (item.school_city || item.school_country) { %><br><%= [item.school_city, item.school_country].filter(Boolean).join(', ') %><% } %>
+          <% } else { %>
+            <%= item.company_name || item.contract_type || 'Entreprise a renseigner' %>
+          <% } %>
+        </p>
+        <% if (type === 'education' && item.status) { %>
+          <p class="muted">Statut : <%= item.status %></p>
+        <% } %>
+        <p><%= item.description %></p>
+        <% if (type === 'education') { %>
+          <% if (formatList(item.technologies).length) { %>
+            <p class="muted">Technologies / matieres</p>
+            <div class="tag-row">
+              <% formatList(item.technologies).forEach((tech) => { %><span><%= tech %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (formatList(item.skills).length) { %>
+            <p class="muted">Competences</p>
+            <div class="tag-row">
+              <% formatList(item.skills).forEach((skill) => { %><span><%= skill %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (item.projects && item.projects.length) { %>
+            <p class="muted">Projets lies</p>
+            <div class="card-actions">
+              <% item.projects.forEach((project) => { %>
+                <% if (project.slug) { %>
+                  <a href="/projets/<%= project.slug %>"><%= project.name %></a>
+                <% } else { %>
+                  <span><%= project.name %></span>
+                <% } %>
+              <% }) %>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="tag-row">
+            <% formatList(item.technologies).slice(0, 6).forEach((tech) => { %><span><%= tech %></span><% }) %>
+          </div>
+        <% } %>
+      </div>
+    </article>
+  <% }) %>
+  <% if (!items.length) { %><p class="empty-state">Aucune donnee pour le moment.</p><% } %>
+</div>

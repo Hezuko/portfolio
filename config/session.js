@@ -2,7 +2,10 @@ require('dotenv').config();
 var session = require("express-session");
 var pgSession = require("connect-pg-simple")(session);
 const pool = require("../model/db"); 
-const { TRUE } = require('sass');
+
+if (!process.env.SESSION_SECRET) {
+    throw new Error("La variable d'environnement SESSION_SECRET est requise pour signer les sessions.");
+}
 
 // 🟢 Initialiser la session avec PostgreSQL
 function initSession() {

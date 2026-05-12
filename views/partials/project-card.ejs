@@ -1,0 +1,19 @@
+<article class="project-card">
+  <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
+  <div>
+    <div class="card-meta">
+      <span><%= project.status || project.etat || 'Projet' %></span>
+      <% if (project.category) { %><span><%= project.category %></span><% } %>
+    </div>
+    <h3><%= project.name || project.titre %></h3>
+    <p><%= project.short_description || project.description || 'Description a completer.' %></p>
+    <div class="tag-row">
+      <% formatList(project.technologies).slice(0, 5).forEach((tech) => { %><span><%= tech %></span><% }) %>
+    </div>
+    <div class="card-actions">
+      <% if (project.github_url) { %><a href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+      <% if (project.demo_url) { %><a href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Demo</a><% } %>
+      <% if (project.slug) { %><a href="/projets/<%= project.slug %>">Voir plus</a><% } %>
+    </div>
+  </div>
+</article>

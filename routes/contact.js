@@ -4,13 +4,18 @@ var validator = require('validator');
 var contact = require('../model/contact');
 var nodemailer = require('nodemailer');
 
-var transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'h.mukumbi100@gmail.com',
-        pass: 'urrb fvjm xrcy xlol' 
-    }
-});
+const mailUser = process.env.MAIL_USER;
+const mailPass = process.env.MAIL_PASS;
+const mailTo = process.env.MAIL_TO || mailUser;
+const transporter = mailUser && mailPass
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: mailUser,
+            pass: mailPass
+        }
+    })
+    : null;
 
 router.get('/', async function(req, res, next) {
     res.render('contact', {
@@ -53,21 +58,24 @@ router.post('/', async function(req, res, next) {
 
     console.log('Les données du formulaire sécurisées :', { nom, prenom, objet, email, texte });
 
-    var mailOptions = {
-        from: 'h.mukumbi100@gmail.com',
-        to: 'h.mukumbi100@gmail.com',
-        subject: `Portfolio en savoir Plus : ${objet}`,
-        text: `Vous avez reçu un nouveau message de contact.\n\nNom: ${nom}\nPrénom: ${prenom}\nEmail: ${email}\nMessage:\n${texte}`
-    };
-    
+    if (transporter) {
+        var mailOptions = {
+            from: mailUser,
+            to: mailTo,
+            subject: `Portfolio en savoir Plus : ${objet}`,
+            text: `Vous avez reçu un nouveau message de contact.\n\nNom: ${nom}\nPrénom: ${prenom}\nEmail: ${email}\nMessage:\n${texte}`
+        };
 
-    transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-            console.log('Erreur lors de l\'envoi de l\'e-mail :', error);
-        } else {
-            console.log('E-mail envoyé : ' + info.response);
-        }
-    });
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log('Erreur lors de l\'envoi de l\'e-mail :', error);
+            } else {
+                console.log('E-mail envoyé : ' + info.response);
+            }
+        });
+    } else {
+        console.warn("Configuration mail absente : le message sera seulement enregistré en base.");
+    }
 
     try {
         const contactAjoute = await contact.AddContact(nom, prenom, objet, email, texte);

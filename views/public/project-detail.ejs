@@ -1,0 +1,29 @@
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow"><%= project.category || 'Projet' %></p>
+    <h1><%= project.name %></h1>
+    <p><%= project.short_description || project.goal || '' %></p>
+    <div class="hero-actions">
+      <% if (project.github_url) { %><a class="btn btn-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+      <% if (project.demo_url) { %><a class="btn btn-outline-dark" href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Demo</a><% } %>
+    </div>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container detail-layout">
+    <img class="detail-image" src="<%= project.main_image_url || project.main_image || '/images/background.jpg' %>" alt="<%= project.name %>">
+    <div class="detail-content">
+      <h2>Objectif</h2>
+      <p><%= project.goal || project.long_description || 'Objectif a completer.' %></p>
+      <h2>Fonctionnalites</h2>
+      <ul class="clean-list">
+        <% formatList(project.features).forEach((feature) => { %><li><%= feature %></li><% }) %>
+      </ul>
+      <h2>Technologies</h2>
+      <div class="tag-row">
+        <% formatList(project.technologies).forEach((tech) => { %><span><%= tech %></span><% }) %>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,72 @@
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow">Donnees personnelles</p>
+    <h1>Politique de confidentialite</h1>
+    <p>Cette page explique quelles donnees sont collectees, pourquoi, et comment exercer tes droits.</p>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container legal-content">
+    <article>
+      <h2>Responsable du traitement</h2>
+      <p>
+        Le responsable du traitement est <%= legal.dataController %>.
+        Pour toute question : <a href="mailto:<%= legal.contactEmail %>"><%= legal.contactEmail %></a>.
+      </p>
+    </article>
+
+    <article>
+      <h2>Donnees collectees</h2>
+      <p>Le formulaire de contact peut collecter les informations suivantes :</p>
+      <ul>
+        <li>nom et prenom ;</li>
+        <li>adresse email ;</li>
+        <li>objet du message ;</li>
+        <li>contenu du message ;</li>
+        <li>date d'envoi.</li>
+      </ul>
+    </article>
+
+    <article>
+      <h2>Finalite et base legale</h2>
+      <p>
+        Ces donnees sont utilisees uniquement pour lire, gerer et repondre aux demandes envoyees via le formulaire.
+        La base legale est l'interet legitime a pouvoir repondre aux personnes qui contactent l'editeur du site.
+      </p>
+    </article>
+
+    <article>
+      <h2>Duree de conservation</h2>
+      <p><%= legal.retentionContact %></p>
+    </article>
+
+    <article>
+      <h2>Destinataires</h2>
+      <p>
+        Les donnees sont destinees uniquement a l'editeur du site. Elles ne sont pas vendues.
+        Elles peuvent etre stockees chez les prestataires techniques necessaires au fonctionnement du site
+        ou de la base de donnees.
+      </p>
+    </article>
+
+    <article>
+      <h2>Vos droits</h2>
+      <p>
+        Conformement au RGPD, tu peux demander l'acces, la rectification ou la suppression des donnees te concernant,
+        ainsi que t'opposer a leur traitement lorsque cela est applicable. Pour exercer ces droits, contacte :
+        <a href="mailto:<%= legal.contactEmail %>"><%= legal.contactEmail %></a>.
+      </p>
+    </article>
+
+    <article>
+      <h2>Securite</h2>
+      <p>
+        L'acces a l'administration est protege par authentification. Les fonctions de creation, modification et suppression
+        ne sont pas exposees aux visiteurs non connectes.
+      </p>
+    </article>
+
+    <p class="muted">Derniere mise a jour : <%= legal.lastUpdated %></p>
+  </div>
+</section>

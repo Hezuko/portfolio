@@ -41,7 +41,7 @@ router.post("/", loginLimiter, async function (req, res) {
         // Enregistrer en session
         sessionManager.createSession(req, user);
 
-        res.redirect("/");
+        res.redirect(user.role === "admin" ? "/admin" : "/");
     } catch (err) {
         console.error("❌ Erreur de connexion :", err);
         res.status(500).render("authentification", { 

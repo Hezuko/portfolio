@@ -1,55 +1,32 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-  <div class="container-fluid">
-
-    <div class="d-flex flex-grow-1">
-      <a class="navbar-brand d-flex align-items-center" href="/">
-        <img src="/images/came.png" alt="Logo" class="me-2" style="height: 50px;"> 
-        <span class="portfolio-font fw-bold">PORTFOLIO</span>
-      </a>   
-    </div>
-
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+<nav class="navbar navbar-expand-lg portfolio-navbar">
+  <div class="container">
+    <a class="navbar-brand brand-mark" href="/">
+      <img src="/images/came.png" alt="Logo <%= siteProfile.name %>">
+      <span><%= siteProfile.name %></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Ouvrir la navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    
-    <% if (user && user.id) { %> 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav align-items-center">
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
+        <li class="nav-item"><a class="nav-link" href="/projets">Projets</a></li>
+        <li class="nav-item"><a class="nav-link" href="/etudes">Etudes</a></li>
+        <li class="nav-item"><a class="nav-link" href="/jobs">Experiences</a></li>
+        <li class="nav-item"><a class="nav-link" href="/competences">Competences</a></li>
+        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+        <% if (user && user.role === "admin") { %>
+          <li class="nav-item"><a class="btn btn-sm btn-dark ms-lg-2" href="/admin">Admin</a></li>
           <li class="nav-item">
-            <a class="nav-link active" href="/projets">📂 Projets</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="/etudes">📚 Etudes</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="/jobs">💼 Jobs</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="/contact">📩 Contact</a>
-          </li>
-          <li class="nav-item">
-            <form action="/desauthentification" method="POST" class="d-inline">
+            <form action="/desauthentification" method="POST" class="ms-lg-2 mt-2 mt-lg-0">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button type="submit" class="nav-link btn btn-link text-decoration-none p-0 border-0 d-inline-flex align-items-center">
-                🔓 Désauthentification
-              </button>
+              <button class="btn btn-sm btn-outline-dark" type="submit">Logout</button>
             </form>
           </li>
-        </ul>
-      </div>
-      
-      
-     <% } %>
-
-    <div class="d-flex align-items-center social-icons">
-      <a href="https://github.com/Hezuko" target="_blank" class="me-3">
-        <i class="bi bi-github fs-1" style="color: black;"></i>
-      </a>
-      <a href="https://www.linkedin.com/in/henocmukumbi" target="_blank">
-        <i class="bi bi-linkedin fs-1"></i>
-      </a>
+        <% } else { %>
+          <li class="nav-item"><a class="btn btn-sm btn-outline-dark ms-lg-2" href="/authentification">Admin</a></li>
+        <% } %>
+      </ul>
     </div>
-    
-
   </div>
 </nav>

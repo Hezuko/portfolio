@@ -1,0 +1,22 @@
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow">Competences</p>
+    <h1>Stack technique</h1>
+    <p>Competences regroupees par domaine pour rendre la lecture rapide.</p>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container skill-sections">
+    <% [...new Set(skills.map((skill) => skill.category))].forEach((category) => { %>
+      <article>
+        <h2><%= category %></h2>
+        <div class="skill-cloud inline">
+          <% skills.filter((skill) => skill.category === category).forEach((skill) => { %>
+            <span><%= skill.name %><small><%= skill.level %></small></span>
+          <% }) %>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>

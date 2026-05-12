@@ -1,0 +1,74 @@
+<section class="hero-section">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Portfolio developpeur</p>
+      <h1><%= profile.name %></h1>
+      <p class="lead"><%= profile.role %></p>
+      <p class="hero-text"><%= profile.tagline %></p>
+      <div class="hero-actions">
+        <a class="btn btn-dark" href="/projets">Voir mes projets</a>
+        <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
+        <% if (profile.cv) { %>
+          <a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Telecharger mon CV</a>
+        <% } %>
+      </div>
+    </div>
+    <div class="hero-media">
+      <img src="<%= profile.photo %>" alt="Portrait de <%= profile.name %>">
+    </div>
+  </div>
+</section>
+
+<% if (profile.about) { %>
+  <section class="section-band subtle">
+    <div class="container section-heading">
+      <p class="eyebrow">Profil</p>
+      <h2>A propos</h2>
+      <p><%= profile.about %></p>
+    </div>
+  </section>
+<% } %>
+
+<section class="section-band">
+  <div class="container section-heading">
+    <p class="eyebrow">Selection</p>
+    <h2>Projets recents</h2>
+  </div>
+  <div class="container card-grid">
+    <% projects.slice(0, 3).forEach((project) => { %>
+      <%- include('../partials/project-card', { project }) %>
+    <% }) %>
+    <% if (!projects.length) { %><p class="empty-state">Aucun projet pour le moment.</p><% } %>
+  </div>
+</section>
+
+<section class="section-band subtle">
+  <div class="container two-columns">
+    <div>
+      <div class="section-heading compact">
+        <p class="eyebrow">Parcours</p>
+        <h2>Etudes</h2>
+      </div>
+      <%- include('../partials/timeline-list', { items: educations, type: 'education' }) %>
+    </div>
+    <div>
+      <div class="section-heading compact">
+        <p class="eyebrow">Terrain</p>
+        <h2>Experiences</h2>
+      </div>
+      <%- include('../partials/timeline-list', { items: jobs, type: 'job' }) %>
+    </div>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container section-heading">
+    <p class="eyebrow">Competences</p>
+    <h2>Stack et outils</h2>
+  </div>
+  <div class="container skill-cloud">
+    <% skills.forEach((skill) => { %>
+      <span><%= skill.name %><small><%= skill.category %></small></span>
+    <% }) %>
+  </div>
+</section>

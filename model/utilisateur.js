@@ -1,5 +1,4 @@
 const pool = require("./db");
-const bcrypt = require("bcrypt");
 
 // 🟢 Récupérer un utilisateur par le pseudo
 async function getUtilisateur(pseudo) {

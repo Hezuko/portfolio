@@ -1,0 +1,16 @@
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow">Realisations</p>
+    <h1>Projets</h1>
+    <p>Des projets presentes avec leur contexte, leur objectif, leur stack et les liens utiles.</p>
+  </div>
+</section>
+
+<section class="section-band">
+  <div class="container card-grid">
+    <% projects.forEach((project) => { %>
+      <%- include('../partials/project-card', { project }) %>
+    <% }) %>
+    <% if (!projects.length) { %><p class="empty-state">Aucun projet n'a encore ete publie.</p><% } %>
+  </div>
+</section>
