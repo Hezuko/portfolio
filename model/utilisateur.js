@@ -1,4 +1,12 @@
 const pool = require("./db");
+const bcrypt = require("bcryptjs");
+
+const SALT_ROUNDS = 10;
+
+// 🔐 Hacher un mot de passe (utilisé pour créer / réinitialiser un compte)
+async function hashMotDePasse(mdp) {
+    return bcrypt.hash(mdp, SALT_ROUNDS);
+}
 
 // 🟢 Récupérer un utilisateur par le pseudo
 async function getUtilisateur(pseudo) {
@@ -17,8 +25,9 @@ async function verifyUtilisateur(pseudo, mdp) {
         const utilisateur = res.rows[0];
 
         if (!utilisateur) return null;
-        
-        if (mdp !== utilisateur.mot_de_passe) {
+
+        const motDePasseValide = await bcrypt.compare(mdp, utilisateur.mot_de_passe);
+        if (!motDePasseValide) {
             return null;
         }
 
@@ -33,5 +42,6 @@ async function verifyUtilisateur(pseudo, mdp) {
 
 module.exports = {
     getUtilisateur,
-    verifyUtilisateur
+    verifyUtilisateur,
+    hashMotDePasse
 };

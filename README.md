@@ -101,12 +101,16 @@ Le serveur écoute par défaut sur :
 http://localhost:3000
 ```
 
-Identifiants Admin locaux :
+Identifiants Admin :
 
-```text
-pseudo: admin
-mot de passe: 0000
+Le mot de passe admin est haché avec bcrypt et n'est jamais stocké en clair.
+Définis le tien (ne le commite pas) :
+
+```sh
+node -e "require('./model/utilisateur').hashMotDePasse(process.argv[1]).then(h => console.log(h))" 'TON_MOT_DE_PASSE'
 ```
+
+Puis mets le hash obtenu dans la table `utilisateurs` (colonne `mot_de_passe`) pour le pseudo `admin`.
 
 L'interface Admin est disponible sur :
 
@@ -136,4 +140,4 @@ npm run sass
 npm test
 ```
 
-Les tests nécessitent une base PostgreSQL disponible avec les tables et données attendues, notamment l'utilisateur `admin` avec le mot de passe `0000`.
+Les tests nécessitent une base PostgreSQL disponible avec les tables et données attendues. La suite crée et supprime elle-même un utilisateur admin de test (`admin-test-jest`), sans toucher au compte `admin` réel.

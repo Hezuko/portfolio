@@ -2,15 +2,29 @@ const request = require("supertest");
 const cheerio = require("cheerio");
 const app = require("../app");
 const pool = require("../model/db");
+const utilisateur = require("../model/utilisateur");
+
+// Utilisateur admin dédié aux tests : créé puis supprimé, sans toucher au compte réel.
+const TEST_ADMIN = { pseudo: "admin-test-jest", password: "Jest-Admin-Passw0rd!" };
 
 async function loginAdmin() {
   const agent = request.agent(app);
   const loginPage = await agent.get("/authentification");
   const $ = cheerio.load(loginPage.text);
   const csrf = $('input[name="_csrf"]').val();
-  await agent.post("/authentification").send({ pseudo: "admin", password: "0000", _csrf: csrf });
+  await agent.post("/authentification").send({ pseudo: TEST_ADMIN.pseudo, password: TEST_ADMIN.password, _csrf: csrf });
   return agent;
 }
+
+beforeAll(async () => {
+  const hash = await utilisateur.hashMotDePasse(TEST_ADMIN.password);
+  await pool.query(
+    `INSERT INTO utilisateurs (pseudo, mot_de_passe, role)
+     VALUES ($1, $2, 'admin')
+     ON CONFLICT (pseudo) DO UPDATE SET mot_de_passe = EXCLUDED.mot_de_passe, role = 'admin'`,
+    [TEST_ADMIN.pseudo, hash]
+  );
+});
 
 describe("vision visiteur", () => {
   it("affiche l'accueil public sans connexion", async () => {
@@ -87,5 +101,6 @@ describe("vision admin", () => {
 });
 
 afterAll(async () => {
+  await pool.query("DELETE FROM utilisateurs WHERE pseudo = $1", [TEST_ADMIN.pseudo]);
   await pool.end();
 });

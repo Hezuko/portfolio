@@ -181,8 +181,10 @@ CREATE TABLE media_assets (
     updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+-- Mot de passe hache avec bcrypt (jamais en clair). Le mot de passe reel est
+-- defini hors du depot ; remplacez ce hash par le votre via model/utilisateur.hashMotDePasse().
 INSERT INTO utilisateurs (pseudo, mot_de_passe, role)
-VALUES ('admin', '0000', 'admin');
+VALUES ('admin', '$2b$10$wxVX4Dp4T0jnK6Ab5eZhU.t58r/7bDlbil.smkEtfz92hOzJfe5WO', 'admin');
 
 INSERT INTO schools (name, slug, logo, city, country, website, description)
 VALUES
