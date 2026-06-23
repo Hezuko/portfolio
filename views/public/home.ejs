@@ -1,74 +1,129 @@
-<section class="hero-section">
-  <div class="container hero-grid">
-    <div class="hero-copy">
-      <p class="eyebrow">Portfolio developpeur</p>
-      <h1><%= profile.name %></h1>
-      <p class="lead"><%= profile.role %></p>
-      <p class="hero-text"><%= profile.tagline %></p>
-      <div class="hero-actions">
-        <a class="btn btn-dark" href="/projets">Voir mes projets</a>
-        <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
-        <% if (profile.cv) { %>
-          <a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Telecharger mon CV</a>
-        <% } %>
+<div class="focus-scroll-page home-focus-page" data-focus-scroll>
+  <section class="focus-scroll-section">
+    <article class="focus-card home-profile-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Portfolio developpeur</p>
+        <h1><%= profile.name %></h1>
+        <p class="lead"><%= profile.role %></p>
+        <p class="hero-text"><%= profile.about || profile.tagline %></p>
+        <div class="hero-actions">
+          <a class="btn btn-dark" href="/projets">Voir mes projets</a>
+          <a class="btn btn-outline-dark" href="/etudes">Voir mon parcours</a>
+          <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
+        </div>
       </div>
-    </div>
-    <div class="hero-media">
-      <img src="<%= profile.photo %>" alt="Portrait de <%= profile.name %>">
-    </div>
-  </div>
-</section>
-
-<% if (profile.about) { %>
-  <section class="section-band subtle">
-    <div class="container section-heading">
-      <p class="eyebrow">Profil</p>
-      <h2>A propos</h2>
-      <p><%= profile.about %></p>
-    </div>
+      <div class="hero-media">
+        <img src="<%= profile.photo %>" alt="Portrait de <%= profile.name %>">
+      </div>
+    </article>
+    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller à la section projets"><span aria-hidden="true"></span></button>
   </section>
-<% } %>
 
-<section class="section-band">
-  <div class="container section-heading">
-    <p class="eyebrow">Selection</p>
-    <h2>Projets recents</h2>
-  </div>
-  <div class="container card-grid">
-    <% projects.slice(0, 3).forEach((project) => { %>
-      <%- include('../partials/project-card', { project, compact: true }) %>
-    <% }) %>
-    <% if (!projects.length) { %><p class="empty-state">Aucun projet pour le moment.</p><% } %>
-  </div>
-</section>
-
-<section class="section-band subtle">
-  <div class="container two-columns">
-    <div>
-      <div class="section-heading compact">
-        <p class="eyebrow">Parcours</p>
-        <h2>Etudes</h2>
+  <section class="focus-scroll-section">
+    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="0" aria-label="Revenir au profil"><span aria-hidden="true"></span></button>
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/projets" tabindex="0" role="link" aria-label="Voir mes projets">
+      <p class="eyebrow">Selection</p>
+      <div class="home-summary-card__header">
+        <h2>Mes projets</h2>
       </div>
-      <%- include('../partials/timeline-list', { items: educations.slice(0, 3), type: 'education', compact: true }) %>
-    </div>
-    <div>
-      <div class="section-heading compact">
-        <p class="eyebrow">Terrain</p>
-        <h2>Experiences</h2>
+      <p>Un aperçu compact de mes réalisations techniques, avec les projets récents accessibles depuis la page dédiée.</p>
+      <div class="home-summary-list">
+        <% projects.slice(0, 3).forEach((project) => { %>
+          <div class="home-summary-item">
+            <div class="home-summary-media home-summary-media--project">
+              <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="Visuel <%= project.name || project.titre %>">
+            </div>
+            <div>
+              <strong><%= project.name || project.titre %></strong>
+              <small><%= [formatProjectCategory(project.category), formatStatus(project.status || project.etat, 'default')].filter(Boolean).join(' · ') %></small>
+            </div>
+          </div>
+        <% }) %>
+        <% if (!projects.length) { %><div class="home-summary-item"><span>Aucun projet pour le moment</span></div><% } %>
       </div>
-      <%- include('../partials/timeline-list', { items: jobs.slice(0, 3), type: 'job', compact: true }) %>
-    </div>
-  </div>
-</section>
+      <div class="focus-card-actions"><a class="section-link" href="/projets">Voir tous les projets</a></div>
+    </article>
+    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="2" aria-label="Aller à la section expériences"><span aria-hidden="true"></span></button>
+  </section>
 
-<section class="section-band">
-  <div class="container section-heading">
-    <p class="eyebrow">Competences</p>
-    <h2>Stack et outils</h2>
-  </div>
-  <div class="container skill-cloud">
-    <% skills.forEach((skill) => { %>
-      <button class="skill-badge" type="button" data-knowledge-type="skill" data-knowledge-id="<%= skill.id %>" aria-label="Afficher la fiche de <%= skill.name %>"><%= skill.name %><small><%= skill.category %></small></button>
-    <% }) %>
-  </div>
-</section>
+  <section class="focus-scroll-section">
+    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="1" aria-label="Revenir à la section projets"><span aria-hidden="true"></span></button>
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/jobs" tabindex="0" role="link" aria-label="Voir mes expériences">
+      <p class="eyebrow">Terrain</p>
+      <div class="home-summary-card__header">
+        <h2>Mes expériences</h2>
+      </div>
+      <p>Les missions et environnements professionnels les plus récents, résumés pour une navigation rapide.</p>
+      <div class="home-summary-list">
+        <% jobs.slice(0, 3).forEach((job) => { %>
+          <% const companyInitial = (job.company_name || '?').trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1).toUpperCase()).join(''); %>
+          <div class="home-summary-item">
+            <div class="home-summary-media">
+              <% if (job.company_logo_url) { %>
+                <img src="<%= job.company_logo_url %>" alt="Logo <%= job.company_name %>">
+              <% } else { %>
+                <span><%= companyInitial %></span>
+              <% } %>
+            </div>
+            <div>
+              <strong><%= job.title %></strong>
+              <small><%= [job.company_name, formatDateRange(job.start_date, job.end_date, job.status)].filter(Boolean).join(' · ') %></small>
+            </div>
+          </div>
+        <% }) %>
+        <% if (!jobs.length) { %><div class="home-summary-item"><span>Aucune expérience pour le moment</span></div><% } %>
+      </div>
+      <div class="focus-card-actions"><a class="section-link" href="/jobs">Voir toutes les expériences</a></div>
+    </article>
+    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="3" aria-label="Aller à la section études"><span aria-hidden="true"></span></button>
+  </section>
+
+  <section class="focus-scroll-section">
+    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="2" aria-label="Revenir à la section expériences"><span aria-hidden="true"></span></button>
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/etudes" tabindex="0" role="link" aria-label="Voir mes études">
+      <p class="eyebrow">Parcours</p>
+      <div class="home-summary-card__header">
+        <h2>Mes études</h2>
+      </div>
+      <p>Les formations qui structurent mon parcours technique et mon apprentissage en ingénierie.</p>
+      <div class="home-summary-list">
+        <% educations.slice(0, 3).forEach((education) => { %>
+          <% const schoolInitial = (education.school_name || '?').trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1).toUpperCase()).join(''); %>
+          <div class="home-summary-item">
+            <div class="home-summary-media">
+              <% if (education.school_logo_url) { %>
+                <img src="<%= education.school_logo_url %>" alt="Logo <%= education.school_name %>">
+              <% } else { %>
+                <span><%= schoolInitial %></span>
+              <% } %>
+            </div>
+            <div>
+              <strong><%= education.title %></strong>
+              <small><%= [education.school_name, formatDateRange(education.start_date, education.end_date, education.status)].filter(Boolean).join(' · ') %></small>
+            </div>
+          </div>
+        <% }) %>
+        <% if (!educations.length) { %><div class="home-summary-item"><span>Aucune formation pour le moment</span></div><% } %>
+      </div>
+      <div class="focus-card-actions"><a class="section-link" href="/etudes">Voir toutes les études</a></div>
+    </article>
+    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="4" aria-label="Aller à la section contact"><span aria-hidden="true"></span></button>
+  </section>
+
+  <section class="focus-scroll-section">
+    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="3" aria-label="Revenir à la section études"><span aria-hidden="true"></span></button>
+    <article class="focus-card cta-panel">
+      <div class="slide-header">
+        <p class="eyebrow">Contact</p>
+        <h2>Construisons quelque chose de clair, robuste et utile.</h2>
+        <p><%= profile.tagline %></p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-dark" href="/contact">Me contacter</a>
+        <% if (profile.github) { %><a class="btn btn-outline-dark" href="<%= profile.github %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+        <% if (profile.linkedin) { %><a class="btn btn-outline-dark" href="<%= profile.linkedin %>" target="_blank" rel="noreferrer">LinkedIn</a><% } %>
+        <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Télécharger mon CV</a><% } %>
+      </div>
+    </article>
+  </section>
+</div>

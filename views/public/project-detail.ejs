@@ -1,32 +1,240 @@
-<section class="page-header">
-  <div class="container">
-    <p class="eyebrow"><%= project.category || 'Projet' %></p>
-    <h1><%= project.name %></h1>
-    <p><%= project.short_description || project.goal || '' %></p>
-    <p class="muted">Statut : <%= formatStatus(project.status, 'default') %></p>
-    <div class="hero-actions">
-      <% if (project.github_url) { %><a class="btn btn-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
-      <% if (project.demo_url) { %><a class="btn btn-outline-dark" href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Demo</a><% } %>
+<%
+  const techs = formatList(project.technologies);
+  const features = formatList(project.features);
+  const images = project.image_urls || [];
+  const hasLinks = project.github_url || project.demo_url;
+  const sections = project.sections || [];
+  const paragraphs = (value) => String(value || '').split(/\n{2,}/).map((entry) => entry.trim()).filter(Boolean);
+  const renderText = (value) => paragraphs(value).forEach((paragraph) => { %><p><%= paragraph %></p><% });
+  const canEditProject = typeof user !== 'undefined' && user && user.role === 'admin';
+  const publicProjectPath = `/projets/${project.slug}`;
+%>
+
+<section class="detail-hero">
+  <div class="container detail-hero__grid">
+    <div class="detail-hero__content">
+      <p class="eyebrow"><%= formatProjectCategory(project.category) || 'Projet' %></p>
+      <h1><%= project.name %></h1>
+      <% if (project.short_description || project.goal) { %>
+        <p><%= project.short_description || project.goal %></p>
+      <% } %>
+      <div class="detail-meta-row">
+        <span><%= formatStatus(project.status, 'default') %></span>
+        <% if (project.start_date || project.end_date) { %><span><%= formatDateRange(project.start_date, project.end_date, project.status) %></span><% } %>
+        <% if (project.school_name) { %><span><%= project.school_name %></span><% } %>
+        <% if (project.company_name) { %><span><%= project.company_name %></span><% } %>
+      </div>
+      <% if (canEditProject) { %>
+        <div class="public-admin-toolbar">
+          <a class="btn btn-dark" href="/admin/projects/<%= project.id %>/edit">Modifier le projet</a>
+          <a class="btn btn-outline-dark" href="/admin/project_sections/new?project_id=<%= project.id %>">Ajouter une section</a>
+        </div>
+      <% } %>
+      <% if (hasLinks) { %>
+        <div class="hero-actions">
+          <% if (project.github_url) { %><a class="btn btn-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+          <% if (project.demo_url) { %><a class="btn btn-outline-dark" href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Démo</a><% } %>
+        </div>
+      <% } %>
     </div>
+    <figure class="detail-hero__media">
+      <img src="<%= project.main_image_url || project.main_image || '/images/background.jpg' %>" alt="<%= project.name %>">
+    </figure>
   </div>
 </section>
 
-<section class="section-band">
-  <div class="container detail-layout">
-    <img class="detail-image" src="<%= project.main_image_url || project.main_image || '/images/background.jpg' %>" alt="<%= project.name %>">
-    <div class="detail-content">
-      <h2>Objectif</h2>
-      <p><%= project.goal || project.long_description || 'Objectif a completer.' %></p>
-      <h2>Fonctionnalites</h2>
-      <ul class="clean-list">
-        <% formatList(project.features).forEach((feature) => { %><li><%= feature %></li><% }) %>
-      </ul>
-      <h2>Technologies</h2>
-      <div class="tag-row">
-        <% formatList(project.technologies).forEach((tech) => { %>
-          <button class="skill-badge" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><%= tech %></button>
-        <% }) %>
-      </div>
-    </div>
+<section class="detail-page section-band">
+  <div class="container detail-page__grid">
+    <main class="detail-main">
+      <% if (project.context || project.long_description) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Contexte</p>
+          <h2>Pourquoi ce projet existe</h2>
+          <p><%= project.context || project.long_description %></p>
+        </section>
+      <% } %>
+
+      <% if (project.goal) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Objectif</p>
+          <h2>Ce que le projet devait accomplir</h2>
+          <p><%= project.goal %></p>
+        </section>
+      <% } %>
+
+      <% if (features.length) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Réalisation</p>
+          <h2>Ce qui a été réalisé</h2>
+          <ul class="detail-list">
+            <% features.forEach((feature) => { %><li><%= feature %></li><% }) %>
+          </ul>
+        </section>
+      <% } %>
+
+      <% if (sections.length) { %>
+        <div class="project-section-list">
+          <% sections.forEach((section) => { %>
+            <% const hasMedia = section.media_url; %>
+            <% const mediaPosition = section.media_position || (section.layout || '').replace('media_', '') || 'right'; %>
+            <% const sectionClasses = ['project-rich-section', `project-rich-section--${section.layout || 'text_only'}`, hasMedia ? 'project-rich-section--has-media' : '', hasMedia ? `project-rich-section--media-${mediaPosition}` : ''].filter(Boolean).join(' '); %>
+            <section class="<%= sectionClasses %>">
+              <div class="project-rich-section__text">
+                <% if (section.section_type) { %><p class="eyebrow"><%= section.section_type %></p><% } %>
+                <% if (section.title) { %><h2><%= section.title %></h2><% } %>
+                <% if (section.subtitle) { %><p class="project-rich-section__subtitle"><%= section.subtitle %></p><% } %>
+                <% renderText(section.body); %>
+              </div>
+              <% if (hasMedia) { %>
+                <figure class="project-rich-section__media">
+                  <% if (section.media_resource_type === 'video') { %>
+                    <video src="<%= section.media_url %>" controls preload="metadata"></video>
+                  <% } else { %>
+                    <img src="<%= section.media_url %>" alt="<%= section.media_alt_text || section.title || project.name %>" loading="lazy">
+                  <% } %>
+                  <% if (section.media_caption) { %><figcaption><%= section.media_caption %></figcaption><% } %>
+                </figure>
+              <% } %>
+            </section>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <% if (project.architecture) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Architecture</p>
+          <h2>Fonctionnement général</h2>
+          <p><%= project.architecture %></p>
+        </section>
+      <% } %>
+
+      <% if (project.challenges) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Choix techniques</p>
+          <h2>Difficultés et compromis</h2>
+          <p><%= project.challenges %></p>
+        </section>
+      <% } %>
+
+      <% if (project.results) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Résultats</p>
+          <h2>Ce que le projet démontre</h2>
+          <p><%= project.results %></p>
+        </section>
+      <% } %>
+
+      <% if (project.future_improvements) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Suite</p>
+          <h2>Améliorations possibles</h2>
+          <p><%= project.future_improvements %></p>
+        </section>
+      <% } %>
+
+      <% if (images.length) { %>
+        <section class="detail-section">
+          <p class="eyebrow">Galerie</p>
+          <h2>Images du projet</h2>
+          <div class="detail-gallery">
+            <% images.forEach((image, index) => { %>
+              <img src="<%= image %>" alt="<%= project.name %> - image <%= index + 1 %>">
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+    </main>
+
+    <aside class="detail-sidebar">
+      <section class="detail-side-card">
+        <h2>Fiche technique</h2>
+        <dl class="detail-kv">
+          <div><dt>Statut</dt><dd><%= formatStatus(project.status, 'default') %></dd></div>
+          <% if (project.category) { %><div><dt>Catégorie</dt><dd><%= formatProjectCategory(project.category) %></dd></div><% } %>
+          <% if (project.start_date || project.end_date) { %><div><dt>Période</dt><dd><%= formatDateRange(project.start_date, project.end_date, project.status) %></dd></div><% } %>
+          <% if (project.school_name) { %><div><dt>École liée</dt><dd><%= project.school_name %></dd></div><% } %>
+          <% if (project.company_name) { %><div><dt>Entreprise liée</dt><dd><%= project.company_name %></dd></div><% } %>
+          <% if (project.job_title) { %><div><dt>Expérience liée</dt><dd><%= project.job_title %></dd></div><% } %>
+        </dl>
+      </section>
+
+      <% if (techs.length) { %>
+        <section class="detail-side-card">
+          <h2>Technologies et outils</h2>
+          <div class="tag-row">
+            <% techs.forEach((tech) => { %>
+              <button class="skill-badge" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><%= tech %></button>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (canEditProject && sections.length) { %>
+        <section class="detail-side-card public-admin-panel">
+          <h2>Ajouter des médias</h2>
+          <p>Upload direct depuis cette page. Le média sera associé à la section choisie.</p>
+          <div class="public-section-upload-list">
+            <% sections.forEach((section) => { %>
+              <details class="public-section-upload">
+                <summary><%= section.title %></summary>
+                <form method="POST" action="/admin/project_sections/<%= section.id %>/media?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="return_to" value="<%= publicProjectPath %>">
+                  <label>
+                    <span>Image ou vidéo</span>
+                    <input type="file" name="media" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" required>
+                  </label>
+                  <label>
+                    <span>Nom admin</span>
+                    <input name="display_name" value="<%= project.name %> - <%= section.title %>" required>
+                  </label>
+                  <label>
+                    <span>Position</span>
+                    <select name="media_position">
+                      <% ['right','left','top','bottom','full'].forEach((position) => { %>
+                        <option value="<%= position %>" <%= section.media_position === position ? 'selected' : '' %>><%= position %></option>
+                      <% }) %>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Texte alternatif</span>
+                    <input name="alt_text" value="<%= section.media_alt_text || section.title || project.name %>">
+                  </label>
+                  <label>
+                    <span>Légende</span>
+                    <input name="caption" value="<%= section.media_caption || '' %>">
+                  </label>
+                  <button class="btn btn-dark" type="submit">Uploader ici</button>
+                </form>
+              </details>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if ((project.educations && project.educations.length) || project.school_name || project.company_name || project.job_title) { %>
+        <section class="detail-side-card">
+          <h2>Liens avec le parcours</h2>
+          <div class="relation-preview">
+            <% if (project.educations && project.educations.length) { %>
+              <% project.educations.forEach((education) => { %><a href="/etudes/<%= education.id %>"><%= education.title %></a><% }) %>
+            <% } %>
+            <% if (project.job_id && project.job_title) { %><a href="/experiences/<%= project.job_id %>"><%= project.job_title %></a><% } %>
+            <% if (!project.educations?.length && project.school_name) { %><span><%= project.school_name %></span><% } %>
+            <% if (project.company_name) { %><span><%= project.company_name %></span><% } %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (hasLinks) { %>
+        <section class="detail-side-card">
+          <h2>Liens</h2>
+          <div class="card-actions">
+            <% if (project.github_url) { %><a href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+            <% if (project.demo_url) { %><a href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Démo</a><% } %>
+          </div>
+        </section>
+      <% } %>
+    </aside>
   </div>
 </section>

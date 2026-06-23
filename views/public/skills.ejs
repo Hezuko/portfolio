@@ -1,24 +1,57 @@
-<section class="page-header">
-  <div class="container">
-    <p class="eyebrow">Competences</p>
-    <h1>Stack technique</h1>
-    <p>Competences regroupees par domaine pour rendre la lecture rapide.</p>
-  </div>
-</section>
+<% const domainEntries = Object.entries(groups); %>
+<div class="focus-scroll-page technical-focus-page" data-focus-scroll>
+  <section class="focus-scroll-section">
+    <article class="focus-card technical-intro-card">
+      <p class="eyebrow">Domaines techniques</p>
+      <h1>Compétences reliées au parcours</h1>
+      <p>Une compétence n’est affichée ici que comme point d’entrée vers les projets, expériences et études où elle apparaît réellement.</p>
+    </article>
+    <% if (domainEntries.length) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller au domaine suivant"><span aria-hidden="true"></span></button><% } %>
+  </section>
 
-<section class="section-band">
-  <div class="container skill-sections">
-    <% [...new Set(skills.map((skill) => skill.category))].forEach((category) => { %>
-      <article>
-        <h2><%= category %></h2>
-        <div class="skill-cloud inline">
-          <% skills.filter((skill) => skill.category === category).forEach((skill) => { %>
-            <button class="skill-badge" type="button" data-knowledge-type="skill" data-knowledge-id="<%= skill.id %>" aria-label="Afficher la fiche de <%= skill.name %>">
-              <%= skill.name %><small><%= formatLevel(skill.level) %></small>
-            </button>
+  <% domainEntries.forEach(([domain, items], index) => { %>
+    <section class="focus-scroll-section">
+      <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="<%= index %>" aria-label="Aller au domaine précédent"><span aria-hidden="true"></span></button>
+      <article class="focus-card technical-domain-section">
+        <div class="technical-domain-section__header">
+          <h2><%= domain %></h2>
+          <p><%= items.length %> compétence<%= items.length > 1 ? 's' : '' %> reliée<%= items.length > 1 ? 's' : '' %> au portfolio</p>
+        </div>
+        <div class="technical-skill-grid">
+          <% items.forEach((item) => { %>
+            <article class="technical-skill-card">
+              <button class="skill-badge" type="button" data-knowledge-type="<%= item.type %>" data-knowledge-id="<%= item.id %>" aria-label="Afficher la fiche de <%= item.name %>">
+                <%= item.name %>
+                <% if (item.level) { %><small><%= formatLevel(item.level) %></small><% } %>
+              </button>
+              <% if (item.description) { %><p><%= item.description %></p><% } %>
+              <dl class="skill-relations">
+                <div>
+                  <dt>Projets</dt>
+                  <dd><%= (item.projects || []).length %></dd>
+                </div>
+                <div>
+                  <dt>Expériences</dt>
+                  <dd><%= (item.experiences || []).length %></dd>
+                </div>
+                <div>
+                  <dt>Études</dt>
+                  <dd><%= (item.studies || []).length %></dd>
+                </div>
+              </dl>
+              <div class="relation-preview">
+                <% const usedIn = [...(item.projects || []).map((project) => project.name), ...(item.experiences || []).map((experience) => experience.company_name ? `${experience.title} — ${experience.company_name}` : experience.title), ...(item.studies || []).map((study) => study.school_name ? `${study.title} — ${study.school_name}` : study.title)].slice(0, 3); %>
+                <% if (usedIn.length) { %>
+                  <% usedIn.forEach((label) => { %><span><%= label %></span><% }) %>
+                <% } else { %>
+                  <span>Relation à compléter dans l’admin</span>
+                <% } %>
+              </div>
+            </article>
           <% }) %>
         </div>
       </article>
-    <% }) %>
-  </div>
-</section>
+      <% if (index < domainEntries.length - 1) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="<%= index + 2 %>" aria-label="Aller au domaine suivant"><span aria-hidden="true"></span></button><% } %>
+    </section>
+  <% }) %>
+</div>

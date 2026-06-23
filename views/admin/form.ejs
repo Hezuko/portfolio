@@ -19,8 +19,12 @@
 
     <form class="admin-form" method="POST" action="<%= item.id ? `/admin/${entity}/${item.id}` : `/admin/${entity}` %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <div class="form-grid">
-        <% meta.fields.forEach(([name, label, type]) => { 
+      <% const formGroups = meta.fieldGroups || [{ title: null, fields: meta.fields }]; %>
+      <% formGroups.forEach((group) => { %>
+        <section class="admin-form-group">
+          <% if (group.title) { %><h2><%= group.title %></h2><% } %>
+          <div class="form-grid">
+        <% group.fields.forEach(([name, label, type]) => { 
           const value = item[name];
           const printable = Array.isArray(value) ? value.join('\n') : (value instanceof Date ? value.toISOString().slice(0,10) : (value || ''));
           const urlSettingKeys = ['github_url', 'linkedin_url', 'cv_url', 'legal_hosting_website'];
@@ -53,6 +57,14 @@
                 <% }) %>
               </select>
               <small class="field-help">Choisis une image deja uploadee. <a href="/admin/media" target="_blank">Uploader ou voir les medias prives</a></small>
+            <% } else if (fieldType === 'media-any') { %>
+              <select name="<%= name %>">
+                <option value="">Aucun media</option>
+                <% options.mediaAssets.forEach((asset) => { %>
+                  <option value="<%= asset.id %>" <%= Number(value) === Number(asset.id) ? 'selected' : '' %>><%= asset.label || asset.public_id %> — <%= asset.resource_type %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Associe une image ou video deja uploadee. Tu peux aussi uploader directement depuis cette section une fois creee.</small>
             <% } else if (fieldType === 'media-multiple') { %>
               <select name="<%= name %>" multiple size="6">
                 <% options.mediaAssets.filter((asset) => asset.resource_type === 'image').forEach((asset) => { %>
@@ -75,6 +87,16 @@
                 <option value="">Aucune experience</option>
                 <% options.jobs.forEach((job) => { %><option value="<%= job.id %>" <%= value === job.id ? 'selected' : '' %>><%= job.title %></option><% }) %>
               </select>
+            <% } else if (fieldType === 'project') { %>
+              <select name="<%= name %>">
+                <option value="">Aucun projet</option>
+                <% options.projects.forEach((project) => { %><option value="<%= project.id %>" <%= value === project.id ? 'selected' : '' %>><%= project.name %></option><% }) %>
+              </select>
+            <% } else if (fieldType === 'course-category') { %>
+              <select name="<%= name %>">
+                <option value="">Aucune categorie</option>
+                <% options.courseCategories.forEach((category) => { %><option value="<%= category.id %>" <%= value === category.id ? 'selected' : '' %>><%= category.name %></option><% }) %>
+              </select>
             <% } else if (fieldType === 'technologies') { %>
               <select name="<%= name %>" multiple size="8">
                 <% options.technologies.forEach((technology) => { %>
@@ -96,6 +118,13 @@
                 <% }) %>
               </select>
               <small class="field-help">Maintiens Cmd/Ctrl pour lier plusieurs projets.</small>
+            <% } else if (fieldType === 'courses-multiple') { %>
+              <select name="<%= name %>" multiple size="10">
+                <% options.courses.forEach((course) => { %>
+                  <option value="<%= course.id %>" <%= Array.isArray(value) && value.includes(course.id) ? 'selected' : '' %>><%= course.code %> - <%= course.title %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Maintiens Cmd/Ctrl pour associer plusieurs UV ou cours a cette formation.</small>
             <% } else { %>
               <input type="<%= fieldType %>" name="<%= name %>" value="<%= printable %>" placeholder="<%= placeholder %>" <%= isLockedKey ? 'readonly' : '' %>>
               <% if (isLockedKey) { %>
@@ -104,8 +133,146 @@
             <% } %>
           </label>
         <% }) %>
-      </div>
+          </div>
+        </section>
+      <% }) %>
       <button class="btn btn-dark" type="submit"><%= item.id ? 'Enregistrer' : 'Creer' %></button>
     </form>
+
+    <% if (entity === 'project_sections' && item.id) { %>
+      <section class="admin-form-group">
+        <h2>Uploader un media pour cette section</h2>
+        <% if (item.media_url) { %>
+          <div class="section-media-preview">
+            <% if (item.media_resource_type === 'video') { %>
+              <video src="<%= item.media_url %>" controls></video>
+            <% } else { %>
+              <img src="<%= item.media_url %>" alt="<%= item.media_alt_text || item.title %>">
+            <% } %>
+            <% if (item.media_caption) { %><p><%= item.media_caption %></p><% } %>
+          </div>
+        <% } %>
+        <form class="media-upload-form" method="POST" action="/admin/project_sections/<%= item.id %>/media?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label>
+            <span>Fichier image ou video</span>
+            <input type="file" name="media" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" required>
+          </label>
+          <label>
+            <span>Nom admin</span>
+            <input name="display_name" value="<%= item.project_name ? `${item.project_name} - ${item.title}` : item.title %>" required>
+          </label>
+          <label>
+            <span>Position</span>
+            <select name="media_position">
+              <% ['right','left','top','bottom','full'].forEach((position) => { %>
+                <option value="<%= position %>" <%= item.media_position === position ? 'selected' : '' %>><%= position %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>Texte alternatif</span>
+            <input name="alt_text" value="<%= item.media_alt_text || '' %>">
+          </label>
+          <label>
+            <span>Legende</span>
+            <input name="caption" value="<%= item.media_caption || '' %>">
+          </label>
+          <button class="btn btn-dark" type="submit">Uploader et associer</button>
+        </form>
+      </section>
+    <% } %>
+
+    <% if (entity === 'projects' && item.id) { %>
+      <%
+        const projectSections = (options.projectSections || []).filter((section) => Number(section.project_id) === Number(item.id));
+        const sectionTypeOptions = ['text','image','video','gallery','step','result','challenge','architecture','code'];
+        const layoutOptions = ['text_only','media_right','media_left','media_top','media_bottom','media_full'];
+        const mediaPositionOptions = ['right','left','top','bottom','full'];
+        const projectReturnTo = `/admin/projects/${item.id}/edit`;
+      %>
+      <section class="admin-form-group">
+        <h2>Sections détaillées du projet</h2>
+        <p class="field-help">Ajoute, modifie, ordonne et illustre les sections directement depuis cette page projet.</p>
+
+        <details class="admin-accordion" open>
+          <summary>Ajouter une section</summary>
+          <form class="admin-inline-form" method="POST" action="/admin/project_sections">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="return_to" value="<%= projectReturnTo %>">
+            <input type="hidden" name="project_id" value="<%= item.id %>">
+            <div class="form-grid">
+              <label><span>Titre</span><input name="title" required></label>
+              <label><span>Sous-titre</span><input name="subtitle"></label>
+              <label><span>Type</span><select name="section_type"><% sectionTypeOptions.forEach((option) => { %><option value="<%= option %>"><%= option %></option><% }) %></select></label>
+              <label><span>Mise en page</span><select name="layout"><% layoutOptions.forEach((option) => { %><option value="<%= option %>"><%= option %></option><% }) %></select></label>
+              <label><span>Ordre</span><input type="number" name="display_order" value="<%= projectSections.length + 1 %>"></label>
+              <label><span>Visible</span><select name="is_visible"><option value="true">true</option><option value="false">false</option></select></label>
+              <label class="form-grid__full"><span>Texte</span><textarea name="body" rows="5"></textarea></label>
+            </div>
+            <button class="btn btn-dark" type="submit">Ajouter la section</button>
+          </form>
+        </details>
+
+        <% if (projectSections.length) { %>
+          <div class="admin-section-list">
+            <% projectSections.forEach((section) => { %>
+              <details class="admin-accordion">
+                <summary>
+                  <span><%= section.display_order || '-' %>. <%= section.title %></span>
+                  <small><%= section.is_visible ? 'Visible' : 'Masquee' %><%= section.media_url ? ' · media associe' : '' %></small>
+                </summary>
+                <form class="admin-inline-form" method="POST" action="/admin/project_sections/<%= section.id %>">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="return_to" value="<%= projectReturnTo %>">
+                  <input type="hidden" name="project_id" value="<%= item.id %>">
+                  <div class="form-grid">
+                    <label><span>Titre</span><input name="title" value="<%= section.title || '' %>" required></label>
+                    <label><span>Sous-titre</span><input name="subtitle" value="<%= section.subtitle || '' %>"></label>
+                    <label><span>Type</span><select name="section_type"><% sectionTypeOptions.forEach((option) => { %><option value="<%= option %>" <%= section.section_type === option ? 'selected' : '' %>><%= option %></option><% }) %></select></label>
+                    <label><span>Mise en page</span><select name="layout"><% layoutOptions.forEach((option) => { %><option value="<%= option %>" <%= section.layout === option ? 'selected' : '' %>><%= option %></option><% }) %></select></label>
+                    <label><span>Ordre</span><input type="number" name="display_order" value="<%= section.display_order || '' %>"></label>
+                    <label><span>Visible</span><select name="is_visible"><option value="true" <%= section.is_visible ? 'selected' : '' %>>true</option><option value="false" <%= !section.is_visible ? 'selected' : '' %>>false</option></select></label>
+                    <label><span>Media existant</span><select name="media_id"><option value="">Aucun media</option><% options.mediaAssets.forEach((asset) => { %><option value="<%= asset.id %>" <%= Number(section.media_id) === Number(asset.id) ? 'selected' : '' %>><%= asset.label || asset.public_id %> — <%= asset.resource_type %></option><% }) %></select></label>
+                    <label><span>Position media</span><select name="media_position"><% mediaPositionOptions.forEach((option) => { %><option value="<%= option %>" <%= section.media_position === option ? 'selected' : '' %>><%= option %></option><% }) %></select></label>
+                    <label><span>Texte alternatif</span><input name="media_alt_text" value="<%= section.media_alt_text || '' %>"></label>
+                    <label><span>Legende</span><input name="media_caption" value="<%= section.media_caption || '' %>"></label>
+                    <label class="form-grid__full"><span>Texte</span><textarea name="body" rows="6"><%= section.body || '' %></textarea></label>
+                  </div>
+                  <% if (section.media_url) { %>
+                    <div class="section-media-preview">
+                      <% if (section.media_resource_type === 'video') { %><video src="<%= section.media_url %>" controls></video><% } else { %><img src="<%= section.media_url %>" alt="<%= section.media_alt_text || section.title %>"><% } %>
+                      <% if (section.media_caption) { %><p><%= section.media_caption %></p><% } %>
+                    </div>
+                  <% } %>
+                  <div class="admin-inline-actions">
+                    <button class="btn btn-dark" type="submit">Enregistrer la section</button>
+                  </div>
+                </form>
+
+                <form class="admin-inline-form media-upload-form" method="POST" action="/admin/project_sections/<%= section.id %>/media?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="return_to" value="<%= projectReturnTo %>">
+                  <label><span>Uploader image/video</span><input type="file" name="media" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" required></label>
+                  <label><span>Nom admin</span><input name="display_name" value="<%= item.name %> - <%= section.title %>" required></label>
+                  <label><span>Position</span><select name="media_position"><% mediaPositionOptions.forEach((option) => { %><option value="<%= option %>" <%= section.media_position === option ? 'selected' : '' %>><%= option %></option><% }) %></select></label>
+                  <label><span>Alt text</span><input name="alt_text" value="<%= section.media_alt_text || '' %>"></label>
+                  <label><span>Legende</span><input name="caption" value="<%= section.media_caption || '' %>"></label>
+                  <button class="btn btn-dark" type="submit">Uploader et associer</button>
+                </form>
+
+                <form method="POST" action="/admin/project_sections/<%= section.id %>/delete" onsubmit="return confirm('Supprimer cette section ?')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="return_to" value="<%= projectReturnTo %>">
+                  <button class="admin-danger-link" type="submit">Supprimer cette section</button>
+                </form>
+              </details>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="empty-state">Aucune section detaillee pour ce projet.</p>
+        <% } %>
+      </section>
+    <% } %>
   </div>
 </section>

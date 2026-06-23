@@ -1,16 +1,114 @@
-<section class="page-header">
-  <div class="container">
-    <p class="eyebrow">Realisations</p>
-    <h1>Projets</h1>
-    <p>Des projets presentes avec leur contexte, leur objectif, leur stack et les liens utiles.</p>
-  </div>
-</section>
+<%
+  const projectCategories = [...new Set(projects.map((project) => project.category).filter(Boolean))]
+    .sort((a, b) => formatProjectCategory(a).localeCompare(formatProjectCategory(b), 'fr'));
+  const projectTechnologies = [...new Set(projects.flatMap((project) => formatList(project.technologies)))]
+    .sort((a, b) => a.localeCompare(b, 'fr'));
+  const projectYears = [...new Set(projects.flatMap((project) => {
+    const dates = [project.start_date, project.end_date].filter(Boolean);
+    return dates
+      .map((date) => new Date(date).getFullYear())
+      .filter((year) => Number.isFinite(year));
+  }))].sort((a, b) => b - a);
+%>
+<div class="focus-scroll-page" data-focus-scroll>
+  <section class="focus-scroll-section intro-section">
+    <article class="focus-card intro-card">
+      <p class="eyebrow">REALISATIONS</p>
+      <h1>Projets</h1>
+      <p>Un parcours rapide dans mes projets. Chaque slide donne le contexte essentiel ; les pages détail gardent les explications longues.</p>
+      <% if (projects.length) { %>
+        <form class="project-filter-panel" data-project-filters aria-label="Filtrer les projets">
+          <label>
+            <span>Catégorie</span>
+            <select name="category">
+              <option value="">Toutes</option>
+              <% projectCategories.forEach((category) => { %>
+                <option value="<%= category %>"><%= formatProjectCategory(category) %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>Date</span>
+            <select name="year">
+              <option value="">Toutes</option>
+              <% projectYears.forEach((year) => { %>
+                <option value="<%= year %>"><%= year %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>Technologie</span>
+            <select name="technology">
+              <option value="">Toutes</option>
+              <% projectTechnologies.forEach((technology) => { %>
+                <option value="<%= technology %>"><%= technology %></option>
+              <% }) %>
+            </select>
+          </label>
+          <button class="btn btn-outline-dark" type="button" data-project-reset>Réinitialiser</button>
+          <p class="project-filter-count" data-project-count><%= projects.length %> projet<%= projects.length > 1 ? 's' : '' %> affiché<%= projects.length > 1 ? 's' : '' %></p>
+        </form>
+      <% } %>
+    </article>
+    <% if (projects.length) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller au projet suivant"><span aria-hidden="true"></span></button><% } %>
+  </section>
 
-<section class="section-band">
-  <div class="container card-grid">
-    <% projects.forEach((project) => { %>
-      <%- include('../partials/project-card', { project }) %>
-    <% }) %>
-    <% if (!projects.length) { %><p class="empty-state">Aucun projet n'a encore ete publie.</p><% } %>
-  </div>
-</section>
+  <% projects.forEach((project, index) => { %>
+    <% const detailHref = project.slug ? `/projets/${project.slug}` : ''; %>
+    <%
+      const projectTechList = formatList(project.technologies);
+      const projectYearValues = [project.start_date, project.end_date]
+        .filter(Boolean)
+        .map((date) => new Date(date).getFullYear())
+        .filter((year) => Number.isFinite(year));
+    %>
+    <section
+      class="focus-scroll-section project-focus-section"
+      data-project-section
+      data-project-category="<%= project.category || '' %>"
+      data-project-years="<%= projectYearValues.join('|') %>"
+      data-project-technologies="<%= projectTechList.join('|') %>"
+    >
+      <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="<%= index %>" aria-label="Aller au projet précédent"><span aria-hidden="true"></span></button>
+      <article class="focus-card project-focus-card <%= detailHref ? 'clickable-card' : '' %>" <% if (detailHref) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
+        <span class="focus-card-position" data-project-position><%= index + 1 %> / <%= projects.length %></span>
+        <div class="project-showcase">
+          <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
+          <div class="project-showcase-content">
+            <div class="card-meta">
+              <span><%= formatStatus(project.status || project.etat, 'default') %></span>
+              <% if (project.category) { %><span><%= formatProjectCategory(project.category) %></span><% } %>
+            </div>
+            <h2><%= project.name || project.titre %></h2>
+            <p><%= project.short_description || project.goal || project.description || 'Description à compléter.' %></p>
+            <div class="tag-row">
+              <% projectTechList.slice(0, 5).forEach((tech) => { %>
+                <button class="skill-badge" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><%= tech %></button>
+              <% }) %>
+            </div>
+            <div class="hero-actions">
+              <% if (project.slug) { %><a class="btn btn-dark" href="/projets/<%= project.slug %>">Voir le projet</a><% } %>
+              <% if (project.github_url) { %><a class="btn btn-outline-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub</a><% } %>
+              <% if (project.demo_url) { %><a class="btn btn-outline-dark" href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Démo</a><% } %>
+            </div>
+          </div>
+        </div>
+      </article>
+      <% if (index < projects.length - 1) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="<%= index + 2 %>" aria-label="Aller au projet suivant"><span aria-hidden="true"></span></button><% } %>
+    </section>
+  <% }) %>
+
+  <% if (projects.length) { %>
+    <section class="focus-scroll-section project-empty-section" data-project-empty hidden>
+      <article class="focus-card">
+        <p class="empty-state">Aucun projet ne correspond à ces filtres.</p>
+      </article>
+    </section>
+  <% } %>
+
+  <% if (!projects.length) { %>
+    <section class="focus-scroll-section">
+      <article class="focus-card"><p class="empty-state">Aucun projet n'a encore été publié.</p></article>
+    </section>
+  <% } %>
+</div>

@@ -1,35 +1,36 @@
-<section class="page-header">
-  <div class="container">
-    <p class="eyebrow">Contact</p>
-    <h1>Discutons d'un projet</h1>
-    <p>Un message clair, un contexte, et je reviens vers toi.</p>
-  </div>
-</section>
-
-<section class="section-band">
-  <div class="container contact-grid">
-    <aside class="contact-panel">
-      <h2>Liens utiles</h2>
-      <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><%= profile.email %></a>
-      <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i>GitHub</a>
-      <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i>LinkedIn</a>
-    </aside>
-    <form class="form-surface" method="POST" action="/contact">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <% if (messageSent) { %><p class="alert alert-success">Message envoye.</p><% } %>
-      <% if (error) { %><p class="alert alert-danger"><%= error %></p><% } %>
-      <div class="form-row">
-        <label>Nom<input name="nom" required></label>
-        <label>Prenom<input name="prenom" required></label>
+<div class="focus-scroll-page contact-focus-page">
+  <section class="focus-scroll-section">
+    <article class="focus-card contact-focus-card">
+      <div class="contact-focus-header">
+        <p class="eyebrow">Contact</p>
+        <h1>Discutons d’un projet</h1>
+        <p>Un message clair, un contexte, et je reviens vers toi.</p>
       </div>
-      <label>Email<input name="email" type="email" required></label>
-      <label>Objet<input name="objet" required></label>
-      <label>Message<textarea name="texte" rows="6" required></textarea></label>
-      <p class="form-note">
-        Les informations envoyees via ce formulaire sont utilisees uniquement pour traiter ta demande.
-        Pour en savoir plus, consulte la <a href="/confidentialite">politique de confidentialite</a>.
-      </p>
-      <button class="btn btn-dark" type="submit">Envoyer</button>
-    </form>
-  </div>
-</section>
+      <div class="contact-grid">
+        <aside class="contact-panel">
+          <h2>Liens utiles</h2>
+          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><%= profile.email %></a>
+          <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i>GitHub</a>
+          <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i>LinkedIn</a>
+        </aside>
+        <form class="form-surface" method="POST" action="/contact">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% if (messageSent) { %><p class="alert alert-success">Message envoye.</p><% } %>
+          <% if (error) { %><p class="alert alert-danger"><%= error %></p><% } %>
+          <div class="form-row">
+            <label>Nom<input name="nom" required></label>
+            <label>Prenom<input name="prenom" required></label>
+          </div>
+          <label>Email<input name="email" type="email" required></label>
+          <label>Objet<input name="objet" required></label>
+          <label>Message<textarea name="texte" rows="6" required></textarea></label>
+          <p class="form-note">
+            Les informations envoyees via ce formulaire sont utilisees uniquement pour traiter ta demande.
+            Pour en savoir plus, consulte la <a href="/confidentialite">politique de confidentialite</a>.
+          </p>
+          <button class="btn btn-dark" type="submit">Envoyer</button>
+        </form>
+      </div>
+    </article>
+  </section>
+</div>

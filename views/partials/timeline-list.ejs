@@ -1,12 +1,13 @@
 <div class="timeline-list">
   <% items.forEach((item) => { %>
     <% const isCompact = Boolean(typeof compact !== 'undefined' && compact); %>
+    <% const isCardLinkEnabled = isCompact && !(typeof cardLink !== 'undefined' && cardLink === false); %>
     <% const orgName = type === 'education' ? item.school_name : item.company_name; %>
     <% const orgLogo = type === 'education' ? item.school_logo_url : item.company_logo_url; %>
     <% const orgInitial = (orgName || '?').trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1).toUpperCase()).join(''); %>
     <% const infoId = `${type}-info-${item.id}`; %>
     <% const detailHref = type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}`; %>
-    <article class="timeline-item <%= isCompact ? 'timeline-item--compact clickable-card' : '' %>" <% if (isCompact) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le detail de <%= item.title %>"<% } %>>
+    <article class="timeline-item <%= isCompact ? 'timeline-item--compact' : '' %> <%= isCardLinkEnabled ? 'clickable-card' : '' %>" <% if (isCardLinkEnabled) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le detail de <%= item.title %>"<% } %>>
       <div class="timeline-body">
         <header class="timeline-card-header">
           <div class="timeline-heading">

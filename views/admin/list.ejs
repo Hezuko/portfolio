@@ -19,7 +19,7 @@
             <% const settingInfo = entity === 'settings' ? (meta.descriptions[item.setting_key] || {}) : {}; %>
             <div class="table-row">
               <div>
-                <strong><%= settingInfo.label || item.name || item.title || item.setting_key %></strong>
+                <strong><%= settingInfo.label || item.admin_title || item.name || item.title || item.setting_key %></strong>
                 <% if (entity === 'settings' && settingInfo.help) { %>
                   <small class="field-help"><%= settingInfo.help %></small>
                 <% } %>
