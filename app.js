@@ -52,7 +52,14 @@ app.use((req, res, next) => {
     if (!date) return "Aujourd'hui";
     return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(new Date(date));
   };
-  res.locals.formatList = (value) => Array.isArray(value) ? value.filter(Boolean) : [];
+  res.locals.formatList = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (!value) return [];
+    return String(value)
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
   res.locals.formatDateRange = formatDateRange;
   res.locals.formatContractType = formatContractType;
   res.locals.formatLevel = formatLevel;

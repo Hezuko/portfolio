@@ -89,12 +89,13 @@ async function upload(file, body) {
 
   const result = await pool.query(
     `INSERT INTO media_assets
-      (provider, public_id, resource_type, delivery_type, format, version, display_name, original_filename, bytes, width, height, entity_type, alt_text)
+      (provider, public_id, secure_url, resource_type, delivery_type, format, version, display_name, original_filename, bytes, width, height, duration, entity_type, alt_text, caption)
      VALUES
-      ('cloudinary', $1, $2, 'authenticated', $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ('cloudinary', $1, $2, $3, 'authenticated', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      RETURNING *`,
     [
       uploadResult.public_id,
+      uploadResult.secure_url || null,
       uploadResult.resource_type,
       uploadResult.format || null,
       uploadResult.version || null,
@@ -103,8 +104,10 @@ async function upload(file, body) {
       uploadResult.bytes || null,
       uploadResult.width || null,
       uploadResult.height || null,
+      uploadResult.duration || null,
       body.entity_type || "general",
       body.alt_text || null,
+      body.caption || null,
     ]
   );
 

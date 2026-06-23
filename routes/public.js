@@ -45,6 +45,25 @@ const legal = {
   lastUpdated: "12 mai 2026",
 };
 
+function normalizeTerm(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function classifyDomain(category = "", name = "") {
+  const value = normalizeTerm(`${category} ${name}`);
+  if (/embarque|stm32|firmware|micro|pic|temps reel|vhdl|fpga/.test(value)) return "Systèmes embarqués";
+  if (/electron|pcb|kicad|altium|ultiboard|capteur|oscillo|instrument/.test(value)) return "Électronique & instrumentation";
+  if (/test|validation|can|lin|canoe|rtrt|tracabilite|qualite/.test(value)) return "Test & validation";
+  if (/backend|base|postgres|node|express|django|python|logiciel/.test(value)) return "Développement logiciel";
+  if (/front|javascript|react|html|css/.test(value)) return "Frontend";
+  if (/devops|docker|git|linux|github|gitlab|outil/.test(value)) return "DevOps & outils";
+  if (/matlab|simulink|solidworks|robot|ros|vision|cao|simulation/.test(value)) return "Simulation & robotique";
+  return category || "Autres compétences";
+}
+
 function buildLegal(settings = {}, currentProfile = buildProfile(settings)) {
   return {
     ...legal,
@@ -152,8 +171,20 @@ router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
 
 router.get("/competences", async function (req, res, next) {
   try {
-    const skills = await repo.list("skills");
-    res.render("public/skills", { title: "Competences", skills });
+    const [skills, technologies] = await Promise.all([repo.list("skills"), repo.list("technologies")]);
+    const knowledge = await Promise.all([
+      ...skills.map((skill) => repo.getSkillDetails(skill.id)),
+      ...technologies.map((technology) => repo.getTechnologyDetails(technology.id)),
+    ]);
+    const groups = knowledge
+      .filter(Boolean)
+      .reduce((map, item) => {
+        const domain = classifyDomain(item.category, item.name);
+        map[domain] = map[domain] || [];
+        map[domain].push(item);
+        return map;
+      }, {});
+    res.render("public/skills", { title: "Domaines techniques", groups });
   } catch (err) {
     next(err);
   }

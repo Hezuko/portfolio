@@ -8,8 +8,9 @@ var upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/") && !file.mimetype.startsWith("video/")) {
-      return cb(new Error("Seuls les images et videos sont acceptees."));
+    const allowed = new Set(["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"]);
+    if (!allowed.has(file.mimetype)) {
+      return cb(new Error("Formats acceptes : jpg, jpeg, png, webp, mp4, webm, mov."));
     }
     cb(null, true);
   },
@@ -26,18 +27,41 @@ const ENTITY_META = {
       ["images", "Galerie d'images", "media-multiple"],
       ["short_description", "Description courte", "textarea"],
       ["long_description", "Description longue", "textarea"],
+      ["context", "Contexte du projet", "textarea"],
       ["goal", "Objectif", "textarea"],
       ["features", "Fonctionnalites", "textarea"],
+      ["architecture", "Architecture / fonctionnement", "textarea"],
       ["technologies", "Technologies", "textarea"],
+      ["challenges", "Difficultes et choix techniques", "textarea"],
+      ["results", "Resultats", "textarea"],
+      ["future_improvements", "Ameliorations futures", "textarea"],
       ["github_url", "Lien GitHub", "url"],
       ["demo_url", "Lien demo", "url"],
       ["start_date", "Date de debut", "date"],
       ["end_date", "Date de fin", "date"],
       ["status", "Statut", "select:planned,in_progress,done,abandoned"],
-      ["category", "Categorie", "select:web,mobile,embedded,ia,crypto,drone,other"],
+      ["category", "Categorie", "select:web,mobile,embedded,electronics,robotics,ia,crypto,drone,other"],
       ["school_id", "Ecole associee", "school"],
       ["company_id", "Entreprise associee", "company"],
       ["job_id", "Experience associee", "job"],
+    ],
+  },
+  project_sections: {
+    label: "Sections projets",
+    singular: "Section projet",
+    fields: [
+      ["project_id", "Projet associe", "project"],
+      ["title", "Titre de section", "text"],
+      ["subtitle", "Sous-titre", "text"],
+      ["body", "Contenu", "textarea"],
+      ["section_type", "Type de section", "select:text,image,video,gallery,step,result,challenge,architecture,code"],
+      ["layout", "Mise en page", "select:text_only,media_right,media_left,media_top,media_bottom,media_full"],
+      ["display_order", "Ordre d'affichage", "number"],
+      ["is_visible", "Visible", "select:true,false"],
+      ["media_id", "Media associe", "media-any"],
+      ["media_position", "Position du media", "select:right,left,top,bottom,full"],
+      ["media_caption", "Legende du media", "textarea"],
+      ["media_alt_text", "Texte alternatif", "text"],
     ],
   },
   educations: {
@@ -49,6 +73,11 @@ const ENTITY_META = {
       ["degree", "Diplome", "text"],
       ["field", "Domaine", "text"],
       ["description", "Description", "textarea"],
+      ["context", "Contexte de la formation", "textarea"],
+      ["program_summary", "Resume du programme suivi", "textarea"],
+      ["program_distribution", "Repartition des enseignements", "textarea"],
+      ["key_subjects", "Matieres principales", "textarea"],
+      ["personal_contribution", "Apport dans le parcours", "textarea"],
       ["start_date", "Date de debut", "date"],
       ["end_date", "Date de fin", "date"],
       ["status", "Statut", "select:planned,in_progress,done,abandoned"],
@@ -56,12 +85,16 @@ const ENTITY_META = {
       ["technology_ids", "Technologies / matieres", "technologies"],
       ["skill_ids", "Competences acquises", "skills-multiple"],
       ["project_ids", "Projets lies", "projects-multiple"],
+      ["course_ids", "Programme suivi / UV", "courses-multiple"],
     ],
   },
   jobs: {
     label: "Experiences",
     singular: "Experience",
-    fields: [
+    fieldGroups: [
+      {
+        title: "Informations generales",
+        fields: [
       ["title", "Titre du poste", "text"],
       ["company_id", "Entreprise associee", "company"],
       ["contract_type", "Type de contrat", "select:internship,apprenticeship,cdi,cdd,freelance,personal,other"],
@@ -71,9 +104,93 @@ const ENTITY_META = {
       ["end_date", "Date de fin", "date"],
       ["status", "Statut", "select:planned,in_progress,done"],
       ["description", "Description", "textarea"],
+      ["short_summary", "Resume court", "textarea"],
+      ["lab_name", "Laboratoire / service", "text"],
+      ["supervision", "Tutelle / rattachement", "text"],
+      ["function_title", "Fonction", "text"],
+      ["exact_dates", "Dates exactes", "text"],
+        ],
+      },
+      {
+        title: "Contexte entreprise",
+        fields: [
+      ["company_context", "Contexte entreprise", "textarea"],
+        ],
+      },
+      {
+        title: "Contexte de mission",
+        fields: [
+      ["mission_context", "Contexte de mission", "textarea"],
+        ],
+      },
+      {
+        title: "Produit / systeme travaille",
+        fields: [
+      ["product_context", "Produit / systeme travaille", "textarea"],
+      ["problem_statement", "Problematique technique", "textarea"],
+      ["system_architecture", "Architecture du systeme", "textarea"],
+        ],
+      },
+      {
+        title: "Premiere annee",
+        fields: [
+      ["first_year_summary", "Resume premiere annee", "textarea"],
+      ["first_year_tasks", "Missions premiere annee", "textarea"],
+      ["first_year_achievements", "Realisations premiere annee", "textarea"],
+      ["first_year_tools", "Outils premiere annee", "textarea"],
+      ["first_year_skills", "Competences premiere annee", "textarea"],
+        ],
+      },
+      {
+        title: "Deuxieme annee",
+        fields: [
+      ["second_year_summary", "Resume deuxieme annee", "textarea"],
+      ["second_year_tasks", "Missions deuxieme annee", "textarea"],
+      ["second_year_achievements", "Realisations deuxieme annee", "textarea"],
+      ["second_year_tools", "Outils deuxieme annee", "textarea"],
+      ["second_year_skills", "Competences deuxieme annee", "textarea"],
+        ],
+      },
+      {
+        title: "Missions et realisations",
+        fields: [
       ["missions", "Missions principales", "textarea"],
+      ["achievements", "Realisations concretes", "textarea"],
+        ],
+      },
+      {
+        title: "Difficultes et resolution",
+        fields: [
+      ["technical_challenges", "Difficultes et resolutions", "textarea"],
+        ],
+      },
+      {
+        title: "Technologies et outils",
+        fields: [
       ["technologies", "Technologies", "textarea"],
+      ["tools", "Outils", "textarea"],
+      ["methods", "Methodes de travail", "textarea"],
+        ],
+      },
+      {
+        title: "Resultats et apports",
+        fields: [
+      ["results", "Resultats et apports", "textarea"],
+      ["results_list", "Resultats detailles", "textarea"],
+      ["personal_contribution", "Apports personnels", "textarea"],
+      ["personal_contribution_list", "Apports personnels detailles", "textarea"],
+      ["skills_developed", "Competences developpees", "textarea"],
+        ],
+      },
+      {
+        title: "Documents lies",
+        fields: [
+      ["document_title", "Document lie - titre", "text"],
+      ["document_url", "Document lie - URL", "url"],
+      ["document_description", "Document lie - description", "textarea"],
       ["project_ids", "IDs projets lies", "textarea"],
+        ],
+      },
     ],
   },
   schools: {
@@ -121,6 +238,32 @@ const ENTITY_META = {
     fields: [
       ["name", "Nom", "text"],
       ["category", "Categorie", "select:Langage,Matiere,Electronique,Protocole,Outil,Systeme,Autre"],
+    ],
+  },
+  course_categories: {
+    label: "Categories UV",
+    singular: "Categorie UV",
+    fields: [
+      ["name", "Nom", "text"],
+      ["description", "Resume affiche dans le programme", "textarea"],
+      ["skills_summary", "Competences principales", "textarea"],
+      ["display_order", "Ordre d'affichage", "number"],
+    ],
+  },
+  courses: {
+    label: "UV / Cours",
+    singular: "UV",
+    fields: [
+      ["code", "Code", "text"],
+      ["title", "Intitule", "text"],
+      ["formation_year", "Annee de formation", "text"],
+      ["semester", "Semestre", "text"],
+      ["hours", "Volume horaire", "text"],
+      ["ects", "ECTS", "text"],
+      ["description", "Description courte", "textarea"],
+      ["skills_summary", "Competences associees", "textarea"],
+      ["category_id", "Categorie", "course-category"],
+      ["display_order", "Ordre d'affichage", "number"],
     ],
   },
   settings: {
@@ -231,19 +374,34 @@ const ENTITY_META = {
   },
 };
 
+Object.values(ENTITY_META).forEach((meta) => {
+  if (meta.fieldGroups && !meta.fields) {
+    meta.fields = meta.fieldGroups.flatMap((group) => group.fields);
+  }
+});
+
 router.use(requireAdmin);
 
 async function formOptions() {
-  const [schools, companies, jobs, projects, skills, technologies, mediaAssets] = await Promise.all([
+  const [schools, companies, jobs, projects, projectSections, skills, technologies, courseCategories, courses, mediaAssets] = await Promise.all([
     repo.list("schools"),
     repo.list("companies"),
     repo.list("jobs"),
     repo.list("projects"),
+    repo.list("project_sections"),
     repo.list("skills"),
     repo.list("technologies"),
+    repo.list("course_categories"),
+    repo.list("courses"),
     media.list(),
   ]);
-  return { schools, companies, jobs, projects, skills, technologies, mediaAssets };
+  return { schools, companies, jobs, projects, projectSections, skills, technologies, courseCategories, courses, mediaAssets };
+}
+
+function adminReturnTo(value, fallback) {
+  const target = String(value || "");
+  if ((target.startsWith("/admin/") || target.startsWith("/projets/")) && !target.startsWith("//")) return target;
+  return fallback;
 }
 
 router.get("/", async function (req, res, next) {
@@ -301,6 +459,20 @@ router.post("/media/:id/rename", async function (req, res, next) {
   }
 });
 
+router.post("/project_sections/:id/media", upload.single("media"), async function (req, res, next) {
+  const fallback = `/admin/project_sections/${req.params.id}/edit`;
+  try {
+    const returnTo = adminReturnTo(req.body.return_to, fallback);
+    if (!req.file) return res.redirect(`${returnTo}?error=missing-file`);
+    const asset = await media.upload(req.file, { ...req.body, entity_type: "project_sections" });
+    await repo.attachMediaToProjectSection(req.params.id, asset.id, req.body);
+    res.redirect(`${returnTo}?success=media-uploaded`);
+  } catch (err) {
+    console.error("Erreur upload media section projet :", err.message, err.cause || "");
+    res.redirect(`${fallback}?error=${encodeURIComponent(err.message || "upload-failed")}`);
+  }
+});
+
 router.get("/:entity", async function (req, res, next) {
   try {
     const meta = ENTITY_META[req.params.entity];
@@ -316,7 +488,10 @@ router.get("/:entity/new", async function (req, res, next) {
   try {
     const meta = ENTITY_META[req.params.entity];
     if (!meta) return res.status(404).render("errors/404", { title: "Section introuvable" });
-    res.render("admin/form", { title: `Créer ${meta.singular}`, entity: req.params.entity, meta, item: {}, options: await formOptions(), entities: ENTITY_META });
+    const item = req.params.entity === "project_sections" && req.query.project_id
+      ? { project_id: Number.parseInt(req.query.project_id, 10) }
+      : {};
+    res.render("admin/form", { title: `Créer ${meta.singular}`, entity: req.params.entity, meta, item, options: await formOptions(), entities: ENTITY_META });
   } catch (err) {
     next(err);
   }
@@ -325,7 +500,7 @@ router.get("/:entity/new", async function (req, res, next) {
 router.post("/:entity", async function (req, res, next) {
   try {
     await repo.create(req.params.entity, req.body);
-    res.redirect(`/admin/${req.params.entity}?success=created`);
+    res.redirect(adminReturnTo(req.body.return_to, `/admin/${req.params.entity}?success=created`));
   } catch (err) {
     next(err);
   }
@@ -345,7 +520,7 @@ router.get("/:entity/:id/edit", async function (req, res, next) {
 router.post("/:entity/:id", async function (req, res, next) {
   try {
     await repo.update(req.params.entity, req.params.id, req.body);
-    res.redirect(`/admin/${req.params.entity}?success=updated`);
+    res.redirect(adminReturnTo(req.body.return_to, `/admin/${req.params.entity}?success=updated`));
   } catch (err) {
     next(err);
   }
@@ -354,7 +529,7 @@ router.post("/:entity/:id", async function (req, res, next) {
 router.post("/:entity/:id/delete", async function (req, res, next) {
   try {
     await repo.remove(req.params.entity, req.params.id);
-    res.redirect(`/admin/${req.params.entity}?success=deleted`);
+    res.redirect(adminReturnTo(req.body.return_to, `/admin/${req.params.entity}?success=deleted`));
   } catch (err) {
     next(err);
   }

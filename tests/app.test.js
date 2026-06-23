@@ -17,14 +17,16 @@ describe("vision visiteur", () => {
     const response = await request(app).get("/");
     expect(response.statusCode).toBe(200);
     expect(response.text).toContain("Henoc Mukumbi");
-    expect(response.text).toContain("Projets recents");
+    expect(response.text).toContain("Mes projets");
+    expect(response.text).toContain("home-summary-card");
+    expect(response.text).toContain("focus-scroll-page");
   });
 
   it("affiche les projets publics", async () => {
     const response = await request(app).get("/projets");
     expect(response.statusCode).toBe(200);
     expect(response.text).toContain("Projets");
-    expect(response.text).toMatch(/project-card|Aucun projet n'a encore ete publie/);
+    expect(response.text).toMatch(/project-showcase|Aucun projet n'a encore (été|ete) publié/);
   });
 
   it("redirige l'admin non connecte vers le login", async () => {
