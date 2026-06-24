@@ -288,3 +288,65 @@
     }
   }
 })();
+
+// Lightbox : galerie & héro cliquables, navigation clavier/boutons
+(function () {
+  const imgs = Array.from(document.querySelectorAll(".detail-hero__media img, .detail-gallery img"));
+  if (!imgs.length) return;
+  const items = imgs.map((el) => ({ src: el.currentSrc || el.getAttribute("src"), alt: el.getAttribute("alt") || "" }));
+
+  const box = document.createElement("div");
+  box.className = "lightbox" + (items.length > 1 ? " has-multiple" : "");
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.innerHTML =
+    '<button class="lightbox__close" type="button" aria-label="Fermer">×</button>' +
+    '<button class="lightbox__btn lightbox__btn--prev" type="button" aria-label="Image precedente">‹</button>' +
+    '<img class="lightbox__img" alt="">' +
+    '<button class="lightbox__btn lightbox__btn--next" type="button" aria-label="Image suivante">›</button>' +
+    '<div class="lightbox__counter"></div>';
+  document.body.appendChild(box);
+
+  const imgEl = box.querySelector(".lightbox__img");
+  const counter = box.querySelector(".lightbox__counter");
+  let index = 0;
+  let lastFocus = null;
+
+  function render() {
+    const it = items[index];
+    imgEl.src = it.src;
+    imgEl.alt = it.alt;
+    counter.textContent = items.length + " image" + (items.length > 1 ? "s" : "") + " — " + (index + 1) + " / " + items.length;
+  }
+  function open(i) {
+    index = i;
+    render();
+    lastFocus = document.activeElement;
+    box.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+  }
+  function close() {
+    box.classList.remove("is-open");
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  function go(delta) {
+    index = (index + delta + items.length) % items.length;
+    render();
+  }
+
+  imgs.forEach((el, i) => {
+    el.style.cursor = "zoom-in";
+    el.addEventListener("click", () => open(i));
+  });
+  box.querySelector(".lightbox__close").addEventListener("click", close);
+  box.querySelector(".lightbox__btn--prev").addEventListener("click", (e) => { e.stopPropagation(); go(-1); });
+  box.querySelector(".lightbox__btn--next").addEventListener("click", (e) => { e.stopPropagation(); go(1); });
+  box.addEventListener("click", (e) => { if (e.target === box) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (!box.classList.contains("is-open")) return;
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft") go(-1);
+    else if (e.key === "ArrowRight") go(1);
+  });
+})();

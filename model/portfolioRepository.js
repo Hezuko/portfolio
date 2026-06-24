@@ -372,7 +372,9 @@ async function getAdminStats() {
 }
 
 function signMediaValue(value) {
-  if (!value || /^https?:\/\//.test(String(value))) return value;
+  // Laisse passer les URLs absolues et les chemins statiques locaux (/images/...).
+  // Le reste est traité comme un public_id Cloudinary à signer.
+  if (!value || /^(https?:\/\/|\/)/.test(String(value))) return value;
   return media.signedUrl({ public_id: value, resource_type: "image" });
 }
 

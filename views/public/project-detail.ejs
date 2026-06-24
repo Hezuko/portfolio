@@ -138,7 +138,11 @@
           <h2>Images du projet</h2>
           <div class="detail-gallery">
             <% images.forEach((image, index) => { %>
-              <img src="<%= image %>" alt="<%= project.name %> - image <%= index + 1 %>">
+              <% if (/\.(mp4|webm|mov|m4v)$/i.test(image)) { %>
+                <video class="detail-gallery__video" src="<%= image %>" controls preload="metadata" playsinline></video>
+              <% } else { %>
+                <img src="<%= image %>" alt="<%= project.name %> - image <%= index + 1 %>">
+              <% } %>
             <% }) %>
           </div>
         </section>
