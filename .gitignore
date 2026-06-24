@@ -5,3 +5,5 @@ TOKNOW.md
 /sql
 .DS_Store
 .claude/
+# Médias des projets : servis depuis Cloudinary, pas versionnés
+/public/images/projects/
