@@ -3,6 +3,7 @@ var router = express.Router();
 var multer = require("multer");
 var repo = require("../model/portfolioRepository");
 var media = require("../model/mediaRepository");
+var contact = require("../model/contact");
 var { requireAdmin } = require("../middlewares/adminAuth");
 var upload = multer({
   storage: multer.memoryStorage(),
@@ -408,6 +409,25 @@ router.get("/", async function (req, res, next) {
   try {
     const stats = await repo.getAdminStats();
     res.render("admin/dashboard", { title: "Admin", stats, entities: ENTITY_META });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Boîte de réception : messages reçus via le formulaire de contact
+router.get("/messages", async function (req, res, next) {
+  try {
+    const messages = await contact.listContacts();
+    res.render("admin/messages", { title: "Messages reçus", entities: ENTITY_META, messages });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/messages/:id/delete", async function (req, res, next) {
+  try {
+    await contact.deleteContact(req.params.id);
+    res.redirect("/admin/messages");
   } catch (err) {
     next(err);
   }

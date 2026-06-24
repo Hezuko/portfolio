@@ -17,6 +17,19 @@ async function AddContact(nom, prenom, objet, email, texte) {
     }
 }
 
+// 🟢 Lister les messages reçus (plus récents d'abord)
+async function listContacts() {
+    const res = await db.query("SELECT * FROM contacts ORDER BY date_submitted DESC, id DESC");
+    return res.rows;
+}
+
+// 🟢 Supprimer un message
+async function deleteContact(id) {
+    await db.query("DELETE FROM contacts WHERE id = $1", [id]);
+}
+
 module.exports = {
-    AddContact
+    AddContact,
+    listContacts,
+    deleteContact
 };

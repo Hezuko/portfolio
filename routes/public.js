@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var validator = require("validator");
 var contact = require("../model/contact");
+var mailer = require("../model/mailer");
 var repo = require("../model/portfolioRepository");
 var { formatLevel } = require("../utils/formatters");
 
@@ -255,20 +256,27 @@ router.post("/contact", async function (req, res, next) {
   try {
     const currentProfile = buildProfile(await repo.getSettingsMap());
     let { nom, prenom, objet, email, texte } = req.body;
-    nom = validator.escape((nom || "").trim());
-    prenom = validator.escape((prenom || "").trim());
-    objet = validator.escape((objet || "").trim());
-    email = validator.normalizeEmail((email || "").trim());
-    texte = validator.escape((texte || "").trim());
+    nom = (nom || "").trim();
+    prenom = (prenom || "").trim();
+    objet = (objet || "").trim();
+    email = (email || "").trim();
+    texte = (texte || "").trim();
 
-    if (!nom || !prenom || !objet || !email || !texte) {
-      return res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: "Tous les champs sont requis." });
-    }
-    if (!validator.isEmail(email)) {
-      return res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: "Adresse email invalide." });
-    }
+    const fail = (msg) => res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: msg });
+    if (!nom || !prenom || !objet || !email || !texte) return fail("Tous les champs sont requis.");
+    if (!validator.isEmail(email)) return fail("Adresse email invalide.");
+    if (nom.length > 80 || prenom.length > 80) return fail("Le nom et le prénom sont trop longs (80 caractères maximum).");
+    if (objet.length > 140) return fail("L'objet est trop long (140 caractères maximum).");
+    if (texte.length > 4000) return fail("Le message est trop long (4000 caractères maximum).");
 
-    await contact.AddContact(nom, prenom, objet, email, texte);
+    const normalizedEmail = validator.normalizeEmail(email) || email;
+    const data = { nom, prenom, objet, email: normalizedEmail, texte };
+
+    // On enregistre le message en base (valeurs brutes, échappées à l'affichage),
+    // puis on notifie par email sans bloquer la réponse si l'envoi échoue.
+    await contact.AddContact(nom, prenom, objet, normalizedEmail, texte);
+    mailer.sendContactEmail(data).catch((e) => console.error("Email de contact non envoyé :", e.message));
+
     res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
   } catch (err) {
     next(err);
