@@ -1,0 +1,99 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-sidebar', { entities }) %>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div>
+        <p class="eyebrow">Cloudinary authenticated</p>
+        <h1>Medias prives</h1>
+      </div>
+      <a class="btn btn-outline-dark" href="/admin/projects/new">Utiliser dans un projet</a>
+    </div>
+
+    <% if (!cloudinaryConfigured) { %>
+      <div class="alert alert-warning">
+        CLOUDINARY_URL n'est pas configure. Cree un compte Cloudinary, recupere ton API Environment variable et ajoute-la dans .env.
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="alert alert-danger">
+        <strong>Upload impossible.</strong> <%= error %>
+      </div>
+    <% } %>
+
+    <% if (success) { %>
+      <div class="alert alert-success">
+        Operation effectuee.
+      </div>
+    <% } %>
+
+    <section class="admin-panel">
+      <h2>Uploader une image ou video</h2>
+      <form class="media-upload-form" method="POST" action="/admin/media?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>
+          <span>Fichier</span>
+          <input type="file" name="media" accept="image/*,video/*" required>
+        </label>
+        <label>
+          <span>Utilisation</span>
+          <select name="entity_type">
+            <option value="projects">Projet</option>
+            <option value="schools">Ecole</option>
+            <option value="companies">Entreprise</option>
+            <option value="profile">Profil</option>
+            <option value="general">General</option>
+          </select>
+        </label>
+        <label>
+          <span>Nom dans l'admin</span>
+          <input name="display_name" placeholder="Exemple : Photo profil accueil" required>
+        </label>
+        <label>
+          <span>Texte alternatif</span>
+          <input name="alt_text" placeholder="Description courte de l'image">
+        </label>
+        <button class="btn btn-dark" type="submit">Uploader en prive</button>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <h2>Bibliotheque privee</h2>
+      <% if (assets.length) { %>
+        <div class="media-grid">
+          <% assets.forEach((asset) => { %>
+            <article class="media-card">
+              <% if (asset.resource_type === 'video') { %>
+                <video src="<%= asset.signed_url %>" controls></video>
+              <% } else { %>
+                <img src="<%= asset.signed_url %>" alt="<%= asset.alt_text || asset.label || asset.public_id %>">
+              <% } %>
+              <div>
+                <strong><%= asset.label %></strong>
+                <code><%= asset.public_id %></code>
+                <% if (asset.original_filename && asset.original_filename !== asset.label) { %>
+                  <small>Fichier source : <%= asset.original_filename %></small>
+                <% } %>
+                <small><%= asset.resource_type %> / <%= asset.entity_type %></small>
+                <form method="POST" action="/admin/media/<%= asset.id %>/rename">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <label>
+                    <span>Nom admin</span>
+                    <input name="display_name" value="<%= asset.display_name || asset.original_filename || '' %>" required>
+                  </label>
+                  <button type="submit">Renommer</button>
+                </form>
+                <form method="POST" action="/admin/media/<%= asset.id %>/delete" onsubmit="return confirm('Supprimer ce media de Cloudinary et de la base ?')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit">Supprimer</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="empty-state">Aucun media prive pour le moment.</p>
+      <% } %>
+    </section>
+  </div>
+</section>

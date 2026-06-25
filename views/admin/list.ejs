@@ -1,0 +1,46 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-sidebar', { entities }) %>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1><%= meta.label %></h1>
+      </div>
+      <a class="btn btn-dark" href="/admin/<%= entity %>/new">Creer</a>
+    </div>
+
+    <section class="admin-panel">
+      <% if (entity === 'settings') { %>
+        <p class="admin-note">Ces parametres pilotent les informations globales du site. Modifie-les ici pour changer l'accueil ou les informations de contact sans toucher au code.</p>
+      <% } %>
+      <% if (items.length) { %>
+        <div class="admin-table">
+          <% items.forEach((item) => { %>
+            <% const settingInfo = entity === 'settings' ? (meta.descriptions[item.setting_key] || {}) : {}; %>
+            <div class="table-row">
+              <div>
+                <strong><%= settingInfo.label || item.admin_title || item.name || item.title || item.setting_key %></strong>
+                <% if (entity === 'settings' && settingInfo.help) { %>
+                  <small class="field-help"><%= settingInfo.help %></small>
+                <% } %>
+                <% if (entity === 'schools' && item.education_titles && item.education_titles.length) { %>
+                  <small class="field-help">Formations : <%= item.education_titles.join(', ') %></small>
+                <% } %>
+              </div>
+              <span><%= entity === 'settings' ? (item.setting_value ? 'Configure' : 'Non renseigne') : (item.status || item.category || item.type || '') %></span>
+              <div class="row-actions">
+                <a href="/admin/<%= entity %>/<%= item.id %>/edit">Modifier</a>
+                <form method="POST" action="/admin/<%= entity %>/<%= item.id %>/delete" onsubmit="return confirm('Supprimer cet element ?')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit">Supprimer</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="empty-state">Aucune donnee. Cree le premier element.</p>
+      <% } %>
+    </section>
+  </div>
+</section>

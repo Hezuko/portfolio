@@ -1,0 +1,31 @@
+<% const isEducationPage = type === 'education'; %>
+<div class="focus-scroll-page" data-focus-scroll>
+  <section class="focus-scroll-section intro-section">
+    <article class="focus-card intro-card">
+      <p class="eyebrow"><%= isEducationPage ? 'PARCOURS' : 'TERRAIN' %></p>
+      <h1><%= isEducationPage ? 'Études et formations' : 'Expériences professionnelles' %></h1>
+      <p><%= isEducationPage ? "Un parcours structuré autour de l'informatique, des projets concrets et de l'apprentissage continu." : 'Des missions concrètes en systèmes embarqués, électronique, validation et développement logiciel.' %></p>
+    </article>
+    <% if (items.length) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller à l'élément suivant"><span aria-hidden="true"></span></button><% } %>
+  </section>
+
+  <% items.forEach((item, index) => { %>
+    <section class="focus-scroll-section">
+      <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="<%= index %>" aria-label="Aller à l'élément précédent"><span aria-hidden="true"></span></button>
+      <article class="focus-card clickable-card <%= isEducationPage ? 'education-focus-card' : 'experience-focus-card' %>" data-card-href="<%= type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}` %>" tabindex="0" role="link" aria-label="<%= type === 'education' ? 'Voir la formation' : "Voir l'expérience" %> <%= item.title %>">
+        <span class="focus-card-position"><%= index + 1 %> / <%= items.length %></span>
+        <%- include('../partials/timeline-list', { items: [item], type, compact: true, cardLink: false }) %>
+        <div class="focus-card-actions">
+          <a class="btn btn-dark" href="<%= type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}` %>"><%= type === 'education' ? 'Voir la formation' : "Voir l'expérience" %></a>
+        </div>
+      </article>
+      <% if (index < items.length - 1) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="<%= index + 2 %>" aria-label="Aller à l'élément suivant"><span aria-hidden="true"></span></button><% } %>
+    </section>
+  <% }) %>
+
+  <% if (!items.length) { %>
+    <section class="focus-scroll-section">
+      <article class="focus-card"><p class="empty-state">Aucune donnée pour le moment.</p></article>
+    </section>
+  <% } %>
+</div>

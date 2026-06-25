@@ -1,94 +1,143 @@
-# 🎨 Portfolio
+# Portfolio
 
-Bienvenue sur mon projet **Portfolio** ! Ce site web permet d'afficher mes **diplômes**, **certifications** et **expériences professionnelles** de manière organisée et élégante. 🚀
+Application web de portfolio en Node.js, Express, EJS et PostgreSQL, avec une vision publique Visiteur et une vision Admin protegee.
 
----
+## Ce que contient le projet
 
-## 📌 **Table des matières**
-- [🌜 Description](#-description)
-- [🛠️ Installation](#️-installation)
-- [📾 Architecture du projet](#-architecture-du-projet)
-- [🔧 Technologies utilisées](#-technologies-utilisées)
-- [🚀 Lancer le projet](#-lancer-le-projet)
-- [📩 Contact](#-contact)
+- Une interface publique accessible sans connexion.
+- Une page d'accueil moderne avec profil, projets, parcours et competences.
+- Des pages publiques pour projets, etudes, experiences, competences et contact.
+- Une interface Admin separee sur `/admin`.
+- Des CRUD Admin pour projets, etudes, jobs, ecoles, entreprises et competences.
+- Un modele PostgreSQL normalise et restaurable depuis `backup.sql`.
+- Des tests Jest/Supertest pour la vision visiteur, la protection admin et un CRUD admin.
 
----
+## Stack
 
-## 🌜 **Description**
-Vous pourrez découvrir :
-- 📚 **Mon parcours scolaire** (diplômes, certifications)
-- 💼 **Mes expériences professionnelles**
-- 🏭️ **Les projets sur lesquels j’ai travaillé**
-- 📩 **Une page de contact**
+- Node.js / Express
+- EJS avec `express-ejs-layouts`
+- PostgreSQL avec `pg` et sessions stockées via `connect-pg-simple`
+- Bootstrap 5 et Sass
+- Jest, Supertest et Cheerio pour les tests
 
-Le site est conçu avec **Node.js**, **Express.js** et utilise **PostgreSQL** comme base de données.
+## Installation
 
----
-
-## 🛠️ **Installation**
 ```sh
-# 1️⃣ Cloner le projet
-git clone https://github.com/Hezuko/portfolio.git
-cd portfolio
-
-# 2️⃣ Installer les dépendances
 npm install
-
-# 3️⃣ Configurer la base de données
-# Le projet utilise PostgreSQL pour stocker les données.
-# Créer une base de données "portfolio" et ajouter les tables.
-psql -U postgres -h localhost -c "CREATE DATABASE portfolio;"
-
-# Importer les données depuis `backup.sql`
-psql -U postgres -d portfolio -f backup.sql
+cp .env.example .env
 ```
 
----
+Renseigner ensuite `.env`.
 
-## 📾 **Architecture du projet**
+Variables principales :
 
-Le projet suit le modèle **MVC (Modèle - Vue - Contrôleur)** pour une meilleure organisation et maintenabilité du code.
+```env
+DB_URL=postgres://postgres:postgres@localhost:5432/portfolio
+DB_SSL=false
+SESSION_SECRET=change-moi-en-local
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+MAIL_USER=
+MAIL_PASS=
+MAIL_TO=
+```
 
-### 🛠️ Modèle (model/)
-- Gère la connexion à la base de données et les interactions avec les tables PostgreSQL.
-- Exemple : `db.js` contient les fonctions pour exécuter des requêtes SQL.
+## Medias prives Cloudinary
 
-### 🚦 Contrôleur (routes/)
-- Gère la logique métier et les interactions entre la base de données et les vues.
-- Exemple : `etudes.js` récupère les diplômes et les envoie à la vue.
+Les images et videos gerees depuis l'admin sont uploadees avec le delivery type Cloudinary `authenticated`.
+Elles ne doivent donc pas etre accessibles via une URL Cloudinary publique non signee.
 
-### 🎨 Vue (views/)
-- Contient les fichiers **EJS** pour afficher les données dynamiquement sur le site.
-- Exemple : `index.ejs` affiche les informations du portfolio.
+Configuration a faire :
 
----
+1. Creer un compte Cloudinary.
+2. Recuperer l'API Environment variable dans le dashboard Cloudinary.
+3. La mettre dans `.env` :
 
-## 🔧 **Technologies utilisées**
+```env
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+```
 
-- **Node.js** - Environnement JavaScript côté serveur
-- **Express.js** - Framework web minimaliste
-- **EJS** - Moteur de template pour générer du HTML dynamique
-- **PostgreSQL** - Base de données relationnelle
-- **Multer** - Middleware pour gérer l'upload de fichiers
-- **Bootstrap** - Framework CSS pour le design
-- **Morgan** - Logger HTTP pour voir les requêtes
-- **Serve-favicon** - Gestion du favicon
-- **Cookie-parser** - Gestion des cookies
-- **Express-ejs-layouts** - Gestion des layouts dans Express
+Ensuite :
 
----
+- aller sur `/admin/media` ;
+- uploader les images/videos ;
+- retourner dans Projets, Ecoles, Entreprises ou Parametres ;
+- selectionner le media dans le champ Logo, Image principale, Galerie ou `profile_photo`.
 
-## 🚀 **Lancer le projet**
+Pour changer la photo de profil de l'accueil :
+
+1. Uploader l'image dans `/admin/media` avec l'utilisation `Profil`.
+2. Aller dans `/admin/settings`.
+3. Modifier le parametre `profile_photo`.
+4. Selectionner l'image uploadee, puis enregistrer.
+
+Important : un media affiche dans le navigateur utilise une URL signee. Cette URL peut etre copiee pendant qu'elle est valide. Le gain principal est qu'aucun asset n'est publie en URL Cloudinary non signee et devinable.
+
+Pour une base PostgreSQL locale :
+
+```sh
+createdb portfolio
+psql -h localhost -p 5433 -U henocmkb -d portfolio -f backup.sql
+```
+
+Si tu utilises une base distante qui impose SSL, retire `DB_SSL=false` ou mets `DB_SSL=true`.
+
+## Lancer le projet
+
+En production locale simple :
+
 ```sh
 npm start
-# Le serveur démarre sur http://localhost:3000
 ```
 
----
+En développement avec rechargement automatique :
 
-## 📩 **Contact**
-Si vous avez des questions ou suggestions, contactez-moi via mon portfolio ! 😊
+```sh
+npm run dev
+```
 
-- 💎 **Email** : h.mukumbi100@gmail.com
-- 🌐 **Site Web** : en cours d'implémentation
+Le serveur écoute par défaut sur :
 
+```text
+http://localhost:3000
+```
+
+Identifiants Admin :
+
+Le mot de passe admin est haché avec bcrypt et n'est jamais stocké en clair.
+Définis le tien (ne le commite pas) :
+
+```sh
+node -e "require('./model/utilisateur').hashMotDePasse(process.argv[1]).then(h => console.log(h))" 'TON_MOT_DE_PASSE'
+```
+
+Puis mets le hash obtenu dans la table `utilisateurs` (colonne `mot_de_passe`) pour le pseudo `admin`.
+
+L'interface Admin est disponible sur :
+
+```text
+http://localhost:3000/admin
+```
+
+Tu peux changer le port avec :
+
+```sh
+PORT=3001 npm start
+```
+
+## CSS
+
+Le fichier source Sass est `public/stylesheets/custom.scss`.
+
+Pour le compiler en continu :
+
+```sh
+npm run sass
+```
+
+## Tests
+
+```sh
+npm test
+```
+
+Les tests nécessitent une base PostgreSQL disponible avec les tables et données attendues. La suite crée et supprime elle-même un utilisateur admin de test (`admin-test-jest`), sans toucher au compte `admin` réel.

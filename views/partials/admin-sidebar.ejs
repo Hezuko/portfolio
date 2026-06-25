@@ -1,0 +1,11 @@
+<aside class="admin-sidebar">
+  <a class="admin-logo" href="/admin">Admin</a>
+  <nav>
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/messages">Messages reçus</a>
+    <a href="/admin/media">Medias prives</a>
+    <% Object.entries(entities).forEach(([key, meta]) => { %>
+      <a href="/admin/<%= key %>"><%= meta.label %></a>
+    <% }) %>
+  </nav>
+</aside>

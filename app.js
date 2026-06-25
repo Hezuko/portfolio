@@ -4,21 +4,30 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-var favicon = require("serve-favicon");
 var expressLayouts = require("express-ejs-layouts");
+var compression = require("compression");
 var session = require("./config/session");
+var portfolioRepository = require("./model/portfolioRepository");
+var { formatContractType, formatDateRange, formatLevel, formatProjectCategory, formatStatus } = require("./utils/formatters");
+var { techIconUrl } = require("./utils/techIcons");
+var { cloudinaryUrl } = require("./utils/cloudinary");
 const csrf = require("csurf");
 
+// Version d'assets : change à chaque démarrage → casse le cache navigateur après un déploiement
+const ASSET_VERSION = Date.now().toString(36);
+
 // Import des routes
-var homeRouter = require("./routes/home");
-var etudesRouter = require("./routes/etudes");
-var projetsRouter = require("./routes/projets");
-var jobsRouter = require("./routes/jobs");
-var contactRouter = require("./routes/contact");
-var confirmationRouter = require("./routes/confirmation");
+var publicRouter = require("./routes/public");
+var adminRouter = require("./routes/admin");
 var authentificationRouter = require("./routes/authentification");
 
 var app = express();
+
+// Valeurs par défaut utilisées par le layout, même si la session échoue.
+app.use((req, res, next) => {
+  res.locals.user = null;
+  next();
+});
 
 // 🟢 Configuration du moteur de vue
 app.set("views", path.join(__dirname, "views"));
@@ -27,6 +36,9 @@ app.set("view engine", "ejs");
 // 🟢 Activer les layouts
 app.use(expressLayouts);
 app.set("layout", "layout");
+
+// 📦 Compression gzip/br de toutes les réponses (HTML/CSS/JS) — gros gain réseau
+app.use(compression());
 
 // 🛡️ Initialiser la session avant CSRF
 app.use(session.initSession());
@@ -44,11 +56,43 @@ app.use(csrfProtection);
 // 🔹 Ajouter le token CSRF dans toutes les vues
 app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken();
+  res.locals.currentPath = req.path;
+  res.locals.formatDate = (date) => {
+    if (!date) return "Aujourd'hui";
+    return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" }).format(new Date(date));
+  };
+  res.locals.formatList = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (!value) return [];
+    return String(value)
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+  res.locals.formatDateRange = formatDateRange;
+  res.locals.formatContractType = formatContractType;
+  res.locals.formatLevel = formatLevel;
+  res.locals.formatProjectCategory = formatProjectCategory;
+  res.locals.formatStatus = formatStatus;
+  res.locals.techIconUrl = techIconUrl;
+  res.locals.cloudinaryUrl = cloudinaryUrl;
+  res.locals.assetVersion = ASSET_VERSION;
+
+  // 🔎 SEO / partage : valeurs par défaut, surchargeables par chaque route.
+  const host = req.get("host");
+  res.locals.siteUrl = process.env.SITE_URL || `${req.protocol}://${host}`;
+  res.locals.canonicalUrl = res.locals.siteUrl + (req.path === "/" ? "" : req.path);
+  res.locals.description =
+    "Henoc Mukumbi, ingénieur systèmes embarqués. Je conçois l'électronique et le logiciel qui tourne dessus : du circuit imprimé au cloud, de l'app mobile au coach IA.";
+  res.locals.ogImage =
+    "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
+  res.locals.robots = "index,follow";
   next();
 });
 
-// 🟢 Servir les fichiers statiques
-app.use(express.static(path.join(__dirname, "public")));
+// 🟢 Servir les fichiers statiques (cache long : les assets changent peu)
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // 🟢 Routes pour Bootstrap CSS & JS
 app.use(
@@ -60,9 +104,27 @@ app.use(
   express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"))
 );
 
+app.use(async (req, res, next) => {
+  const defaultName = "Henoc Mukumbi";
+  try {
+    const settings = await portfolioRepository.getSettingsMap();
+    const name = settings.profile_name || defaultName;
+    res.locals.siteProfile = {
+      name,
+      footerText: settings.profile_tagline || "Ingénieur systèmes embarqués — du circuit imprimé au cloud.",
+    };
+  } catch (err) {
+    res.locals.siteProfile = {
+      name: defaultName,
+      footerText: "Portfolio personnel, projets, parcours et experiences.",
+    };
+  }
+  next();
+});
+
 // 🟢 Définition de l'utilisateur global pour les vues
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
+  res.locals.user = req.session?.user || null;
   next();
 });
 
@@ -75,32 +137,12 @@ app.use((err, req, res, next) => {
 });
 
 
-// 🔒 Middleware pour forcer l'authentification
-app.use((req, res, next) => {
-  if (!req.session.userid && !["/authentification", "/authentification/visiteur"].includes(req.path)) {
-    return res.redirect("/authentification");
-  }
-  next();
-});
-
 // 🛠️ Définition des routes
-app.use("/", homeRouter);
-app.use("/etudes", etudesRouter);
-app.use("/projets", projetsRouter);
-app.use("/jobs", jobsRouter);
-app.use("/contact", contactRouter);
-app.use("/confirmation", confirmationRouter);
 app.use("/authentification", authentificationRouter);
+app.use("/admin", adminRouter);
+app.use("/", publicRouter);
 
 // 🚨 Gestion des erreurs
-
-// ❌ Catch 400 - Mauvaise requête
-app.use((req, res, next) => {
-  if (Object.keys(req.body).length === 0 && Object.keys(req.query).length === 0) {
-    return res.status(400).render("errors/400", { title: "Erreur 400" });
-  }
-  next();
-});
 
 // ❌ Catch 403 - Accès interdit
 app.use((req, res, next) => {

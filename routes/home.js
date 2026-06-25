@@ -71,8 +71,8 @@ router.post('/diplome/ajouter', async function(req, res, next) {
       niveau_etude,
       delivrepar,
       etudeId,
-      image_path || null,
-      annee_obtention
+      annee_obtention,
+      image_path || null
     );
 
     res.status(201).redirect('/');

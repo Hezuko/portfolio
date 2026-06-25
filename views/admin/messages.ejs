@@ -1,0 +1,59 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-sidebar', { entities }) %>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Messages reçus</h1>
+      </div>
+      <a class="btn btn-outline-dark" href="/">Voir le site</a>
+    </div>
+
+    <style>
+      .message-list { display: grid; gap: 14px; }
+      .message-card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 16px 18px; }
+      .message-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .message-card__head strong { font-size: 1.05rem; margin-right: 10px; }
+      .message-card__head a { color: var(--accent); }
+      .message-card__head small { color: var(--muted); white-space: nowrap; }
+      .message-card__objet { font-weight: 600; margin: 8px 0 4px; }
+      .message-card__texte { color: var(--text); line-height: 1.6; white-space: pre-wrap; margin: 0 0 12px; }
+      .message-card__actions { display: flex; gap: 8px; align-items: center; }
+      .message-card__actions form { margin: 0; }
+      .btn-danger { background: #b3322a; color: #fff; border: 1px solid #b3322a; padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+      .btn-danger:hover { background: #962a23; }
+    </style>
+
+    <% if (!messages || !messages.length) { %>
+      <section class="admin-panel">
+        <p class="muted">Aucun message pour l'instant. Les messages envoyés depuis la page Contact apparaîtront ici.</p>
+      </section>
+    <% } else { %>
+      <section class="admin-panel">
+        <h2><%= messages.length %> message<%= messages.length > 1 ? 's' : '' %></h2>
+        <div class="message-list">
+          <% messages.forEach((m) => { %>
+            <article class="message-card">
+              <div class="message-card__head">
+                <div>
+                  <strong><%= m.prenom %> <%= m.nom %></strong>
+                  <a href="mailto:<%= m.email %>"><%= m.email %></a>
+                </div>
+                <small><%= formatDate(m.date_submitted) %></small>
+              </div>
+              <p class="message-card__objet"><%= m.objet %></p>
+              <p class="message-card__texte"><%= m.texte %></p>
+              <div class="message-card__actions">
+                <a class="btn btn-outline-dark" href="mailto:<%= m.email %>?subject=RE:%20<%= encodeURIComponent(m.objet) %>">Répondre</a>
+                <form method="POST" action="/admin/messages/<%= m.id %>/delete" onsubmit="return confirm('Supprimer ce message ?');">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn-danger" type="submit">Supprimer</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+  </div>
+</section>

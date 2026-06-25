@@ -1,0 +1,132 @@
+<div class="timeline-list">
+  <% items.forEach((item) => { %>
+    <% const isCompact = Boolean(typeof compact !== 'undefined' && compact); %>
+    <% const isCardLinkEnabled = isCompact && !(typeof cardLink !== 'undefined' && cardLink === false); %>
+    <% const orgName = type === 'education' ? item.school_name : item.company_name; %>
+    <% const orgLogo = type === 'education' ? item.school_logo_url : item.company_logo_url; %>
+    <% const orgInitial = (orgName || '?').trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1).toUpperCase()).join(''); %>
+    <% const infoId = `${type}-info-${item.id}`; %>
+    <% const detailHref = type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}`; %>
+    <article class="timeline-item <%= isCompact ? 'timeline-item--compact' : '' %> <%= isCardLinkEnabled ? 'clickable-card' : '' %>" <% if (isCardLinkEnabled) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le detail de <%= item.title %>"<% } %>>
+      <div class="timeline-body">
+        <header class="timeline-card-header">
+          <div class="timeline-heading">
+            <h3><%= item.title %></h3>
+            <p class="muted entity-name">
+              <% if (type === 'education') { %>
+                <%= orgName || 'Ecole a renseigner' %>
+              <% } else { %>
+                <%= orgName || 'Entreprise a renseigner' %>
+              <% } %>
+              <% if (orgName) { %>
+                <button class="info-button" type="button" data-info-template="<%= infoId %>" aria-label="Afficher les informations de <%= orgName %>">i</button>
+              <% } %>
+            </p>
+            <% if (type === 'education' && (item.degree || item.field)) { %><p class="muted"><%= [item.degree, item.field].filter(Boolean).join(' - ') %></p><% } %>
+            <% if (type === 'job' && item.contract_type) { %><p class="muted"><%= formatContractType(item.contract_type) %></p><% } %>
+            <p class="timeline-date"><%= formatDateRange(item.start_date, item.end_date, item.status) %></p>
+            <% if (type === 'education' && (item.school_city || item.school_country)) { %><p class="muted"><%= [item.school_city, item.school_country].filter(Boolean).join(', ') %></p><% } %>
+            <% if (type === 'job' && (item.company_city || item.company_country)) { %><p class="muted"><%= [item.company_city, item.company_country].filter(Boolean).join(', ') %></p><% } %>
+          </div>
+          <div class="timeline-logo entity-logo" aria-label="<%= orgLogo ? `Logo ${orgName}` : 'Logo non disponible' %>">
+            <% if (orgLogo) { %>
+              <img src="<%= orgLogo %>" alt="Logo <%= orgName %>">
+            <% } else { %>
+              <span><%= orgInitial %></span>
+            <% } %>
+          </div>
+        </header>
+        <% if (!isCompact) { %>
+          <p><%= item.description %></p>
+        <% } %>
+        <% if (type === 'education') { %>
+          <% if ((item.technology_details || []).length) { %>
+            <p class="muted">Technologies / matieres</p>
+            <div class="tag-row">
+              <% item.technology_details.slice(0, isCompact ? 5 : item.technology_details.length).forEach((tech) => { %>
+                <button class="skill-badge" type="button" data-knowledge-type="technology" data-knowledge-id="<%= tech.id %>" aria-label="Afficher la fiche de <%= tech.name %>"><%= tech.name %></button>
+              <% }) %>
+            </div>
+          <% } %>
+          <% if (!isCompact && (item.skill_details || []).length) { %>
+            <p class="muted">Competences</p>
+            <div class="tag-row">
+              <% item.skill_details.forEach((skill) => { %>
+                <button class="skill-badge" type="button" data-knowledge-type="skill" data-knowledge-id="<%= skill.id %>" aria-label="Afficher la fiche de <%= skill.name %>"><%= skill.name %><small><%= formatLevel(skill.level) %></small></button>
+              <% }) %>
+            </div>
+          <% } %>
+          <% if (!isCompact && item.projects && item.projects.length) { %>
+            <p class="muted">Projets lies</p>
+            <div class="card-actions">
+              <% item.projects.forEach((project) => { %>
+                <% if (project.slug) { %>
+                  <a href="/projets/<%= project.slug %>"><%= project.name %></a>
+                <% } else { %>
+                  <span><%= project.name %></span>
+                <% } %>
+              <% }) %>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="tag-row">
+            <% formatList(item.technologies).slice(0, isCompact ? 5 : 6).forEach((tech) => { %>
+              <button class="skill-badge" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><%= tech %></button>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </article>
+    <% if (orgName) { %>
+      <template id="<%= infoId %>">
+        <article class="info-card">
+          <div class="entity-line">
+            <div class="entity-logo large">
+              <% if (orgLogo) { %>
+                <img src="<%= orgLogo %>" alt="Logo <%= orgName %>">
+              <% } else { %>
+                <span><%= orgInitial %></span>
+              <% } %>
+            </div>
+            <div>
+              <p class="eyebrow"><%= type === 'education' ? 'Ecole' : 'Entreprise' %></p>
+              <h2 id="infoModalTitle"><%= orgName %></h2>
+              <p class="muted">
+                <% if (type === 'education') { %>
+                  <%= [item.school_city, item.school_country].filter(Boolean).join(', ') || 'Localisation non renseignee' %>
+                <% } else { %>
+                  <%= [item.company_city, item.company_country].filter(Boolean).join(', ') || 'Localisation non renseignee' %>
+                <% } %>
+              </p>
+            </div>
+          </div>
+          <% if (type === 'education') { %>
+            <p><%= item.school_description || 'Aucune description renseignee' %></p>
+            <% if (item.school_website) { %><p><a href="<%= item.school_website %>" target="_blank" rel="noreferrer">Site web</a></p><% } %>
+            <h3>Formations associees</h3>
+            <% if (item.school_education_titles && item.school_education_titles.length) { %>
+              <ul class="clean-list"><% item.school_education_titles.forEach((title) => { %><li><%= title %></li><% }) %></ul>
+            <% } else { %>
+              <p class="muted">Aucune formation associee</p>
+            <% } %>
+          <% } else { %>
+            <p><%= item.company_description || 'Aucune description renseignee' %></p>
+            <% if (item.company_website) { %><p><a href="<%= item.company_website %>" target="_blank" rel="noreferrer">Site web</a></p><% } %>
+            <dl class="info-list">
+              <dt>Secteur</dt><dd><%= item.company_industry || 'Non renseigne' %></dd>
+              <dt>Taille</dt><dd><%= item.company_size || 'Non renseignee' %></dd>
+              <dt>Type</dt><dd><%= item.company_type || 'Non renseigne' %></dd>
+            </dl>
+            <h3>Experiences associees</h3>
+            <% if (item.company_job_titles && item.company_job_titles.length) { %>
+              <ul class="clean-list"><% item.company_job_titles.forEach((title) => { %><li><%= title %></li><% }) %></ul>
+            <% } else { %>
+              <p class="muted">Aucune experience associee</p>
+            <% } %>
+          <% } %>
+        </article>
+      </template>
+    <% } %>
+  <% }) %>
+  <% if (!items.length) { %><p class="empty-state">Aucune donnee pour le moment.</p><% } %>
+</div>

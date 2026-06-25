@@ -1,0 +1,265 @@
+<%
+  const techs = formatList(project.technologies);
+  const features = formatList(project.features);
+  const images = project.image_urls || [];
+  const hasLinks = project.github_url || project.demo_url;
+  const sections = project.sections || [];
+  const paragraphs = (value) => String(value || '').split(/\n{2,}/).map((entry) => entry.trim()).filter(Boolean);
+  const renderText = (value) => paragraphs(value).forEach((paragraph) => { %><p><%= paragraph %></p><% });
+  const canEditProject = typeof user !== 'undefined' && user && user.role === 'admin';
+  const publicProjectPath = `/projets/${project.slug}`;
+  const isVideo = (src) => /\.(mp4|webm|mov|m4v)$/i.test(src || '');
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  // Une image/vidéo, tissée dans le récit (apparaît au scroll, cliquable via la lightbox).
+  const mediaFigure = (src, i) => {
+    if (!src) return '';
+    if (isVideo(src)) {
+      return `<figure class="story-media" data-reveal><video class="detail-gallery__video" src="${esc(src)}" controls preload="metadata" playsinline></video></figure>`;
+    }
+    return `<figure class="story-media" data-reveal><img src="${esc(cloudinaryUrl(src, { w: 900 }))}" alt="${esc(project.name)} — visuel ${i + 1}" loading="lazy"></figure>`;
+  };
+  // Répartition des images sur les sections de récit (pour les semer régulièrement, pas en bloc).
+  const storySectionCount = [
+    project.context || project.long_description || project.goal,
+    features.length,
+    project.architecture || project.challenges,
+    project.results,
+    project.future_improvements,
+  ].filter(Boolean).length;
+  const perSection = storySectionCount ? Math.ceil(images.length / storySectionCount) : images.length;
+%>
+
+<section class="detail-hero skin-<%= project.category %>">
+  <div class="container detail-hero__grid">
+    <div class="detail-hero__content">
+      <p class="eyebrow"><%= formatProjectCategory(project.category) || 'Projet' %></p>
+      <h1><%= project.name %></h1>
+      <% if (project.short_description || project.goal) { %>
+        <p class="detail-hero__lead"><%= project.short_description || project.goal %></p>
+      <% } %>
+      <div class="detail-meta-row">
+        <span><%= formatStatus(project.status, 'default') %></span>
+        <% if (project.start_date || project.end_date) { %><span><%= formatDateRange(project.start_date, project.end_date, project.status) %></span><% } %>
+        <% if (project.school_name) { %><span><%= project.school_name %></span><% } %>
+        <% if (project.company_name) { %><span><%= project.company_name %></span><% } %>
+      </div>
+      <% if (techs.length) { %>
+        <div class="detail-stack" aria-label="Stack technique du projet">
+          <% techs.forEach((tech) => { const techIcon = techIconUrl(tech); if (techIcon) { %>
+            <span class="detail-stack__chip" title="<%= tech %>"><img src="<%= techIcon %>" alt="<%= tech %>" width="20" height="20" loading="lazy"></span>
+          <% } }) %>
+        </div>
+      <% } %>
+      <% if (hasLinks) { %>
+        <div class="hero-actions">
+          <% if (project.github_url) { %><a class="btn btn-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">Voir le code</a><% } %>
+          <% if (project.demo_url) { %><a class="btn btn-outline-dark" href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Voir la démo</a><% } %>
+        </div>
+      <% } %>
+      <% if (canEditProject) { %>
+        <div class="public-admin-toolbar">
+          <a class="btn btn-dark" href="/admin/projects/<%= project.id %>/edit">Modifier le projet</a>
+          <a class="btn btn-outline-dark" href="/admin/project_sections/new?project_id=<%= project.id %>">Ajouter une section</a>
+        </div>
+      <% } %>
+    </div>
+    <figure class="detail-hero__media">
+      <img src="<%= cloudinaryUrl(project.main_image_url || project.main_image || '/images/background.jpg', { w: 800 }) %>" alt="<%= project.name %>">
+    </figure>
+  </div>
+</section>
+
+<section class="detail-page section-band skin-<%= project.category %>">
+  <div class="container detail-page__grid">
+    <main class="detail-main">
+      <% let mi = 0; %>
+      <% const popMediaGroup = (n) => { let h = ''; for (let k = 0; k < n && mi < images.length; k++) { h += mediaFigure(images[mi], mi); mi++; } return h; }; %>
+      <% if (project.context || project.long_description || project.goal) { %>
+        <section class="detail-section detail-section--lead" data-reveal>
+          <p class="eyebrow">Le projet</p>
+          <% if (project.context || project.long_description) { %>
+            <p class="detail-lead-text"><%= project.context || project.long_description %></p>
+          <% } %>
+          <% if (project.goal && (project.context || project.long_description)) { %>
+            <p><%= project.goal %></p>
+          <% } else if (project.goal) { %>
+            <p class="detail-lead-text"><%= project.goal %></p>
+          <% } %>
+        </section>
+        <%- popMediaGroup(perSection) %>
+      <% } %>
+
+      <% if (features.length) { %>
+        <section class="detail-section" data-reveal>
+          <p class="eyebrow">Ce que j'ai construit</p>
+          <ul class="detail-feature-grid">
+            <% features.forEach((feature) => { %><li><%= feature %></li><% }) %>
+          </ul>
+        </section>
+        <%- popMediaGroup(perSection) %>
+      <% } %>
+
+      <% if (sections.length) { %>
+        <div class="project-section-list">
+          <% sections.forEach((section) => { %>
+            <% const hasMedia = section.media_url; %>
+            <% const mediaPosition = section.media_position || (section.layout || '').replace('media_', '') || 'right'; %>
+            <% const sectionClasses = ['project-rich-section', `project-rich-section--${section.layout || 'text_only'}`, hasMedia ? 'project-rich-section--has-media' : '', hasMedia ? `project-rich-section--media-${mediaPosition}` : ''].filter(Boolean).join(' '); %>
+            <section class="<%= sectionClasses %>" data-reveal>
+              <div class="project-rich-section__text">
+                <% if (section.section_type) { %><p class="eyebrow"><%= section.section_type %></p><% } %>
+                <% if (section.title) { %><h2><%= section.title %></h2><% } %>
+                <% if (section.subtitle) { %><p class="project-rich-section__subtitle"><%= section.subtitle %></p><% } %>
+                <% renderText(section.body); %>
+              </div>
+              <% if (hasMedia) { %>
+                <figure class="project-rich-section__media">
+                  <% if (section.media_resource_type === 'video') { %>
+                    <video src="<%= section.media_url %>" controls preload="metadata"></video>
+                  <% } else { %>
+                    <img src="<%= section.media_url %>" alt="<%= section.media_alt_text || section.title || project.name %>" loading="lazy">
+                  <% } %>
+                  <% if (section.media_caption) { %><figcaption><%= section.media_caption %></figcaption><% } %>
+                </figure>
+              <% } %>
+            </section>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <% if (project.architecture || project.challenges) { %>
+        <section class="detail-section" data-reveal>
+          <p class="eyebrow">Sous le capot</p>
+          <% if (project.architecture) { %><p><%= project.architecture %></p><% } %>
+          <% if (project.challenges) { %><p><%= project.challenges %></p><% } %>
+        </section>
+        <%- popMediaGroup(perSection) %>
+      <% } %>
+
+      <% if (project.results) { %>
+        <section class="detail-section detail-section--result" data-reveal>
+          <p class="eyebrow">Résultats</p>
+          <p><%= project.results %></p>
+        </section>
+        <%- popMediaGroup(perSection) %>
+      <% } %>
+
+      <% if (project.future_improvements) { %>
+        <section class="detail-section" data-reveal>
+          <p class="eyebrow">Et après</p>
+          <p><%= project.future_improvements %></p>
+        </section>
+      <% } %>
+
+      <%# Reste éventuel (arrondi) — tissé à la suite, apparaît au scroll %>
+      <%- popMediaGroup(images.length - mi) %>
+    </main>
+
+    <aside class="detail-sidebar">
+      <section class="detail-side-card detail-side-card--sticky">
+        <h2>Fiche technique</h2>
+        <dl class="detail-kv">
+          <div><dt>Statut</dt><dd><%= formatStatus(project.status, 'default') %></dd></div>
+          <% if (project.category) { %><div><dt>Catégorie</dt><dd><%= formatProjectCategory(project.category) %></dd></div><% } %>
+          <% if (project.start_date || project.end_date) { %><div><dt>Période</dt><dd><%= formatDateRange(project.start_date, project.end_date, project.status) %></dd></div><% } %>
+          <% if (project.school_name) { %><div><dt>École liée</dt><dd><%= project.school_name %></dd></div><% } %>
+          <% if (project.company_name) { %><div><dt>Entreprise liée</dt><dd><%= project.company_name %></dd></div><% } %>
+          <% if (project.job_title) { %><div><dt>Expérience liée</dt><dd><%= project.job_title %></dd></div><% } %>
+        </dl>
+
+        <% if (techs.length) { %>
+          <div class="detail-side-tech">
+            <h3>Technologies et outils</h3>
+            <div class="tag-row">
+              <% techs.forEach((tech) => { %>
+                <% const techIcon = techIconUrl(tech); %>
+                <button class="skill-badge<%= techIcon ? ' skill-badge--icon' : '' %>" type="button" data-knowledge-name="<%= tech %>" aria-label="Afficher la fiche de <%= tech %>"><% if (techIcon) { %><img class="skill-badge__icon" src="<%= techIcon %>" alt="" width="16" height="16" loading="lazy"><% } %><%= tech %></button>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (hasLinks) { %>
+          <div class="detail-side-links">
+            <% if (project.github_url) { %><a href="<%= project.github_url %>" target="_blank" rel="noreferrer">GitHub ↗</a><% } %>
+            <% if (project.demo_url) { %><a href="<%= project.demo_url %>" target="_blank" rel="noreferrer">Démo ↗</a><% } %>
+          </div>
+        <% } %>
+      </section>
+
+      <% if ((project.educations && project.educations.length) || project.school_name || project.company_name || project.job_title) { %>
+        <section class="detail-side-card">
+          <h2>Liens avec le parcours</h2>
+          <div class="relation-preview">
+            <% if (project.educations && project.educations.length) { %>
+              <% project.educations.forEach((education) => { %><a href="/etudes/<%= education.id %>"><%= education.title %></a><% }) %>
+            <% } %>
+            <% if (project.job_id && project.job_title) { %><a href="/experiences/<%= project.job_id %>"><%= project.job_title %></a><% } %>
+            <% if (!project.educations?.length && project.school_name) { %><span><%= project.school_name %></span><% } %>
+            <% if (project.company_name) { %><span><%= project.company_name %></span><% } %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (canEditProject && sections.length) { %>
+        <section class="detail-side-card public-admin-panel">
+          <h2>Ajouter des médias</h2>
+          <p>Upload direct depuis cette page. Le média sera associé à la section choisie.</p>
+          <div class="public-section-upload-list">
+            <% sections.forEach((section) => { %>
+              <details class="public-section-upload">
+                <summary><%= section.title %></summary>
+                <form method="POST" action="/admin/project_sections/<%= section.id %>/media?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="return_to" value="<%= publicProjectPath %>">
+                  <label>
+                    <span>Image ou vidéo</span>
+                    <input type="file" name="media" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" required>
+                  </label>
+                  <label>
+                    <span>Nom admin</span>
+                    <input name="display_name" value="<%= project.name %> - <%= section.title %>" required>
+                  </label>
+                  <label>
+                    <span>Position</span>
+                    <select name="media_position">
+                      <% ['right','left','top','bottom','full'].forEach((position) => { %>
+                        <option value="<%= position %>" <%= section.media_position === position ? 'selected' : '' %>><%= position %></option>
+                      <% }) %>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Texte alternatif</span>
+                    <input name="alt_text" value="<%= section.media_alt_text || section.title || project.name %>">
+                  </label>
+                  <label>
+                    <span>Légende</span>
+                    <input name="caption" value="<%= section.media_caption || '' %>">
+                  </label>
+                  <button class="btn btn-dark" type="submit">Uploader ici</button>
+                </form>
+              </details>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+    </aside>
+  </div>
+</section>
+
+<section class="detail-cta skin-<%= project.category %>" data-reveal>
+  <div class="container">
+    <article class="cta-panel">
+      <div class="slide-header">
+        <p class="eyebrow">Discutons</p>
+        <h2>Un projet similaire à concrétiser&nbsp;?</h2>
+        <p>Du circuit imprimé au cloud — décrivez votre besoin en deux lignes, je reviens vers vous.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-dark" href="/contact">Me contacter</a>
+        <% if (project.github_url) { %><a class="btn btn-outline-dark" href="<%= project.github_url %>" target="_blank" rel="noreferrer">Voir le code</a><% } %>
+        <a class="btn btn-outline-dark" href="/projets">Autres projets</a>
+      </div>
+    </article>
+  </div>
+</section>
