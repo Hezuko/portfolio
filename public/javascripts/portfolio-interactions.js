@@ -137,6 +137,7 @@
     focusSections.forEach((section) => {
       section.classList.toggle("is-active", section === active);
     });
+    syncFocusDots(active);
   }
 
   function getClosestFocusSection() {
@@ -203,10 +204,54 @@
         downArrow.hidden = false;
       }
     });
+
+    buildFocusDots();
+  }
+
+  let focusDotsNav = null;
+  function buildFocusDots() {
+    if (!focusPage) return;
+    const visible = getVisibleFocusSections();
+    if (focusDotsNav) { focusDotsNav.remove(); focusDotsNav = null; }
+    if (visible.length < 2) return;
+    focusDotsNav = document.createElement("nav");
+    focusDotsNav.className = "focus-dots";
+    focusDotsNav.setAttribute("aria-label", "Navigation des sections");
+    visible.forEach((section) => {
+      const idx = focusSections.indexOf(section);
+      const h2 = section.querySelector("h1, h2");
+      const eyebrow = section.querySelector(".eyebrow");
+      const h2Text = h2 && h2.textContent.trim();
+      const ebText = eyebrow && eyebrow.textContent.trim();
+      const label =
+        (h2Text && h2Text.length <= 24 ? h2Text : null) ||
+        (ebText && ebText.length <= 22 ? ebText : null) ||
+        (idx === 0 ? "Accueil" : (h2Text || ebText || ("Section " + (idx + 1))));
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "focus-dot";
+      dot.dataset.focusTarget = String(idx);
+      dot.setAttribute("aria-label", label);
+      const span = document.createElement("span");
+      span.className = "focus-dot__label";
+      span.textContent = label;
+      dot.appendChild(span);
+      dot.addEventListener("click", () => { if (!section.hidden) centerFocusSection(section, "smooth"); });
+      focusDotsNav.appendChild(dot);
+    });
+    focusPage.appendChild(focusDotsNav);
+    syncFocusDots(getClosestFocusSection());
+  }
+  function syncFocusDots(active) {
+    if (!focusDotsNav || !active) return;
+    const activeIdx = focusSections.indexOf(active);
+    focusDotsNav.querySelectorAll(".focus-dot").forEach((dot) => {
+      dot.classList.toggle("is-active", Number(dot.dataset.focusTarget) === activeIdx);
+    });
   }
 
   function formatProjectCount(count) {
-    return `${count} projet${count > 1 ? "s" : ""} affiche${count > 1 ? "s" : ""}`;
+    return `${count} projet${count > 1 ? "s" : ""} affiché${count > 1 ? "s" : ""}`;
   }
 
   function normalizeFilterValue(value) {
@@ -291,7 +336,7 @@
 
 // Lightbox : galerie & héro cliquables, navigation clavier/boutons
 (function () {
-  const imgs = Array.from(document.querySelectorAll(".detail-hero__media img, .detail-gallery img"));
+  const imgs = Array.from(document.querySelectorAll(".detail-hero__media img, .detail-gallery img, .story-media img"));
   if (!imgs.length) return;
   const items = imgs.map((el) => ({ src: el.currentSrc || el.getAttribute("src"), alt: el.getAttribute("alt") || "" }));
 
@@ -349,4 +394,42 @@
     else if (e.key === "ArrowLeft") go(-1);
     else if (e.key === "ArrowRight") go(1);
   });
+})();
+
+// Apparition au scroll (caméléon) — robuste : le contenu n'est JAMAIS caché durablement.
+// Ce qui est déjà visible s'affiche tout de suite ; seul ce qui est sous la ligne de
+// flottaison est animé à l'arrivée dans l'écran, avec un filet de sécurité temporisé.
+(function () {
+  var els = Array.prototype.slice.call(document.querySelectorAll("[data-reveal]"));
+  if (!els.length) return;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || typeof IntersectionObserver === "undefined") return; // tout reste visible
+
+  var vh = function () { return window.innerHeight || document.documentElement.clientHeight; };
+  var reveal = function (el) { el.classList.add("is-in"); };
+
+  // On n'arme QUE ce qui est sous l'écran ; le reste s'affiche immédiatement.
+  var armed = [];
+  els.forEach(function (el) {
+    if (el.getBoundingClientRect().top < vh() * 0.95) return;
+    el.classList.add("reveal-armed");
+    armed.push(el);
+  });
+  if (!armed.length) return;
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); }
+    });
+  }, { threshold: 0, rootMargin: "0px 0px -5% 0px" });
+  armed.forEach(function (el) { io.observe(el); });
+
+  // Filet de sécurité : rien ne reste invisible, même si l'observer flanche.
+  // On retire l'armement (le contenu retombe à opacity 1) plutôt que de compter
+  // sur l'animation, qui peut "tenir" l'état caché hors écran.
+  window.setTimeout(function () {
+    armed.forEach(function (el) {
+      if (!el.classList.contains("is-in")) el.classList.remove("reveal-armed");
+    });
+  }, 1500);
 })();

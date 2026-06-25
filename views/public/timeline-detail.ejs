@@ -30,18 +30,22 @@
   const programDistribution = String(item.program_distribution || '').split(/\r?\n/).map((entry) => entry.trim()).filter(Boolean);
   const paragraphs = (value) => String(value || '').split(/\n{2,}/).map((entry) => entry.trim()).filter(Boolean);
   const renderText = (value) => paragraphs(value).forEach((paragraph) => { %><p><%= paragraph %></p><% });
+  const hasAlternance = !isEducation && (item.first_year_summary || firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length || item.second_year_summary || secondYearTasks.length || secondYearAchievements.length || secondYearTools.length || secondYearSkills.length);
+  const skinClass = isEducation ? 'skin-ai' : 'skin-electronique';
+  const stackNames = isEducation ? technologies.map((t) => t.name) : [...tools, ...formatList(item.technologies)];
+  const heroStack = [...new Set(stackNames.filter(Boolean))].map((name) => ({ name, icon: techIconUrl(name) })).filter((x) => x.icon).slice(0, 12);
 %>
 
-<section class="detail-hero">
+<section class="detail-hero <%= skinClass %>">
   <div class="container detail-hero__grid">
     <div class="detail-hero__content">
       <p class="eyebrow"><%= isEducation ? 'Formation' : 'Expérience' %></p>
       <h1><%= item.title %></h1>
-      <p>
+      <p class="detail-hero__lead">
         <% if (isEducation) { %>
-          <%= [orgName, item.degree, item.field].filter(Boolean).join(' - ') %>
+          <%= [orgName, item.degree, item.field].filter(Boolean).join(' · ') %>
         <% } else { %>
-          <%= item.short_summary || [orgName, formatContractType(item.contract_type)].filter(Boolean).join(' - ') %>
+          <%= item.short_summary || [orgName, formatContractType(item.contract_type)].filter(Boolean).join(' · ') %>
         <% } %>
       </p>
       <div class="detail-meta-row">
@@ -52,6 +56,13 @@
         <% if (!isEducation && item.function_title) { %><span><%= item.function_title %></span><% } %>
         <% if (!isEducation && item.lab_name) { %><span><%= item.lab_name %></span><% } %>
       </div>
+      <% if (heroStack.length) { %>
+        <div class="detail-stack" aria-label="Technologies et outils">
+          <% heroStack.forEach((tech) => { %>
+            <span class="detail-stack__chip" title="<%= tech.name %>"><img src="<%= tech.icon %>" alt="<%= tech.name %>" width="20" height="20" loading="lazy"></span>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
     <div class="detail-hero__entity">
       <div class="entity-logo large">
@@ -67,284 +78,237 @@
   </div>
 </section>
 
-<section class="detail-page section-band">
+<section class="detail-page section-band <%= skinClass %>">
   <div class="container detail-page__grid">
     <main class="detail-main">
-      <% if (isEducation && (item.context || item.description)) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Contexte</p>
-          <h2>Place de cette formation dans mon parcours</h2>
-          <p><%= item.context || item.description %></p>
-        </section>
-      <% } %>
 
-      <% if (!isEducation && item.company_context) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Entreprise</p>
-          <h2>Contexte entreprise</h2>
-          <% renderText(item.company_context); %>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && (item.mission_context || item.description)) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Contexte</p>
-          <h2>Contexte de mission</h2>
-          <% renderText(item.mission_context || item.description); %>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && item.product_context) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Produit</p>
-          <h2>OCEAN — pile de protocoles embarqués</h2>
-          <% renderText(item.product_context); %>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && (item.first_year_summary || firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length || item.second_year_summary || secondYearTasks.length || secondYearAchievements.length || secondYearTools.length || secondYearSkills.length)) { %>
-        <section class="detail-section detail-section--timeline">
-          <p class="eyebrow">Progression</p>
-          <h2>Deux années d'alternance</h2>
-          <div class="experience-year-list">
-            <% if (item.first_year_summary || firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length) { %>
-              <article class="experience-year">
-                <div class="experience-year__marker">1</div>
-                <div class="experience-year__body">
-                  <h3>Première année — Vérification logicielle et tests unitaires OCEAN</h3>
-                  <% renderText(item.first_year_summary); %>
-                  <% if (firstYearTasks.length) { %>
-                    <h4>Missions principales</h4>
-                    <ul class="detail-list"><% firstYearTasks.forEach((task) => { %><li><%= task %></li><% }) %></ul>
-                  <% } %>
-                  <% if (firstYearAchievements.length) { %>
-                    <h4>Réalisations concrètes</h4>
-                    <ul class="detail-list"><% firstYearAchievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %></ul>
-                  <% } %>
-                  <% if (firstYearTools.length) { %>
-                    <h4>Outils utilisés</h4>
-                    <div class="tag-row"><% firstYearTools.forEach((tool) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= tool %>" aria-label="Afficher la fiche de <%= tool %>"><%= tool %></button><% }) %></div>
-                  <% } %>
-                  <% if (firstYearSkills.length) { %>
-                    <h4>Compétences développées</h4>
-                    <div class="tag-row"><% firstYearSkills.forEach((skill) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button><% }) %></div>
-                  <% } %>
-                </div>
-              </article>
+      <% if (!isEducation) { %>
+        <%# ---------------- EXPÉRIENCE ---------------- %>
+        <% const expLead = item.mission_context || item.description || item.company_context; %>
+        <% if (expLead) { %>
+          <section class="detail-section detail-section--lead" data-reveal>
+            <p class="eyebrow">Le poste</p>
+            <% const lp = paragraphs(expLead); %>
+            <p class="detail-lead-text"><%= lp[0] %></p>
+            <% lp.slice(1).forEach((p) => { %><p><%= p %></p><% }) %>
+            <% if (item.company_context && (item.mission_context || item.description)) { %>
+              <% paragraphs(item.company_context).forEach((p) => { %><p><%= p %></p><% }) %>
             <% } %>
-            <% if (item.second_year_summary || secondYearTasks.length || secondYearAchievements.length || secondYearTools.length || secondYearSkills.length) { %>
-              <article class="experience-year">
-                <div class="experience-year__marker">2</div>
-                <div class="experience-year__body">
-                  <h3>Deuxième année — Validation calculateurs, tests sur cible et automatisation</h3>
-                  <% renderText(item.second_year_summary); %>
-                  <% if (secondYearTasks.length) { %>
-                    <h4>Missions principales</h4>
-                    <ul class="detail-list"><% secondYearTasks.forEach((task) => { %><li><%= task %></li><% }) %></ul>
-                  <% } %>
-                  <% if (secondYearAchievements.length) { %>
-                    <h4>Réalisations concrètes</h4>
-                    <ul class="detail-list"><% secondYearAchievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %></ul>
-                  <% } %>
-                  <% if (secondYearTools.length) { %>
-                    <h4>Outils utilisés</h4>
-                    <div class="tag-row"><% secondYearTools.forEach((tool) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= tool %>" aria-label="Afficher la fiche de <%= tool %>"><%= tool %></button><% }) %></div>
-                  <% } %>
-                  <% if (secondYearSkills.length) { %>
-                    <h4>Compétences développées</h4>
-                    <div class="tag-row"><% secondYearSkills.forEach((skill) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button><% }) %></div>
-                  <% } %>
-                </div>
-              </article>
+          </section>
+        <% } %>
+
+        <% if (item.problem_statement || item.system_architecture || item.product_context) { %>
+          <section class="detail-section" data-reveal>
+            <p class="eyebrow">Le défi technique</p>
+            <% if (item.problem_statement) { %><p><%= item.problem_statement %></p><% } %>
+            <% if (item.product_context) { renderText(item.product_context); } %>
+            <% if (item.system_architecture) { %><p><%= item.system_architecture %></p><% } %>
+          </section>
+        <% } %>
+
+        <% if (missions.length || achievements.length || methods.length) { %>
+          <section class="detail-section" data-reveal>
+            <p class="eyebrow">Ce que j'ai fait</p>
+            <% if (missions.length) { %>
+              <ul class="detail-feature-grid">
+                <% missions.forEach((mission) => { %><li><%= mission %></li><% }) %>
+              </ul>
             <% } %>
-          </div>
-        </section>
-      <% } %>
+            <% if (achievements.length) { %>
+              <h3 class="detail-subhead">Réalisations concrètes</h3>
+              <ul class="detail-feature-grid">
+                <% achievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %>
+              </ul>
+            <% } %>
+            <% if (methods.length) { %>
+              <h3 class="detail-subhead">Méthodes de travail</h3>
+              <div class="tag-row">
+                <% methods.forEach((method) => { %><span class="skill-badge"><%= method %></span><% }) %>
+              </div>
+            <% } %>
+          </section>
+        <% } %>
 
-      <% if (!isEducation && item.problem_statement) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Problématique</p>
-          <h2>Problématique technique</h2>
-          <p><%= item.problem_statement %></p>
-        </section>
-      <% } %>
+        <% if (hasAlternance) { %>
+          <section class="detail-section" data-reveal>
+            <p class="eyebrow">Progression</p>
+            <h2>Deux années d'alternance</h2>
+            <div class="experience-year-list">
+              <% if (item.first_year_summary || firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length) { %>
+                <article class="experience-year">
+                  <div class="experience-year__marker">1</div>
+                  <div class="experience-year__body">
+                    <h3>Première année — Vérification logicielle et tests unitaires OCEAN</h3>
+                    <% renderText(item.first_year_summary); %>
+                    <% if (firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length) { %>
+                    <details class="year-detail">
+                      <summary>Détail de l'année</summary>
+                      <% if (firstYearTasks.length) { %><h4>Missions principales</h4><ul class="detail-list"><% firstYearTasks.forEach((task) => { %><li><%= task %></li><% }) %></ul><% } %>
+                      <% if (firstYearAchievements.length) { %><h4>Réalisations concrètes</h4><ul class="detail-list"><% firstYearAchievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %></ul><% } %>
+                      <% if (firstYearTools.length) { %><h4>Outils utilisés</h4><div class="tag-row"><% firstYearTools.forEach((tool) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= tool %>" aria-label="Afficher la fiche de <%= tool %>"><%= tool %></button><% }) %></div><% } %>
+                      <% if (firstYearSkills.length) { %><h4>Compétences développées</h4><div class="tag-row"><% firstYearSkills.forEach((skill) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button><% }) %></div><% } %>
+                    </details>
+                    <% } %>
+                  </div>
+                </article>
+              <% } %>
+              <% if (item.second_year_summary || secondYearTasks.length || secondYearAchievements.length || secondYearTools.length || secondYearSkills.length) { %>
+                <article class="experience-year">
+                  <div class="experience-year__marker">2</div>
+                  <div class="experience-year__body">
+                    <h3>Deuxième année — Validation calculateurs, tests sur cible et automatisation</h3>
+                    <% renderText(item.second_year_summary); %>
+                    <% if (secondYearTasks.length || secondYearAchievements.length || secondYearTools.length || secondYearSkills.length) { %>
+                    <details class="year-detail">
+                      <summary>Détail de l'année</summary>
+                      <% if (secondYearTasks.length) { %><h4>Missions principales</h4><ul class="detail-list"><% secondYearTasks.forEach((task) => { %><li><%= task %></li><% }) %></ul><% } %>
+                      <% if (secondYearAchievements.length) { %><h4>Réalisations concrètes</h4><ul class="detail-list"><% secondYearAchievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %></ul><% } %>
+                      <% if (secondYearTools.length) { %><h4>Outils utilisés</h4><div class="tag-row"><% secondYearTools.forEach((tool) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= tool %>" aria-label="Afficher la fiche de <%= tool %>"><%= tool %></button><% }) %></div><% } %>
+                      <% if (secondYearSkills.length) { %><h4>Compétences développées</h4><div class="tag-row"><% secondYearSkills.forEach((skill) => { %><button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button><% }) %></div><% } %>
+                    </details>
+                    <% } %>
+                  </div>
+                </article>
+              <% } %>
+            </div>
+          </section>
+        <% } %>
 
-      <% if (!isEducation && item.system_architecture) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Architecture</p>
-          <h2>Architecture du système</h2>
-          <p><%= item.system_architecture %></p>
-        </section>
-      <% } %>
-
-      <% if (isEducation && keySubjects.length) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Matières</p>
-          <h2>Matières principales</h2>
-          <ul class="detail-list">
-            <% keySubjects.forEach((subject) => { %><li><%= subject %></li><% }) %>
-          </ul>
-        </section>
-      <% } %>
-
-      <% if (isEducation && program.length) { %>
-        <section class="detail-section program-section">
-          <p class="eyebrow">Programme</p>
-          <h2>Programme suivi</h2>
-          <% if (item.program_summary) { %><p><%= item.program_summary %></p><% } %>
-          <% if (programDistribution.length) { %>
-            <div class="program-distribution" aria-label="Répartition des enseignements">
-              <% programDistribution.forEach((entry) => { %>
-                <% const match = entry.match(/^(.*?)(?:\s*:\s*|\s+-\s+)([0-9]+(?:[,.][0-9]+)?\s*%)/); %>
-                <div>
-                  <span><%= match ? match[1].trim() : entry %></span>
-                  <% if (match) { %><strong><%= match[2].replace('.', ',') %></strong><% } %>
-                </div>
+        <% if (technicalChallenges.length) { %>
+          <section class="detail-section" data-reveal>
+            <p class="eyebrow">Difficultés & résolution</p>
+            <div class="challenge-list">
+              <% technicalChallenges.forEach((challenge) => { %>
+                <% const parts = String(challenge).split('|').map((part) => part.trim()).filter(Boolean); %>
+                <details class="challenge-item">
+                  <summary><%= parts[0] || 'Difficulté technique' %></summary>
+                  <% parts.slice(1).forEach((part) => { %><p><%= part %></p><% }) %>
+                </details>
               <% }) %>
             </div>
-          <% } %>
-          <div class="program-category-list">
-            <% program.forEach((category) => { %>
-              <% const categorySkills = formatList(category.skills_summary).length ? formatList(category.skills_summary) : [...new Set(category.courses.flatMap((course) => formatList(course.skills_summary)))]; %>
-              <article class="program-category">
-                <header class="program-category__header">
-                  <div>
-                    <h3><%= category.name %></h3>
-                    <p class="muted">UV suivies : <%= category.courses.map((course) => course.code).join(', ') %></p>
+          </section>
+        <% } %>
+
+        <% if (item.results || resultsList.length || item.personal_contribution || personalContributionList.length) { %>
+          <section class="detail-section detail-section--result" data-reveal>
+            <p class="eyebrow">Résultats & apports</p>
+            <% if (item.results) { renderText(item.results); } %>
+            <% if (resultsList.length) { %>
+              <ul class="detail-feature-grid">
+                <% resultsList.forEach((result) => { %><li><%= result %></li><% }) %>
+              </ul>
+            <% } %>
+            <% if (item.personal_contribution) { renderText(item.personal_contribution); } %>
+            <% if (personalContributionList.length) { %>
+              <ul class="detail-list detail-list--spaced">
+                <% personalContributionList.forEach((contribution) => { %><li><%= contribution %></li><% }) %>
+              </ul>
+            <% } %>
+          </section>
+        <% } %>
+
+      <% } else { %>
+        <%# ---------------- ÉTUDES ---------------- %>
+        <% const eduLead = item.context || item.description; %>
+        <% if (eduLead) { %>
+          <section class="detail-section detail-section--lead" data-reveal>
+            <p class="eyebrow">La formation</p>
+            <% const lp = paragraphs(eduLead); %>
+            <p class="detail-lead-text"><%= lp[0] %></p>
+            <% lp.slice(1).forEach((p) => { %><p><%= p %></p><% }) %>
+          </section>
+        <% } %>
+
+        <% if (keySubjects.length) { %>
+          <section class="detail-section" data-reveal>
+            <p class="eyebrow">Au programme</p>
+            <h2>Matières principales</h2>
+            <ul class="detail-feature-grid">
+              <% keySubjects.forEach((subject) => { %><li><%= subject %></li><% }) %>
+            </ul>
+          </section>
+        <% } %>
+
+        <% if (program.length) { %>
+          <section class="detail-section program-section" data-reveal>
+            <p class="eyebrow">Programme</p>
+            <h2>Répartition des enseignements</h2>
+            <% if (item.program_summary) { %><p><%= item.program_summary %></p><% } %>
+            <% if (programDistribution.length) { %>
+              <div class="program-bars" aria-label="Répartition des enseignements">
+                <% programDistribution.forEach((entry) => { %>
+                  <% const match = entry.match(/^(.*?)(?:\s*:\s*|\s+-\s+)([0-9]+(?:[,.][0-9]+)?)\s*%/); %>
+                  <% const label = match ? match[1].trim() : entry; %>
+                  <% const pct = match ? parseFloat(match[2].replace(',', '.')) : 0; %>
+                  <div class="program-bar">
+                    <div class="program-bar__head"><span><%= label %></span><% if (pct) { %><strong><%= String(pct).replace('.', ',') %> %</strong><% } %></div>
+                    <% if (pct) { %><div class="program-bar__track"><div class="program-bar__fill" style="width: <%= Math.min(pct, 100) %>%"></div></div><% } %>
                   </div>
-                  <span><%= category.courses.length %> UV</span>
-                </header>
-                <% if (category.description) { %><p><%= category.description %></p><% } %>
-                <% if (categorySkills.length) { %>
-                  <div class="tag-row">
-                    <% categorySkills.slice(0, 12).forEach((skill) => { %>
-                      <button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button>
+                <% }) %>
+              </div>
+            <% } %>
+            <div class="program-category-list">
+              <% program.forEach((category) => { %>
+                <% const categorySkills = formatList(category.skills_summary).length ? formatList(category.skills_summary) : [...new Set(category.courses.flatMap((course) => formatList(course.skills_summary)))]; %>
+                <article class="program-category">
+                  <header class="program-category__header">
+                    <div>
+                      <h3><%= category.name %></h3>
+                      <p class="muted">UV suivies : <%= category.courses.map((course) => course.code).join(', ') %></p>
+                    </div>
+                    <span><%= category.courses.length %> UV</span>
+                  </header>
+                  <% if (category.description) { %><p><%= category.description %></p><% } %>
+                  <% if (categorySkills.length) { %>
+                    <div class="tag-row">
+                      <% categorySkills.slice(0, 12).forEach((skill) => { %>
+                        <button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button>
+                      <% }) %>
+                    </div>
+                  <% } %>
+                  <div class="program-course-list">
+                    <% category.courses.forEach((course) => { %>
+                      <details class="program-course">
+                        <% const visibleCode = course.code && !String(course.code).startsWith('ESIEE_'); %>
+                        <summary class="<%= visibleCode ? '' : 'program-course__summary--no-code' %>">
+                          <% if (visibleCode) { %><span><%= course.code %></span><% } %>
+                          <strong><%= course.title %></strong>
+                        </summary>
+                        <% const courseMeta = [course.formation_year, course.semester, course.hours, course.ects].filter(Boolean); %>
+                        <% if (courseMeta.length) { %>
+                          <div class="program-course-meta">
+                            <% courseMeta.forEach((meta) => { %><span><%= meta %></span><% }) %>
+                          </div>
+                        <% } %>
+                        <% if (course.description) { %><p><%= course.description %></p><% } %>
+                        <% const courseSkills = formatList(course.skills_summary); %>
+                        <% if (courseSkills.length) { %>
+                          <div class="tag-row">
+                            <% courseSkills.forEach((skill) => { %>
+                              <button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button>
+                            <% }) %>
+                          </div>
+                        <% } %>
+                      </details>
                     <% }) %>
                   </div>
-                <% } %>
-                <div class="program-course-list">
-                  <% category.courses.forEach((course) => { %>
-                    <details class="program-course">
-                      <% const visibleCode = course.code && !String(course.code).startsWith('ESIEE_'); %>
-                      <summary class="<%= visibleCode ? '' : 'program-course__summary--no-code' %>">
-                        <% if (visibleCode) { %><span><%= course.code %></span><% } %>
-                        <strong><%= course.title %></strong>
-                      </summary>
-                      <% const courseMeta = [course.formation_year, course.semester, course.hours, course.ects].filter(Boolean); %>
-                      <% if (courseMeta.length) { %>
-                        <div class="program-course-meta">
-                          <% courseMeta.forEach((meta) => { %><span><%= meta %></span><% }) %>
-                        </div>
-                      <% } %>
-                      <% if (course.description) { %><p><%= course.description %></p><% } %>
-                      <% const courseSkills = formatList(course.skills_summary); %>
-                      <% if (courseSkills.length) { %>
-                        <div class="tag-row">
-                          <% courseSkills.forEach((skill) => { %>
-                            <button class="skill-badge" type="button" data-knowledge-name="<%= skill %>" aria-label="Afficher la fiche de <%= skill %>"><%= skill %></button>
-                          <% }) %>
-                        </div>
-                      <% } %>
-                    </details>
-                  <% }) %>
-                </div>
-              </article>
-            <% }) %>
-          </div>
-        </section>
-      <% } %>
+                </article>
+              <% }) %>
+            </div>
+          </section>
+        <% } %>
 
-      <% if (!isEducation && missions.length) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Missions</p>
-          <h2>Missions principales</h2>
-          <ul class="detail-list">
-            <% missions.forEach((mission) => { %><li><%= mission %></li><% }) %>
-          </ul>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && achievements.length) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Réalisation</p>
-          <h2>Réalisations concrètes</h2>
-          <ul class="detail-list">
-            <% achievements.forEach((achievement) => { %><li><%= achievement %></li><% }) %>
-          </ul>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && technicalChallenges.length) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Débogage</p>
-          <h2>Difficultés rencontrées et résolution</h2>
-          <div class="challenge-list">
-            <% technicalChallenges.forEach((challenge) => { %>
-              <% const parts = String(challenge).split('|').map((part) => part.trim()).filter(Boolean); %>
-              <details class="challenge-item">
-                <summary><%= parts[0] || 'Difficulté technique' %></summary>
-                <% parts.slice(1).forEach((part) => { %><p><%= part %></p><% }) %>
-              </details>
-            <% }) %>
-          </div>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && methods.length) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Méthodes</p>
-          <h2>Méthodes de travail</h2>
-          <ul class="detail-list">
-            <% methods.forEach((method) => { %><li><%= method %></li><% }) %>
-          </ul>
-        </section>
-      <% } %>
-
-      <% if (isEducation && item.personal_contribution) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Apport</p>
-          <h2>Ce que cette formation m’a apporté</h2>
-          <p><%= item.personal_contribution %></p>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && item.results) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Résultats</p>
-          <h2>Résultats et apports</h2>
-          <% renderText(item.results); %>
-          <% if (resultsList.length) { %>
-            <ul class="detail-list detail-list--spaced">
-              <% resultsList.forEach((result) => { %><li><%= result %></li><% }) %>
-            </ul>
-          <% } %>
-        </section>
-      <% } %>
-
-      <% if (!isEducation && (item.personal_contribution || personalContributionList.length)) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Parcours</p>
-          <h2>Apports personnels</h2>
-          <% renderText(item.personal_contribution); %>
-          <% if (personalContributionList.length) { %>
-            <ul class="detail-list detail-list--spaced">
-              <% personalContributionList.forEach((contribution) => { %><li><%= contribution %></li><% }) %>
-            </ul>
-          <% } %>
-        </section>
-      <% } %>
-
-      <% if (isEducation && item.description && item.context) { %>
-        <section class="detail-section">
-          <p class="eyebrow">Description</p>
-          <h2>Contenu de la formation</h2>
-          <p><%= item.description %></p>
-        </section>
+        <% if (item.personal_contribution) { %>
+          <section class="detail-section detail-section--result" data-reveal>
+            <p class="eyebrow">Ce que ça m'a apporté</p>
+            <p><%= item.personal_contribution %></p>
+          </section>
+        <% } %>
       <% } %>
     </main>
 
     <aside class="detail-sidebar">
-      <section class="detail-side-card">
+      <section class="detail-side-card detail-side-card--sticky">
         <h2>Fiche synthèse</h2>
         <dl class="detail-kv">
           <div><dt>Statut</dt><dd><%= formatStatus(item.status, isEducation ? 'education' : 'default') %></dd></div>
@@ -359,6 +323,17 @@
           <% if (!isEducation && item.contract_type) { %><div><dt>Contrat</dt><dd><%= formatContractType(item.contract_type) %></dd></div><% } %>
           <% if (location) { %><div><dt>Lieu</dt><dd><%= location %></dd></div><% } %>
         </dl>
+
+        <% if (technologies.length) { %>
+          <div class="detail-side-tech">
+            <h3><%= isEducation ? 'Technologies / matières' : 'Technologies' %></h3>
+            <div class="tag-row">
+              <% technologies.forEach((tech) => { %>
+                <button class="skill-badge" type="button" <% if (tech.id) { %>data-knowledge-type="technology" data-knowledge-id="<%= tech.id %>"<% } else { %>data-knowledge-name="<%= tech.name %>"<% } %> aria-label="Afficher la fiche de <%= tech.name %>"><%= tech.name %></button>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
       </section>
 
       <% if (!isEducation && orgName) { %>
@@ -379,17 +354,6 @@
           <h2>Établissement</h2>
           <p><%= item.school_description || 'Description école à compléter.' %></p>
           <% if (item.school_website) { %><a class="section-link" href="<%= item.school_website %>" target="_blank" rel="noreferrer">Site web</a><% } %>
-        </section>
-      <% } %>
-
-      <% if (technologies.length) { %>
-        <section class="detail-side-card">
-          <h2><%= isEducation ? 'Technologies / matières' : 'Technologies et outils' %></h2>
-          <div class="tag-row">
-            <% technologies.forEach((tech) => { %>
-              <button class="skill-badge" type="button" <% if (tech.id) { %>data-knowledge-type="technology" data-knowledge-id="<%= tech.id %>"<% } else { %>data-knowledge-name="<%= tech.name %>"<% } %> aria-label="Afficher la fiche de <%= tech.name %>"><%= tech.name %></button>
-            <% }) %>
-          </div>
         </section>
       <% } %>
 

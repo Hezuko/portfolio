@@ -1,3 +1,8 @@
+/* ⚠️ SOURCE MANUELLE — NE PAS RECOMPILER DEPUIS SCSS.
+   Ce fichier est édité à la main et a divergé de l'ancien custom.scss
+   (archivé dans /_legacy). Le script "sass" a été retiré de package.json.
+   Le thème sombre vit dans redesign.css, chargé après celui-ci.
+   À terme : fusionner les deux en une seule feuille. */
 :root {
   --bg: #f6f4ef;
   --surface: #ffffff;
@@ -241,6 +246,43 @@ a {
 .skill-badge small {
   color: var(--muted);
   font-weight: 650;
+}
+
+.skill-badge__icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: none;
+}
+
+.hero-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1.5rem;
+}
+
+.hero-stack__chip {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hero-stack__chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(30, 28, 24, 0.12);
+}
+
+.hero-stack__chip img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .project-card h3 {

@@ -1,0 +1,61 @@
+<section class="detail-hero skin-ai">
+  <div class="container detail-hero__grid">
+    <div class="detail-hero__content">
+      <p class="eyebrow">À propos</p>
+      <h1><%= profile.name %></h1>
+      <p class="detail-hero__lead"><%= profile.role %></p>
+      <% if (profile.availability) { %>
+        <p class="availability-badge"><span class="availability-dot" aria-hidden="true"></span><%= profile.availability %></p>
+      <% } %>
+      <div class="hero-actions">
+        <% if (profile.cv) { %><a class="btn btn-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Voir mon CV</a><% } %>
+        <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
+      </div>
+    </div>
+    <figure class="detail-hero__media">
+      <img src="<%= cloudinaryUrl(profile.photo, { w: 640 }) %>" alt="Portrait de <%= profile.name %>" width="640" height="640">
+    </figure>
+  </div>
+</section>
+
+<section class="detail-page section-band skin-ai">
+  <div class="container detail-page__grid">
+    <main class="detail-main">
+      <section class="detail-section detail-section--lead" data-reveal>
+        <p class="eyebrow">Qui je suis</p>
+        <% String(profile.about || "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).forEach((para, i) => { %>
+          <p class="<%= i === 0 ? 'detail-lead-text' : '' %>"><%= para %></p>
+        <% }) %>
+      </section>
+
+      <section class="detail-section" data-reveal>
+        <p class="eyebrow">Ce que je fais</p>
+        <ul class="detail-feature-grid">
+          <li>Conception électronique : PCB multicouche, STM32, capteurs, RF.</li>
+          <li>Logiciel embarqué temps réel en C / C++.</li>
+          <li>Applications & produits : mobile (Flutter), web, back-end.</li>
+          <li>IA appliquée : RAG, modèles, intégration dans le produit.</li>
+          <li>Tests, validation et automatisation (CAN / LIN, CI).</li>
+          <li>De l'idée au produit livré — toute la chaîne, par la même main.</li>
+        </ul>
+      </section>
+
+      <section class="detail-section" data-reveal>
+        <p class="eyebrow">La suite</p>
+        <p>Envie d'en savoir plus sur mes réalisations ? Parcourez mes <a class="text-link" href="/projets">projets</a>, mon <a class="text-link" href="/etudes">parcours</a> et mes <a class="text-link" href="/jobs">expériences</a> — ou écrivez-moi directement.</p>
+      </section>
+    </main>
+
+    <aside class="detail-sidebar">
+      <section class="detail-side-card detail-side-card--sticky">
+        <h2>Me joindre</h2>
+        <div class="about-links">
+          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><span><%= profile.email %></span></a>
+          <% if (profile.github) { %><a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i><span>GitHub</span></a><% } %>
+          <% if (profile.linkedin) { %><a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i><span>LinkedIn</span></a><% } %>
+          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text"></i><span>CV / Résumé</span></a><% } %>
+        </div>
+      </section>
+    </aside>
+  </div>
+</section>

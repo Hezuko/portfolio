@@ -10,20 +10,19 @@
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav ms-auto align-items-lg-center">
         <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
+        <li class="nav-item"><a class="nav-link" href="/a-propos">À propos</a></li>
         <li class="nav-item"><a class="nav-link" href="/projets">Projets</a></li>
-        <li class="nav-item"><a class="nav-link" href="/etudes">Etudes</a></li>
-        <li class="nav-item"><a class="nav-link" href="/jobs">Experiences</a></li>
-        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+        <li class="nav-item"><a class="nav-link" href="/etudes">Études</a></li>
+        <li class="nav-item"><a class="nav-link" href="/jobs">Expériences</a></li>
+        <li class="nav-item"><a class="btn btn-sm btn-dark ms-lg-2" href="/contact">Me contacter</a></li>
         <% if (user && user.role === "admin") { %>
-          <li class="nav-item"><a class="btn btn-sm btn-dark ms-lg-2" href="/admin">Admin</a></li>
+          <li class="nav-item"><a class="btn btn-sm btn-outline-dark ms-lg-2" href="/admin">Admin</a></li>
           <li class="nav-item">
             <form action="/desauthentification" method="POST" class="ms-lg-2 mt-2 mt-lg-0">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button class="btn btn-sm btn-outline-dark" type="submit">Logout</button>
             </form>
           </li>
-        <% } else { %>
-          <li class="nav-item"><a class="btn btn-sm btn-outline-dark ms-lg-2" href="/authentification">Admin</a></li>
         <% } %>
       </ul>
     </div>

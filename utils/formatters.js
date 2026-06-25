@@ -5,23 +5,23 @@ const STATUS_LABELS = {
     planned: "Prevu",
     paused: "En pause",
     cancelled: "Annule",
-    abandoned: "Abandonne",
+    abandoned: "Abandonné",
   },
   default: {
-    done: "Termine",
+    done: "Terminé",
     in_progress: "En cours",
     planned: "Prevu",
     paused: "En pause",
     cancelled: "Annule",
-    abandoned: "Abandonne",
+    abandoned: "Abandonné",
   },
 };
 
 const LEVEL_LABELS = {
   beginner: "Debutant",
   debutant: "Debutant",
-  intermediate: "Intermediaire",
-  intermediaire: "Intermediaire",
+  intermediate: "Intermédiaire",
+  intermediaire: "Intermédiaire",
   advanced: "Avance",
   avance: "Avance",
   expert: "Expert",

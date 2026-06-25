@@ -2,18 +2,32 @@
   <section class="focus-scroll-section">
     <article class="focus-card home-profile-card">
       <div class="hero-copy">
-        <p class="eyebrow">Portfolio developpeur</p>
-        <h1><%= profile.name %></h1>
-        <p class="lead"><%= profile.role %></p>
-        <p class="hero-text"><%= profile.about || profile.tagline %></p>
+        <p class="eyebrow"><%= profile.name %> · Ingénieur architecte en systèmes embarqués</p>
+        <h1>Du circuit imprimé au <span class="iris-text">cloud</span></h1>
+        <p class="lead">Je conçois l'électronique — PCB, STM32, capteurs, RF — et le logiciel qui tourne dessus : de l'app mobile à l'IA jusqu'au cloud. Le matériel et le logiciel, par la même main.</p>
+        <% if (profile.availability) { %>
+          <p class="availability-badge"><span class="availability-dot" aria-hidden="true"></span><%= profile.availability %></p>
+        <% } %>
         <div class="hero-actions">
           <a class="btn btn-dark" href="/projets">Voir mes projets</a>
-          <a class="btn btn-outline-dark" href="/etudes">Voir mon parcours</a>
           <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
+          <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Mon CV</a><% } %>
+        </div>
+        <div class="hero-stack" aria-label="Outils et technologies que j'utilise">
+          <%
+            const heroTools = [
+              ['stmicroelectronics','STM32'], ['kicad','KiCad'], ['arduino','Arduino'], ['cplusplus','C++'],
+              ['python','Python'], ['fastapi','FastAPI'], ['nodedotjs','Node.js'], ['flutter','Flutter'],
+              ['react','React'], ['postgresql','PostgreSQL'], ['pytorch','PyTorch'], ['docker','Docker']
+            ];
+          %>
+          <% heroTools.forEach(([slug, label]) => { %>
+            <span class="hero-stack__chip" title="<%= label %>"><img src="/images/tech/<%= slug %>.svg" alt="<%= label %>" width="22" height="22" loading="lazy"></span>
+          <% }) %>
         </div>
       </div>
       <div class="hero-media">
-        <img src="<%= profile.photo %>" alt="Portrait de <%= profile.name %>">
+        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>" alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
       </div>
     </article>
     <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller à la section projets"><span aria-hidden="true"></span></button>
@@ -22,7 +36,7 @@
   <section class="focus-scroll-section">
     <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="0" aria-label="Revenir au profil"><span aria-hidden="true"></span></button>
     <article class="focus-card home-summary-card clickable-card" data-card-href="/projets" tabindex="0" role="link" aria-label="Voir mes projets">
-      <p class="eyebrow">Selection</p>
+      <p class="eyebrow">Sélection</p>
       <div class="home-summary-card__header">
         <h2>Mes projets</h2>
       </div>

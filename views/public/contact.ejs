@@ -15,17 +15,17 @@
         </aside>
         <form class="form-surface" method="POST" action="/contact">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <% if (messageSent) { %><p class="alert alert-success">Message envoye.</p><% } %>
+          <% if (messageSent) { %><p class="alert alert-success">Message envoyé.</p><% } %>
           <% if (error) { %><p class="alert alert-danger"><%= error %></p><% } %>
           <div class="form-row">
             <label>Nom<input name="nom" required></label>
-            <label>Prenom<input name="prenom" required></label>
+            <label>Prénom<input name="prenom" required></label>
           </div>
           <label>Email<input name="email" type="email" required></label>
           <label>Objet<input name="objet" required></label>
           <label>Message<textarea name="texte" rows="6" required></textarea></label>
           <p class="form-note">
-            Les informations envoyees via ce formulaire sont utilisees uniquement pour traiter ta demande.
+            Les informations envoyées via ce formulaire sont utilisées uniquement pour traiter ta demande.
             Pour en savoir plus, consulte la <a href="/confidentialite">politique de confidentialite</a>.
           </p>
           <button class="btn btn-dark" type="submit">Envoyer</button>

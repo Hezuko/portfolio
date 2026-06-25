@@ -5,14 +5,24 @@ var contact = require("../model/contact");
 var mailer = require("../model/mailer");
 var repo = require("../model/portfolioRepository");
 var { formatLevel } = require("../utils/formatters");
+var { cloudinaryUrl } = require("../utils/cloudinary");
+
+function shortText(value, max = 300) {
+  const s = String(value || "").replace(/\s+/g, " ").trim();
+  return s.length > max ? s.slice(0, max - 1).trimEnd() + "…" : s;
+}
 
 const profile = {
   name: "Henoc Mukumbi",
-  role: "Developpeur web et ingenieur logiciel",
-  tagline: "Je construis des applications claires, utiles et maintenables, avec un interet fort pour le backend, les systemes et les produits bien finis.",
+  role: "Ingénieur architecte en systèmes embarqués",
+  tagline: "Ingénieur architecte en systèmes embarqués — je conçois un produit de A à Z, du circuit imprimé au cloud.",
+  about:
+    "Si je devais me définir : ingénieur-architecte en systèmes embarqués. Ce que j'aime, c'est concevoir un produit de A à Z — du schéma électronique jusqu'à la ligne de code qui le fait vivre.\n\nAujourd'hui, j'ai acquis des compétences larges sur de nombreux domaines de l'informatique : électronique embarquée, développement logiciel (back-end, web, mobile), intelligence artificielle et cloud. C'est cette polyvalence qui me permet de tenir un produit de bout en bout, de l'idée à la version finie.",
   email: "h.mukumbi100@gmail.com",
   github: "https://github.com/Hezuko",
   linkedin: "https://www.linkedin.com/in/henocmukumbi",
+  cv: "https://hezuko.github.io/resume/resume.pdf",
+  availability: "",
   photo: "https://res.cloudinary.com/portfolio-hezuko/image/upload/v1740309643/henoc_r0fiwi.jpg",
 };
 
@@ -22,11 +32,12 @@ function buildProfile(settings = {}) {
     name: settings.profile_name || profile.name,
     role: settings.profile_title || profile.role,
     tagline: settings.profile_tagline || profile.tagline,
-    about: settings.profile_about || "",
+    about: settings.profile_about || profile.about,
+    availability: settings.profile_availability || profile.availability,
     email: settings.contact_email || profile.email,
     github: settings.github_url || profile.github,
     linkedin: settings.linkedin_url || profile.linkedin,
-    cv: settings.cv_url || "",
+    cv: settings.cv_url || profile.cv,
     photo: repo.signMediaValue(settings.profile_photo) || profile.photo,
   };
 }
@@ -86,7 +97,7 @@ function buildLegal(settings = {}, currentProfile = buildProfile(settings)) {
 router.get("/", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
-    res.render("public/home", { title: "Portfolio - Henoc Mukumbi", profile: buildProfile(settingsToMap(data.settings)), ...data });
+    res.render("public/home", { title: "Henoc Mukumbi — Ingénieur systèmes embarqués", profile: buildProfile(settingsToMap(data.settings)), ...data });
   } catch (err) {
     next(err);
   }
@@ -106,7 +117,14 @@ router.get("/projets/:slug", async function (req, res, next) {
     const project = await repo.findProjectBySlug(req.params.slug);
     if (!project) return res.status(404).render("errors/404", { title: "Projet introuvable" });
     const settings = await repo.getSettingsMap();
-    res.render("public/project-detail", { title: project.name, profile: buildProfile(settings), project });
+    const projImg = project.main_image_url || project.main_image;
+    res.render("public/project-detail", {
+      title: project.name,
+      description: shortText(project.short_description || project.goal || project.context) || res.locals.description,
+      ogImage: projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage,
+      profile: buildProfile(settings),
+      project,
+    });
   } catch (err) {
     next(err);
   }
@@ -116,9 +134,9 @@ router.get("/etudes", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
-      title: "Etudes",
-      heading: "Etudes et formations",
-      intro: "Un parcours structure autour de l'informatique, des projets concrets et de l'apprentissage continu.",
+      title: "Études",
+      heading: "Études et formations",
+      intro: "Un parcours structuré autour de l'électronique, des systèmes embarqués et de l'apprentissage continu.",
       items: data.educations,
       type: "education",
     });
@@ -133,6 +151,7 @@ router.get("/etudes/:id", async function (req, res, next) {
     if (!item) return res.status(404).render("errors/404", { title: "Formation introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
+      description: shortText(item.context || item.description) || res.locals.description,
       item,
       type: "education",
     });
@@ -145,9 +164,9 @@ router.get("/jobs", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
-      title: "Experiences",
-      heading: "Experiences professionnelles",
-      intro: "Les missions, environnements et projets qui ont construit mon experience.",
+      title: "Expériences",
+      heading: "Expériences professionnelles",
+      intro: "Les missions, environnements et projets qui ont construit mon expérience d'ingénieur.",
       items: data.jobs,
       type: "job",
     });
@@ -162,6 +181,7 @@ router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
     if (!item) return res.status(404).render("errors/404", { title: "Experience introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
+      description: shortText(item.short_summary || item.mission_context || item.description) || res.locals.description,
       item,
       type: "job",
     });
@@ -278,6 +298,42 @@ router.post("/contact", async function (req, res, next) {
     mailer.sendContactEmail(data).catch((e) => console.error("Email de contact non envoyé :", e.message));
 
     res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/a-propos", function (req, res) {
+  repo.getSettingsMap()
+    .then((settings) => res.render("public/about", { title: "À propos", description: "À propos de Henoc Mukumbi, ingénieur systèmes embarqués : électronique, systèmes embarqués, logiciel et IA.", profile: buildProfile(settings) }))
+    .catch(() => res.render("public/about", { title: "À propos", profile: buildProfile() }));
+});
+
+function siteUrlOf(req) {
+  return process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+}
+
+router.get("/robots.txt", function (req, res) {
+  const base = siteUrlOf(req);
+  res.type("text/plain").send(
+    ["User-agent: *", "Allow: /", "Disallow: /admin", "Disallow: /authentification", "", `Sitemap: ${base}/sitemap.xml`, ""].join("\n")
+  );
+});
+
+router.get("/sitemap.xml", async function (req, res, next) {
+  try {
+    const base = siteUrlOf(req);
+    const data = await repo.getPublicData();
+    const paths = [
+      "/", "/a-propos", "/projets", "/etudes", "/jobs", "/competences", "/contact",
+      ...(data.projects || []).filter((p) => p.slug).map((p) => `/projets/${p.slug}`),
+      ...(data.educations || []).map((e) => `/etudes/${e.id}`),
+      ...(data.jobs || []).map((j) => `/experiences/${j.id}`),
+    ];
+    const body = paths.map((p) => `  <url><loc>${base}${p === "/" ? "" : p}</loc></url>`).join("\n");
+    res.type("application/xml").send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
+    );
   } catch (err) {
     next(err);
   }
