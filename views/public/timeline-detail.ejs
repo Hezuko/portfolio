@@ -48,6 +48,30 @@
 }).replace(/</g, "\\u003c") %>
 </script>
 
+<script type="application/ld+json">
+<%- JSON.stringify(
+  isEducation
+    ? {
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalProgram",
+        "name": item.title,
+        "description": description,
+        "url": canonicalUrl,
+        "provider": orgName ? { "@type": "EducationalOrganization", "name": orgName } : undefined,
+        "occupationalCategory": item.field || undefined
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "CreativeWork",
+        "name": item.title,
+        "description": description,
+        "url": canonicalUrl,
+        "author": { "@type": "Person", "name": "Henoc Mukumbi" },
+        "about": orgName || undefined
+      }
+).replace(/</g, "\\u003c") %>
+</script>
+
 <section class="detail-hero <%= skinClass %>">
   <div class="container detail-hero__grid">
     <div class="detail-hero__content">
@@ -79,7 +103,7 @@
     <div class="detail-hero__entity">
       <div class="entity-logo large">
         <% if (orgLogo) { %>
-          <img src="<%= orgLogo %>" alt="Logo <%= orgName %>">
+          <img src="<%= orgLogo %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
         <% } else { %>
           <span><%= orgInitial %></span>
         <% } %>

@@ -31,11 +31,11 @@ var authentificationRouter = require("./routes/authentification");
 
 var app = express();
 
-// Valeurs par défaut utilisées par le layout, même si la session échoue.
-app.use((req, res, next) => {
-  res.locals.user = null;
-  next();
-});
+// Garde-fou déploiement : sans SITE_URL en prod, canonical/OG/JSON-LD/sitemap retombent
+// sur l'hôte de la requête (risque d'indexer une mauvaise origine).
+if (process.env.NODE_ENV === "production" && !process.env.SITE_URL) {
+  console.warn("⚠️  SITE_URL non défini en production — les URLs absolues (canonical, OG, JSON-LD, sitemap) utiliseront l'hôte de la requête. Définir SITE_URL=https://<domaine>.");
+}
 
 // Derrière un reverse-proxy (Caddy) : req.protocol reflète https, canonical/OG corrects
 app.set("trust proxy", 1);

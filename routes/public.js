@@ -267,28 +267,40 @@ router.get("/api/knowledge/:name", async function (req, res, next) {
   }
 });
 
-router.get("/contact", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/contact", { title: "Contact", profile: buildProfile(settings), messageSent: false, error: null }))
-    .catch((err) => res.render("public/contact", { title: "Contact", profile, messageSent: false, error: err.message }));
+router.get("/contact", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/contact", { title: "Contact", profile: buildProfile(settings), messageSent: false, error: null });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/mentions-legales", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/legal-notice", { title: "Mentions légales", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/legal-notice", { title: "Mentions légales", legal: { ...legal, error: err.message } }));
+router.get("/mentions-legales", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/legal-notice", { title: "Mentions légales", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/confidentialite", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/privacy", { title: "Politique de confidentialité", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/privacy", { title: "Politique de confidentialité", legal: { ...legal, error: err.message } }));
+router.get("/confidentialite", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/privacy", { title: "Politique de confidentialité", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/cookies", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/cookies", { title: "Cookies", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/cookies", { title: "Cookies", legal: { ...legal, error: err.message } }));
+router.get("/cookies", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/cookies", { title: "Cookies", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/desauthentification", function (req, res, next) {
@@ -341,10 +353,13 @@ router.post("/contact", async function (req, res, next) {
   }
 });
 
-router.get("/a-propos", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/about", { title: "À propos", description: "À propos de Henoc Mukumbi, ingénieur systèmes embarqués : électronique, systèmes embarqués, logiciel et IA.", profile: buildProfile(settings) }))
-    .catch(() => res.render("public/about", { title: "À propos", profile: buildProfile() }));
+router.get("/a-propos", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/about", { title: "À propos", description: "À propos de Henoc Mukumbi, ingénieur systèmes embarqués : électronique, systèmes embarqués, logiciel et IA.", profile: buildProfile(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 function siteUrlOf(req) {
@@ -362,13 +377,23 @@ router.get("/sitemap.xml", async function (req, res, next) {
   try {
     const base = siteUrlOf(req);
     const data = await repo.getPublicData();
-    const paths = [
-      "/", "/a-propos", "/projets", "/etudes", "/jobs", "/competences", "/contact",
-      ...(data.projects || []).filter((p) => p.slug).map((p) => `/projets/${p.slug}`),
-      ...(data.educations || []).map((e) => `/etudes/${e.id}`),
-      ...(data.jobs || []).map((j) => `/experiences/${j.id}`),
+    const lastmodOf = (entity) => {
+      const d = entity.updated_at || entity.end_date || entity.start_date;
+      if (!d) return null;
+      const t = new Date(d);
+      return Number.isNaN(t.getTime()) ? null : t.toISOString().slice(0, 10);
+    };
+    const entries = [
+      { loc: "/" }, { loc: "/a-propos" }, { loc: "/projets" }, { loc: "/etudes" },
+      { loc: "/jobs" }, { loc: "/competences" }, { loc: "/contact" },
+      ...(data.projects || []).filter((p) => p.slug).map((p) => ({ loc: `/projets/${p.slug}`, lastmod: lastmodOf(p) })),
+      ...(data.educations || []).map((e) => ({ loc: `/etudes/${e.id}`, lastmod: lastmodOf(e) })),
+      ...(data.jobs || []).map((j) => ({ loc: `/experiences/${j.id}`, lastmod: lastmodOf(j) })),
     ];
-    const body = paths.map((p) => `  <url><loc>${base}${p === "/" ? "" : p}</loc></url>`).join("\n");
+    const body = entries.map((e) => {
+      const loc = `${base}${e.loc === "/" ? "" : e.loc}`;
+      return `  <url><loc>${loc}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}</url>`;
+    }).join("\n");
     res.type("application/xml").send(
       `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
     );

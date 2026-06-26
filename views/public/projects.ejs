@@ -11,6 +11,19 @@
       .filter((year) => Number.isFinite(year));
   }))].sort((a, b) => b - a);
 %>
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Projets de Henoc Mukumbi",
+  "itemListElement": projects.filter((project) => project.slug).map((project, i) => ({
+    "@type": "ListItem",
+    "position": i + 1,
+    "url": siteUrl + "/projets/" + project.slug,
+    "name": project.name || project.titre
+  }))
+}).replace(/</g, "\\u003c") %>
+</script>
 <div class="focus-scroll-page" data-focus-scroll>
   <section class="focus-scroll-section intro-section">
     <article class="focus-card intro-card">
@@ -70,10 +83,10 @@
       data-project-years="<%= projectYearValues.join('|') %>"
       data-project-technologies="<%= projectFamilyList.join('|') %>"
     >
-      <article class="focus-card project-focus-card <%= skinClass(project.category) %> <%= detailHref ? 'clickable-card' : '' %>" <% if (detailHref) { %>data-card-href="<%= detailHref %>" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
+      <article class="focus-card project-focus-card <%= skinClass(project.category) %> <%= detailHref ? 'clickable-card' : '' %>" <% if (detailHref) { %>data-card-href="<%= detailHref %>"<% } %>>
         <span class="focus-card-position" data-project-position><%= index + 1 %> / <%= projects.length %></span>
         <div class="project-showcase">
-          <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
+          <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>" loading="lazy" decoding="async">
           <div class="project-showcase-content">
             <div class="card-meta">
               <span><%= formatStatus(project.status || project.etat, 'default') %></span>

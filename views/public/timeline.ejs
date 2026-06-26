@@ -10,7 +10,7 @@
 
   <% items.forEach((item, index) => { %>
     <section class="focus-scroll-section">
-      <article class="focus-card clickable-card <%= isEducationPage ? 'education-focus-card' : 'experience-focus-card' %>" data-card-href="<%= type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}` %>" aria-label="<%= type === 'education' ? 'Voir la formation' : "Voir l'expérience" %> <%= item.title %>">
+      <article class="focus-card clickable-card <%= isEducationPage ? 'education-focus-card' : 'experience-focus-card' %>" data-card-href="<%= type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}` %>">
         <span class="focus-card-position"><%= index + 1 %> / <%= items.length %></span>
         <%- include('../partials/timeline-list', { items: [item], type, compact: true, cardLink: false }) %>
         <div class="focus-card-actions">

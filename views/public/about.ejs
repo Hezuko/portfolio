@@ -50,10 +50,10 @@
       <section class="detail-side-card detail-side-card--sticky">
         <h2>Me joindre</h2>
         <div class="about-links">
-          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><span><%= profile.email %></span></a>
-          <% if (profile.github) { %><a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i><span>GitHub</span></a><% } %>
-          <% if (profile.linkedin) { %><a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i><span>LinkedIn</span></a><% } %>
-          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text"></i><span>CV / Résumé</span></a><% } %>
+          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope" aria-hidden="true"></i><span><%= profile.email %></span></a>
+          <% if (profile.github) { %><a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i><span>GitHub</span></a><% } %>
+          <% if (profile.linkedin) { %><a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin" aria-hidden="true"></i><span>LinkedIn</span></a><% } %>
+          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>CV / Résumé</span></a><% } %>
         </div>
       </section>
     </aside>

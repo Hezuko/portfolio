@@ -246,7 +246,10 @@
     if (!focusDotsNav || !active) return;
     const activeIdx = focusSections.indexOf(active);
     focusDotsNav.querySelectorAll(".focus-dot").forEach((dot) => {
-      dot.classList.toggle("is-active", Number(dot.dataset.focusTarget) === activeIdx);
+      const isActive = Number(dot.dataset.focusTarget) === activeIdx;
+      dot.classList.toggle("is-active", isActive);
+      if (isActive) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
     });
   }
 
@@ -376,7 +379,13 @@
 
   imgs.forEach((el, i) => {
     el.style.cursor = "zoom-in";
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", "Agrandir l'image" + (el.alt ? " : " + el.alt : ""));
     el.addEventListener("click", () => open(i));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(i); }
+    });
   });
   box.querySelector(".lightbox__close").addEventListener("click", close);
   box.querySelector(".lightbox__btn--prev").addEventListener("click", (e) => { e.stopPropagation(); go(-1); });

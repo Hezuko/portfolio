@@ -150,7 +150,6 @@ a { color: inherit; }
 
 
 /* ---------- Cartes résumé ---------- */
-.home-summary-media { background: var(--surface-2); border: 1px solid var(--line); }
 .home-summary-item strong { color: var(--text); }
 .home-summary-item small { color: var(--muted); }
 .section-link { color: var(--skin); }
@@ -238,10 +237,20 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
   box-shadow: 0 0 12px rgba(139, 108, 255, 0.55);
 }
 .focus-dot.is-active .focus-dot__label { opacity: 1; transform: none; color: var(--text); }
-@media (max-width: 768px) {
+/* Points masqués dès que la nav passe en hamburger (évite le chevauchement tablette) */
+@media (max-width: 991px) {
   .focus-dots { display: none; }
+}
+
+@media (max-width: 768px) {
   /* fond non-fixe sur mobile (évite le jank de scroll iOS) */
   body { background-attachment: scroll; }
+  /* pas d'atténuation des sections hors focus sur mobile (le snap desktop n'y est plus) */
+  .focus-scroll-page.has-focus-effect .focus-scroll-section { opacity: 1; transform: none; }
+  /* cibles tactiles : pastilles techniques et boutons ≥ 44px */
+  .skill-badge { min-height: 44px; }
+  .navbar-toggler { min-height: 44px; }
+  .navbar-collapse .nav-link { min-height: 44px; display: flex; align-items: center; }
 }
 
 /* ---------- Fix contraste : lignes projets / écoles / entreprises ---------- */

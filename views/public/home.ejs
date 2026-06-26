@@ -23,7 +23,7 @@
   </section>
 
   <section class="focus-scroll-section">
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/projets" aria-label="Voir mes projets">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/projets">
       <p class="eyebrow">Sélection</p>
       <div class="home-summary-card__header">
         <h2>Mes projets</h2>
@@ -33,7 +33,7 @@
         <% projects.slice(0, 3).forEach((project) => { %>
           <div class="home-summary-item">
             <div class="home-summary-media home-summary-media--project">
-              <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="Visuel <%= project.name || project.titre %>">
+              <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="Visuel <%= project.name || project.titre %>" loading="lazy" decoding="async" width="58" height="58">
             </div>
             <div>
               <strong><%= project.name || project.titre %></strong>
@@ -48,7 +48,7 @@
   </section>
 
   <section class="focus-scroll-section">
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/jobs" aria-label="Voir mes expériences">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/jobs">
       <p class="eyebrow">Terrain</p>
       <div class="home-summary-card__header">
         <h2>Mes expériences</h2>
@@ -60,7 +60,7 @@
           <div class="home-summary-item">
             <div class="home-summary-media">
               <% if (job.company_logo_url) { %>
-                <img src="<%= job.company_logo_url %>" alt="Logo <%= job.company_name %>">
+                <img src="<%= job.company_logo_url %>" alt="Logo <%= job.company_name %>" loading="lazy" decoding="async" width="58" height="58">
               <% } else { %>
                 <span><%= companyInitial %></span>
               <% } %>
@@ -78,7 +78,7 @@
   </section>
 
   <section class="focus-scroll-section">
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/etudes" aria-label="Voir mes études">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/etudes">
       <p class="eyebrow">Parcours</p>
       <div class="home-summary-card__header">
         <h2>Mes études</h2>
@@ -90,7 +90,7 @@
           <div class="home-summary-item">
             <div class="home-summary-media">
               <% if (education.school_logo_url) { %>
-                <img src="<%= education.school_logo_url %>" alt="Logo <%= education.school_name %>">
+                <img src="<%= education.school_logo_url %>" alt="Logo <%= education.school_name %>" loading="lazy" decoding="async" width="58" height="58">
               <% } else { %>
                 <span><%= schoolInitial %></span>
               <% } %>

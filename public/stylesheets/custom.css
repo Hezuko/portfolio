@@ -1158,6 +1158,12 @@ select:focus {
     align-items: flex-start;
   }
 
+  /* cibles tactiles confortables sur les liens du footer */
+  .site-footer a {
+    min-height: 40px;
+    padding: 0.35rem 0;
+  }
+
   .legal-content dl {
     grid-template-columns: 1fr;
   }
@@ -2206,12 +2212,14 @@ select:focus {
   background: rgba(18, 16, 14, 0.92);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .lightbox.is-open {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
 }
 
 .lightbox__img {
