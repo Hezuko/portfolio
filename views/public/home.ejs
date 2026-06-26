@@ -12,13 +12,15 @@
           <a class="btn btn-dark" href="/projets">Voir mes projets</a>
           <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
           <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Mon CV</a><% } %>
+          <% if (profile.github) { %><a class="btn btn-outline-dark" href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a><% } %>
         </div>
         <div class="hero-stack" aria-label="Outils et technologies que j'utilise">
           <%
             const heroTools = [
-              ['stmicroelectronics','STM32'], ['kicad','KiCad'], ['arduino','Arduino'], ['cplusplus','C++'],
-              ['python','Python'], ['fastapi','FastAPI'], ['nodedotjs','Node.js'], ['flutter','Flutter'],
-              ['react','React'], ['postgresql','PostgreSQL'], ['pytorch','PyTorch'], ['docker','Docker']
+              ['stmicroelectronics','STM32'], ['kicad','KiCad'], ['arduino','Arduino'], ['c','C'], ['cplusplus','C++'],
+              ['python','Python'], ['fastapi','FastAPI'], ['nodedotjs','Node.js'], ['express','Express'], ['javascript','JavaScript'],
+              ['flutter','Flutter'], ['dart','Dart'], ['react','React'], ['postgresql','PostgreSQL'], ['pytorch','PyTorch'],
+              ['git','Git'], ['docker','Docker'], ['caddy','Caddy'], ['cloudinary','Cloudinary']
             ];
           %>
           <% heroTools.forEach(([slug, label]) => { %>
