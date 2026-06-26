@@ -10,7 +10,8 @@ var session = require("./config/session");
 var portfolioRepository = require("./model/portfolioRepository");
 var { formatContractType, formatDateRange, formatLevel, formatProjectCategory, formatStatus } = require("./utils/formatters");
 var { techIconUrl } = require("./utils/techIcons");
-var { cloudinaryUrl } = require("./utils/cloudinary");
+var { cloudinaryUrl, cloudinarySrcset } = require("./utils/cloudinary");
+var { techFamily, FAMILY_ORDER } = require("./utils/techFamily");
 const csrf = require("csurf");
 
 // Version d'assets : change à chaque démarrage → casse le cache navigateur après un déploiement
@@ -76,7 +77,15 @@ app.use((req, res, next) => {
   res.locals.formatStatus = formatStatus;
   res.locals.techIconUrl = techIconUrl;
   res.locals.cloudinaryUrl = cloudinaryUrl;
+  res.locals.cloudinarySrcset = cloudinarySrcset;
+  res.locals.techFamily = techFamily;
+  res.locals.familyOrder = FAMILY_ORDER;
   res.locals.assetVersion = ASSET_VERSION;
+  // Peau caméléon par catégorie (whitelist : pas de classe muette pour une catégorie inconnue)
+  res.locals.skinClass = (cat) => {
+    const c = String(cat || "").toLowerCase();
+    return ["web", "mobile", "ai", "robotics", "electronique"].includes(c) ? "skin-" + c : "";
+  };
 
   // 🔎 SEO / partage : valeurs par défaut, surchargeables par chaque route.
   const host = req.get("host");
@@ -86,7 +95,7 @@ app.use((req, res, next) => {
     "Henoc Mukumbi, ingénieur systèmes embarqués. Je conçois l'électronique et le logiciel qui tourne dessus : du circuit imprimé au cloud, de l'app mobile au coach IA.";
   res.locals.ogImage =
     "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
-  res.locals.robots = "index,follow";
+  res.locals.robots = /^\/(admin|authentification)/.test(req.path) ? "noindex,nofollow" : "index,follow";
   next();
 });
 
@@ -154,13 +163,13 @@ app.use((req, res, next) => {
 
 // ❌ Catch 404 - Page non trouvée
 app.use((req, res, next) => {
-  res.status(404).render("errors/404", { title: "Erreur 404" });
+  res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
 });
 
 // ❌ Catch 500 - Erreur interne du serveur
 app.use((err, req, res, next) => {
   console.error("🚨 Erreur serveur :", err.stack);
-  res.status(500).render("errors/500", { title: "Erreur 500" });
+  res.status(500).render("errors/500", { title: "Erreur 500", robots: "noindex,nofollow" });
 });
 
 // ❌ Gestion des autres erreurs

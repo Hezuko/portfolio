@@ -17,6 +17,13 @@
     return `<ul class="clean-list">${items.map(render).join("")}</ul>`;
   }
 
+  function focusablesOf(container) {
+    return Array.prototype.slice
+      .call(container.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter((el) => el.offsetWidth || el.offsetHeight || el === document.activeElement);
+  }
+
+  let trapHandler = null;
   function openModal(html) {
     if (!modal || !content || !panel) return;
     lastFocus = document.activeElement;
@@ -24,6 +31,16 @@
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
     panel.focus();
+    // Piège à focus : Tab/Shift+Tab bouclent dans le panneau
+    trapHandler = (e) => {
+      if (e.key !== "Tab") return;
+      const f = focusablesOf(panel);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", trapHandler);
   }
 
   function closeModal() {
@@ -31,6 +48,7 @@
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     content.innerHTML = "";
+    if (trapHandler) { document.removeEventListener("keydown", trapHandler); trapHandler = null; }
     if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
   }
 
@@ -180,31 +198,6 @@
 
   function refreshFocusNavigation() {
     if (!focusPage || !focusSections.length) return;
-    const visibleSections = getVisibleFocusSections();
-
-    focusSections.forEach((section) => {
-      section.querySelectorAll("[data-focus-target]").forEach((arrow) => {
-        arrow.hidden = true;
-      });
-    });
-
-    visibleSections.forEach((section, index) => {
-      const previous = visibleSections[index - 1];
-      const next = visibleSections[index + 1];
-      const upArrow = section.querySelector(".focus-arrow-up");
-      const downArrow = section.querySelector(".focus-arrow-down");
-
-      if (upArrow && previous) {
-        upArrow.dataset.focusTarget = String(focusSections.indexOf(previous));
-        upArrow.hidden = false;
-      }
-
-      if (downArrow && next) {
-        downArrow.dataset.focusTarget = String(focusSections.indexOf(next));
-        downArrow.hidden = false;
-      }
-    });
-
     buildFocusDots();
   }
 
@@ -304,13 +297,6 @@
   if (focusPage && focusSections.length) {
     refreshFocusNavigation();
     updateActiveFocusSection();
-    focusPage.addEventListener("click", (event) => {
-      const arrow = event.target.closest("[data-focus-target]");
-      if (!arrow) return;
-      const targetIndex = Number.parseInt(arrow.dataset.focusTarget, 10);
-      const target = focusSections[targetIndex];
-      if (target && !target.hidden) centerFocusSection(target, "smooth");
-    });
     window.addEventListener("scroll", () => {
       requestFocusUpdate();
       scheduleFocusSnap();
@@ -369,6 +355,7 @@
     lastFocus = document.activeElement;
     box.classList.add("is-open");
     document.body.style.overflow = "hidden";
+    box.querySelector(".lightbox__close").focus();
   }
   function close() {
     box.classList.remove("is-open");
@@ -393,6 +380,14 @@
     if (e.key === "Escape") close();
     else if (e.key === "ArrowLeft") go(-1);
     else if (e.key === "ArrowRight") go(1);
+    else if (e.key === "Tab") {
+      const f = Array.prototype.slice.call(box.querySelectorAll("button")).filter((b) => b.offsetWidth || b.offsetHeight);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (!box.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
 })();
 
@@ -432,4 +427,20 @@
       if (!el.classList.contains("is-in")) el.classList.remove("reveal-armed");
     });
   }, 1500);
+})();
+
+// Images tissées : marque les portraits (téléphone) pour les afficher côte à côte
+(function () {
+  var imgs = document.querySelectorAll(".story-media img");
+  if (!imgs.length) return;
+  var mark = function (img) {
+    var fig = img.closest(".story-media");
+    if (fig && img.naturalWidth && img.naturalHeight > img.naturalWidth * 1.1) {
+      fig.classList.add("is-portrait");
+    }
+  };
+  imgs.forEach(function (img) {
+    if (img.complete && img.naturalWidth) mark(img);
+    else img.addEventListener("load", function () { mark(img); }, { once: true });
+  });
 })();

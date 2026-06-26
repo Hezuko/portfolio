@@ -13,7 +13,7 @@
       </div>
     </div>
     <figure class="detail-hero__media">
-      <img src="<%= cloudinaryUrl(profile.photo, { w: 640 }) %>" alt="Portrait de <%= profile.name %>" width="640" height="640">
+      <img src="<%= cloudinaryUrl(profile.photo, { w: 640 }) %>" srcset="<%= cloudinarySrcset(profile.photo, [360, 480, 640, 960]) %>" sizes="(max-width: 760px) 90vw, 420px" alt="Portrait de <%= profile.name %>" width="640" height="640" fetchpriority="high">
     </figure>
   </div>
 </section>

@@ -1,18 +1,33 @@
-/* ⚠️ SOURCE MANUELLE — NE PAS RECOMPILER DEPUIS SCSS.
-   Ce fichier est édité à la main et a divergé de l'ancien custom.scss
-   (archivé dans /_legacy). Le script "sass" a été retiré de package.json.
-   Le thème sombre vit dans redesign.css, chargé après celui-ci.
-   À terme : fusionner les deux en une seule feuille. */
+/* ⚠️ SOURCE MANUELLE — NE PAS RECOMPILER DEPUIS SCSS (ancien custom.scss archivé dans /_legacy).
+   Base sombre du thème "caméléon" (variables ci-dessous = source unique).
+   redesign.css, chargé après, ajoute la couche caméléon (skins, composants, animations). */
 :root {
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --surface-2: #ebe7df;
-  --text: #171717;
-  --muted: #6b665d;
-  --line: #ded8cd;
-  --accent: #245c4f;
-  --accent-2: #b85c38;
-  --shadow: 0 18px 50px rgba(30, 28, 24, 0.12);
+  --bg: #0a0712;
+  --bg-2: #07050d;
+  --surface: #120e1f;
+  --surface-2: #191327;
+  --text: #f1edf7;
+  --muted: #a99fc0;
+  --line: rgba(180, 158, 235, 0.12);
+  --line-strong: rgba(180, 158, 235, 0.26);
+
+  --iris: linear-gradient(115deg, #b15cff 0%, #5b8cff 26%, #2fd6c6 50%, #5ee08a 74%, #f0a35a 100%);
+  --iris-soft: linear-gradient(115deg, rgba(177,92,255,.18), rgba(91,140,255,.16), rgba(47,214,198,.16), rgba(94,224,138,.16), rgba(240,163,90,.18));
+
+  --skin: #8b6cff;
+  --skin-2: #2fd6c6;
+  --skin-ink: #0a0712;
+  --accent: #8b6cff;
+  --accent-2: #2fd6c6;
+  --shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+
+  /* Échelle d'espacement & rayons */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.5rem; --space-6: 2rem; --space-8: 3rem;
+  --radius-sm: 12px; --radius-md: 16px; --radius-lg: 18px; --radius-pill: 999px;
+
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 * {
@@ -223,7 +238,7 @@ a {
   border-radius: 999px;
   padding: 5px 10px;
   color: var(--muted);
-  background: #faf9f6;
+  background: var(--surface-2);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -405,7 +420,7 @@ a {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #faf9f6;
+  background: #fff; /* tuile-logo : blanc pour la lisibilité des logos d'organisations */
   color: var(--accent);
   font-weight: 900;
 }
@@ -574,7 +589,7 @@ a {
 .page-header {
   padding: 72px 0 48px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
 }
 
 .detail-layout,
@@ -1011,7 +1026,7 @@ select:focus {
 .form-note {
   padding: 12px 14px;
   border-left: 4px solid var(--accent-2);
-  background: #fff8f2;
+  background: var(--surface-2);
   color: var(--muted);
 }
 
@@ -1406,88 +1421,6 @@ select:focus {
   margin-top: 28px;
 }
 
-.focus-arrow {
-  position: absolute;
-  left: 50%;
-  opacity: 0;
-  width: 128px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--surface);
-  transform: translateX(-50%);
-  cursor: pointer;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 22px rgba(30, 28, 24, 0.35));
-  transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease;
-}
-
-.focus-arrow span {
-  width: 78px;
-  height: 78px;
-  display: block;
-  border-right: 11px solid currentColor;
-  border-bottom: 11px solid currentColor;
-  transition: transform 0.18s ease;
-}
-
-.focus-arrow-up span {
-  transform: rotate(225deg) translate(-2px, -2px);
-}
-
-.focus-arrow-down span {
-  transform: rotate(45deg) translate(-2px, -2px);
-}
-
-.focus-scroll-section.is-active .focus-arrow {
-  opacity: 1;
-  pointer-events: auto;
-  animation: focusChevronPulse 1.8s ease-in-out infinite;
-}
-
-.focus-arrow:hover,
-.focus-arrow:focus {
-  filter: drop-shadow(0 14px 30px rgba(30, 28, 24, 0.48));
-  transform: translateX(-50%) scale(1.1);
-}
-
-.focus-arrow-up:hover span,
-.focus-arrow-up:focus span {
-  transform: rotate(225deg) translate(2px, 2px);
-}
-
-.focus-arrow-down:hover span,
-.focus-arrow-down:focus span {
-  transform: rotate(45deg) translate(2px, 2px);
-}
-
-.focus-arrow:focus-visible {
-  outline: 3px solid rgba(36, 92, 79, 0.24);
-  outline-offset: 3px;
-}
-
-.focus-arrow-up {
-  top: 3.75rem;
-}
-
-.focus-arrow-down {
-  bottom: 1.5rem;
-}
-
-@keyframes focusChevronPulse {
-  0%,
-  100% {
-    transform: translateX(-50%) scale(1);
-    filter: drop-shadow(0 10px 22px rgba(30, 28, 24, 0.35));
-  }
-  50% {
-    transform: translateX(-50%) scale(1.08);
-    filter: drop-shadow(0 15px 32px rgba(30, 28, 24, 0.48));
-  }
-}
 
 .immersive-slide {
   min-height: 100svh;
@@ -1504,7 +1437,7 @@ select:focus {
 }
 
 .intro-slide {
-  background: linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
 }
 
 .hero-slide {
@@ -1778,7 +1711,7 @@ select:focus {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #faf9f6;
+  background: var(--surface-2);
 }
 
 .skill-relations dt {
@@ -1805,7 +1738,7 @@ select:focus {
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
-  background: #faf9f6;
+  background: var(--surface-2);
   font-size: 0.78rem;
   font-weight: 750;
 }
@@ -1831,7 +1764,7 @@ select:focus {
 
 .public-admin-panel {
   border-color: rgba(184, 92, 56, 0.28);
-  background: #fffaf7;
+  background: var(--surface-2);
 }
 
 .public-section-upload-list {
@@ -2076,7 +2009,7 @@ select:focus {
   padding: clamp(1rem, 2.5vw, 1.45rem);
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #faf9f6;
+  background: var(--surface-2);
 }
 
 .experience-year__body h3,
@@ -2110,7 +2043,7 @@ select:focus {
 .challenge-item {
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #faf9f6;
+  background: var(--surface-2);
   overflow: hidden;
 }
 
@@ -2416,7 +2349,7 @@ select:focus {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #faf9f6;
+  background: var(--surface-2);
 }
 
 .program-distribution span {
@@ -2435,7 +2368,7 @@ select:focus {
   padding: clamp(1rem, 2.4vw, 1.45rem);
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #faf9f6;
+  background: var(--surface-2);
 }
 
 .program-category__header {
@@ -2504,7 +2437,7 @@ select:focus {
   padding: 5px 8px;
   border: 1px solid rgba(36, 92, 79, 0.14);
   border-radius: 999px;
-  background: #faf9f6;
+  background: var(--surface-2);
   color: var(--accent);
   font-size: 0.78rem;
   font-weight: 900;
@@ -2550,7 +2483,7 @@ select:focus {
 .program-course-meta span {
   padding: 5px 8px;
   border-radius: 999px;
-  background: #faf9f6;
+  background: var(--surface-2);
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 800;
@@ -2561,7 +2494,7 @@ select:focus {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #faf9f6;
+  background: var(--surface-2);
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 800;
@@ -2725,10 +2658,6 @@ select:focus {
 
   .project-focus-card .project-showcase img {
     max-height: 220px;
-  }
-
-  .focus-arrow {
-    display: none;
   }
 
   .project-filter-panel {

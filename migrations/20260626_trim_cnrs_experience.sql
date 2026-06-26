@@ -1,0 +1,11 @@
+-- Allègement rédactionnel du stage CNRS/MPQ (id=3) : redites supprimées, tous les
+-- composants/specs conservés (CTN 10 kΩ, PT100, DHT22/AM2302, CAN 10 bits, AD7709 16 bits,
+-- SPI, SI4432, PIC18F26J11). Réversible : voir _legacy/cnrs_experience_backup.txt.
+
+UPDATE jobs SET
+  mission_context = $t$Régulation en température de salles d'expériences au laboratoire : les fluctuations thermiques perturbent les dispositifs optiques sensibles (alignements de faisceaux laser, cavités optiques). Objectif : mesurer la température en plusieurs points d'une salle, transmettre les mesures sans fil vers une unité maître, et préparer une future régulation par vannes/électrovannes.$t$,
+  problem_statement = $t$Concevoir et valider un prototype électronique mesurant la température avec plusieurs types de capteurs, puis transmettant les données de façon fiable par radiofréquence vers une carte maître. Contraintes : acquisition analogique et numérique, communication RF, routage de cartes maître/esclave, assemblage traversant + CMS, migration Arduino → PIC18F26J11, et diagnostic de pannes matérielles et logicielles.$t$,
+  system_architecture = $t$Architecture maître/esclave. Les cartes esclaves mesurent la température en plusieurs points (thermistance CTN 10 kΩ, PT100, DHT22/AM2302) via le CAN interne 10 bits, un AD7709 16 bits, une liaison numérique pour le DHT22 et le SPI (AD7709 + module RF SI4432). Les mesures sont transmises par radiofréquence à une carte maître, qui prépare le traitement côté PC et sert de base à une future régulation thermique par actionneurs.$t$,
+  results = $t$Un projet d'instrumentation scientifique complet, du besoin au prototype validé : architecture maître/esclave, routage et préparation de cartes, assemblage de prototypes, acquisition multi-capteurs, communication RF entre cartes, migration vers PIC18F26J11 et rédaction d'un rapport technique complet.$t$,
+  personal_contribution = $t$Ma première expérience professionnelle significative en électronique et systèmes embarqués : instrumentation scientifique, prototypage électronique, rigueur de test, mesure et documentation. Elle a confirmé mon intérêt pour les systèmes embarqués et la validation de systèmes techniques.$t$
+WHERE id = 3;

@@ -27,15 +27,13 @@
         </div>
       </div>
       <div class="hero-media">
-        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>" alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
+        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>" srcset="<%= cloudinarySrcset(profile.photo, [360, 540, 720, 1080]) %>" sizes="(max-width: 760px) 90vw, 420px" alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
       </div>
     </article>
-    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller à la section projets"><span aria-hidden="true"></span></button>
   </section>
 
   <section class="focus-scroll-section">
-    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="0" aria-label="Revenir au profil"><span aria-hidden="true"></span></button>
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/projets" tabindex="0" role="link" aria-label="Voir mes projets">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/projets" aria-label="Voir mes projets">
       <p class="eyebrow">Sélection</p>
       <div class="home-summary-card__header">
         <h2>Mes projets</h2>
@@ -57,12 +55,10 @@
       </div>
       <div class="focus-card-actions"><a class="section-link" href="/projets">Voir tous les projets</a></div>
     </article>
-    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="2" aria-label="Aller à la section expériences"><span aria-hidden="true"></span></button>
   </section>
 
   <section class="focus-scroll-section">
-    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="1" aria-label="Revenir à la section projets"><span aria-hidden="true"></span></button>
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/jobs" tabindex="0" role="link" aria-label="Voir mes expériences">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/jobs" aria-label="Voir mes expériences">
       <p class="eyebrow">Terrain</p>
       <div class="home-summary-card__header">
         <h2>Mes expériences</h2>
@@ -89,12 +85,10 @@
       </div>
       <div class="focus-card-actions"><a class="section-link" href="/jobs">Voir toutes les expériences</a></div>
     </article>
-    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="3" aria-label="Aller à la section études"><span aria-hidden="true"></span></button>
   </section>
 
   <section class="focus-scroll-section">
-    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="2" aria-label="Revenir à la section expériences"><span aria-hidden="true"></span></button>
-    <article class="focus-card home-summary-card clickable-card" data-card-href="/etudes" tabindex="0" role="link" aria-label="Voir mes études">
+    <article class="focus-card home-summary-card clickable-card" data-card-href="/etudes" aria-label="Voir mes études">
       <p class="eyebrow">Parcours</p>
       <div class="home-summary-card__header">
         <h2>Mes études</h2>
@@ -121,11 +115,9 @@
       </div>
       <div class="focus-card-actions"><a class="section-link" href="/etudes">Voir toutes les études</a></div>
     </article>
-    <button class="focus-arrow focus-arrow-down" type="button" data-focus-target="4" aria-label="Aller à la section contact"><span aria-hidden="true"></span></button>
   </section>
 
   <section class="focus-scroll-section">
-    <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="3" aria-label="Revenir à la section études"><span aria-hidden="true"></span></button>
     <article class="focus-card cta-panel">
       <div class="slide-header">
         <p class="eyebrow">Contact</p>

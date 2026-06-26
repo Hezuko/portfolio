@@ -1,8 +1,9 @@
 <%
   const projectCategories = [...new Set(projects.map((project) => project.category).filter(Boolean))]
     .sort((a, b) => formatProjectCategory(a).localeCompare(formatProjectCategory(b), 'fr'));
-  const projectTechnologies = [...new Set(projects.flatMap((project) => formatList(project.technologies)))]
-    .sort((a, b) => a.localeCompare(b, 'fr'));
+  const projectFamilies = familyOrder.filter((fam) =>
+    projects.some((project) => formatList(project.technologies).map(techFamily).includes(fam))
+  );
   const projectYears = [...new Set(projects.flatMap((project) => {
     const dates = [project.start_date, project.end_date].filter(Boolean);
     return dates
@@ -37,11 +38,11 @@
             </select>
           </label>
           <label>
-            <span>Technologie</span>
+            <span>Domaine</span>
             <select name="technology">
-              <option value="">Toutes</option>
-              <% projectTechnologies.forEach((technology) => { %>
-                <option value="<%= technology %>"><%= technology %></option>
+              <option value="">Tous</option>
+              <% projectFamilies.forEach((family) => { %>
+                <option value="<%= family %>"><%= family %></option>
               <% }) %>
             </select>
           </label>
@@ -50,13 +51,13 @@
         </form>
       <% } %>
     </article>
-    <% if (projects.length) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller au projet suivant"><span aria-hidden="true"></span></button><% } %>
   </section>
 
   <% projects.forEach((project, index) => { %>
     <% const detailHref = project.slug ? `/projets/${project.slug}` : ''; %>
     <%
       const projectTechList = formatList(project.technologies);
+      const projectFamilyList = [...new Set(projectTechList.map(techFamily).filter(Boolean))];
       const projectYearValues = [project.start_date, project.end_date]
         .filter(Boolean)
         .map((date) => new Date(date).getFullYear())
@@ -67,10 +68,9 @@
       data-project-section
       data-project-category="<%= project.category || '' %>"
       data-project-years="<%= projectYearValues.join('|') %>"
-      data-project-technologies="<%= projectTechList.join('|') %>"
+      data-project-technologies="<%= projectFamilyList.join('|') %>"
     >
-      <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="<%= index %>" aria-label="Aller au projet précédent"><span aria-hidden="true"></span></button>
-      <article class="focus-card project-focus-card <%= detailHref ? 'clickable-card' : '' %>" <% if (detailHref) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
+      <article class="focus-card project-focus-card <%= skinClass(project.category) %> <%= detailHref ? 'clickable-card' : '' %>" <% if (detailHref) { %>data-card-href="<%= detailHref %>" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
         <span class="focus-card-position" data-project-position><%= index + 1 %> / <%= projects.length %></span>
         <div class="project-showcase">
           <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
@@ -94,7 +94,6 @@
           </div>
         </div>
       </article>
-      <% if (index < projects.length - 1) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="<%= index + 2 %>" aria-label="Aller au projet suivant"><span aria-hidden="true"></span></button><% } %>
     </section>
   <% }) %>
 

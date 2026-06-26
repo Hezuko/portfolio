@@ -249,14 +249,14 @@ router.get("/contact", function (req, res) {
 
 router.get("/mentions-legales", function (req, res) {
   repo.getSettingsMap()
-    .then((settings) => res.render("public/legal-notice", { title: "Mentions legales", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/legal-notice", { title: "Mentions legales", legal: { ...legal, error: err.message } }));
+    .then((settings) => res.render("public/legal-notice", { title: "Mentions légales", legal: buildLegal(settings) }))
+    .catch((err) => res.render("public/legal-notice", { title: "Mentions légales", legal: { ...legal, error: err.message } }));
 });
 
 router.get("/confidentialite", function (req, res) {
   repo.getSettingsMap()
-    .then((settings) => res.render("public/privacy", { title: "Politique de confidentialite", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/privacy", { title: "Politique de confidentialite", legal: { ...legal, error: err.message } }));
+    .then((settings) => res.render("public/privacy", { title: "Politique de confidentialité", legal: buildLegal(settings) }))
+    .catch((err) => res.render("public/privacy", { title: "Politique de confidentialité", legal: { ...legal, error: err.message } }));
 });
 
 router.get("/cookies", function (req, res) {
@@ -275,6 +275,12 @@ router.post("/desauthentification", function (req, res, next) {
 router.post("/contact", async function (req, res, next) {
   try {
     const currentProfile = buildProfile(await repo.getSettingsMap());
+
+    // Anti-spam : champ honeypot (invisible). Rempli = bot -> on simule l'envoi sans rien traiter.
+    if ((req.body.website || "").trim()) {
+      return res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+    }
+
     let { nom, prenom, objet, email, texte } = req.body;
     nom = (nom || "").trim();
     prenom = (prenom || "").trim();
@@ -283,7 +289,8 @@ router.post("/contact", async function (req, res, next) {
     texte = (texte || "").trim();
 
     const fail = (msg) => res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: msg });
-    if (!nom || !prenom || !objet || !email || !texte) return fail("Tous les champs sont requis.");
+    if (!nom || !prenom || !email || !texte) return fail("Le nom, le prénom, l'email et le message sont requis.");
+    if (!objet) objet = "Prise de contact";
     if (!validator.isEmail(email)) return fail("Adresse email invalide.");
     if (nom.length > 80 || prenom.length > 80) return fail("Le nom et le prénom sont trop longs (80 caractères maximum).");
     if (objet.length > 140) return fail("L'objet est trop long (140 caractères maximum).");

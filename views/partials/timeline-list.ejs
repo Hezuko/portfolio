@@ -7,7 +7,7 @@
     <% const orgInitial = (orgName || '?').trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1).toUpperCase()).join(''); %>
     <% const infoId = `${type}-info-${item.id}`; %>
     <% const detailHref = type === 'education' ? `/etudes/${item.id}` : `/experiences/${item.id}`; %>
-    <article class="timeline-item <%= isCompact ? 'timeline-item--compact' : '' %> <%= isCardLinkEnabled ? 'clickable-card' : '' %>" <% if (isCardLinkEnabled) { %>data-card-href="<%= detailHref %>" tabindex="0" role="link" aria-label="Voir le detail de <%= item.title %>"<% } %>>
+    <article class="timeline-item <%= isCompact ? 'timeline-item--compact' : '' %> <%= isCardLinkEnabled ? 'clickable-card' : '' %>" <% if (isCardLinkEnabled) { %>data-card-href="<%= detailHref %>" aria-label="Voir le detail de <%= item.title %>"<% } %>>
       <div class="timeline-body">
         <header class="timeline-card-header">
           <div class="timeline-heading">

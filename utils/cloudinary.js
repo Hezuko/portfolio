@@ -13,4 +13,10 @@ function cloudinaryUrl(url, opts = {}) {
   return url.replace(/\/image\/upload\//, `/image/upload/${parts.join(",")}/`);
 }
 
-module.exports = { cloudinaryUrl };
+// Construit un srcset Cloudinary (plusieurs largeurs) pour les images responsives.
+function cloudinarySrcset(url, widths) {
+  if (!url || typeof url !== "string" || !/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(url)) return "";
+  return (widths || [400, 600, 900, 1200]).map((w) => `${cloudinaryUrl(url, { w })} ${w}w`).join(", ");
+}
+
+module.exports = { cloudinaryUrl, cloudinarySrcset };

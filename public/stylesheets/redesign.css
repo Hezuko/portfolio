@@ -3,32 +3,8 @@
    Identité : une couleur iridescente vivante (la peau du caméléon)
    qui glisse violet→bleu→cyan→vert→cuivre, une palette qui s'adapte
    au contexte, un substrat d'ingénieur (grille + traces), animations.
+   Les variables de base (couleurs, tokens, polices) vivent dans custom.css.
    ============================================================ */
-
-:root {
-  --bg: #0a0712;
-  --bg-2: #07050d;
-  --surface: #120e1f;
-  --surface-2: #191327;
-  --text: #f1edf7;
-  --muted: #a99fc0;
-  --line: rgba(180, 158, 235, 0.12);
-  --line-strong: rgba(180, 158, 235, 0.26);
-
-  --iris: linear-gradient(115deg, #b15cff 0%, #5b8cff 26%, #2fd6c6 50%, #5ee08a 74%, #f0a35a 100%);
-  --iris-soft: linear-gradient(115deg, rgba(177,92,255,.18), rgba(91,140,255,.16), rgba(47,214,198,.16), rgba(94,224,138,.16), rgba(240,163,90,.18));
-
-  /* couleur adaptative du contexte (par défaut : violet caméléon) */
-  --skin: #8b6cff;
-  --skin-2: #2fd6c6;
-  --skin-ink: #0a0712;
-  /* remap de l'ancien accent vert clair du thème clair -> accent caméléon (sinon vert foncé illisible) */
-  --accent: #8b6cff;
-  --accent-2: #2fd6c6;
-  --shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-}
 
 /* Skins par contexte — le site change de peau */
 .skin-robotics, .skin-electronique { --skin: #e2904a; --skin-2: #ffce8a; }
@@ -144,6 +120,13 @@ a { color: inherit; }
 .focus-card { box-shadow: var(--shadow); position: relative; }
 .detail-section { border-radius: 16px; }
 
+/* Liste projets : liseré coloré par catégorie (le caméléon visible en navigation) */
+.project-focus-card { position: relative; overflow: hidden; }
+.project-focus-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: linear-gradient(90deg, var(--skin), var(--skin-2), transparent);
+}
+
 /* coin « composant » : petits crochets d'ingénieur sur les cartes clés */
 .home-profile-card::after, .detail-side-card::after {
   content: ""; position: absolute; right: 14px; top: 14px; width: 14px; height: 14px;
@@ -223,17 +206,13 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 /* ---------- Fonds : retirer l'ancien paysage ---------- */
 .focus-scroll-page { background: transparent !important; }
 .focus-scroll-page::before { display: none !important; }
-.focus-arrow span { border-color: var(--muted); }
-.focus-arrow:hover span { border-color: var(--skin); }
 
 /* ---------- Scroll accueil : centrage conservé (snap), focus allégé ---------- */
 .focus-scroll-page { scroll-snap-type: y mandatory !important; }
 .focus-scroll-page.has-focus-effect .focus-scroll-section { opacity: 0.78; filter: none; transform: scale(0.99); }
 .focus-scroll-page.has-focus-effect .focus-scroll-section.is-active { opacity: 1; filter: none; transform: none; }
 
-/* Chevrons remplacés par un navigateur à points latéral (fini le chevauchement) */
-.focus-arrow { display: none !important; }
-
+/* Navigation inter-sections : navigateur à points latéral (.focus-dots) */
 .focus-dots {
   position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%);
   display: flex; flex-direction: column; align-items: flex-end; gap: 0.95rem; z-index: 50;
@@ -262,7 +241,11 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
   box-shadow: 0 0 12px rgba(139, 108, 255, 0.55);
 }
 .focus-dot.is-active .focus-dot__label { opacity: 1; transform: none; color: var(--text); }
-@media (max-width: 768px) { .focus-dots { display: none; } }
+@media (max-width: 768px) {
+  .focus-dots { display: none; }
+  /* fond non-fixe sur mobile (évite le jank de scroll iOS) */
+  body { background-attachment: scroll; }
+}
 
 /* ---------- Fix contraste : lignes projets / écoles / entreprises ---------- */
 .home-summary-item { background: var(--surface-2) !important; border-color: var(--line) !important; color: var(--text); transition: border-color 0.15s ease, transform 0.15s ease; }
@@ -325,13 +308,22 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 .detail-section--result { background: linear-gradient(180deg, color-mix(in srgb, var(--skin) 9%, transparent), transparent); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem 1.7rem; }
 
 /* Images tissées dans le récit (apparaissent au fil des explications) */
-.story-media { margin: 1.5rem 0 1.9rem; }
+.story-media { margin: 1.5rem 0 1.9rem; text-align: center; }
 .story-media img, .story-media video {
-  display: block; width: 100%; height: auto; border-radius: 14px;
-  border: 1px solid var(--line); background: var(--surface-2);
+  display: block; width: auto; height: auto;
+  max-width: 100%; max-height: 72vh; margin-inline: auto;
+  border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2);
 }
 .story-media img { cursor: zoom-in; transition: border-color 0.2s ease, transform 0.2s ease; }
 .story-media img:hover { border-color: var(--skin); transform: translateY(-2px); }
+
+/* Groupe d'images d'une section : portraits (téléphone) côte à côte ≤3, paysages pleine largeur */
+.story-shots { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: flex-start; margin: 1.5rem 0 1.9rem; }
+.story-shots .story-media { margin: 0; flex: 1 1 100%; }
+.story-shots .story-media.is-portrait { flex: 0 1 calc(33.333% - 0.7rem); }
+.story-shots .story-media.is-portrait img { width: 100%; max-height: none; }
+@media (max-width: 760px) { .story-shots .story-media.is-portrait { flex-basis: calc(50% - 0.5rem); } }
+@media (max-width: 460px) { .story-shots .story-media.is-portrait { flex-basis: 100%; } }
 
 /* Sidebar sticky + sous-blocs */
 .detail-side-card--sticky { position: sticky; top: 92px; }
@@ -499,6 +491,17 @@ textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:
 
 /* CTA en bas des pages projet */
 .detail-cta { padding: clamp(2rem, 5vw, 3.5rem) 0 clamp(3rem, 7vw, 5rem); }
+
+/* Pages d'erreur (404 / 500 / 403) au thème */
+.error-page { min-height: 68vh; display: grid; place-items: center; text-align: center; padding: 4rem 1.5rem; }
+.error-page .eyebrow { color: var(--skin); justify-content: center; }
+.error-page h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; margin: 0.6rem 0 1rem; }
+.error-page__lead { color: var(--muted); max-width: 46ch; margin: 0 auto 1.7rem; font-size: 1.05rem; line-height: 1.55; }
+.error-page .hero-actions { justify-content: center; }
+
+/* Champ honeypot anti-spam : hors écran (pas display:none, que certains bots ignorent) */
+.hp-field { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.label-hint { color: var(--muted); font-weight: 400; font-size: 0.82em; }
 
 @media (prefers-reduced-motion: reduce) {
   .iris-text, .portfolio-navbar::after, .home-profile-card::before, .hero-media::before,
