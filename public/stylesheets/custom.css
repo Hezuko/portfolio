@@ -1642,6 +1642,7 @@ select:focus {
   color: var(--text);
   background: #fff;
   font-weight: 750;
+  text-decoration: none;
 }
 
 .home-summary-media {
