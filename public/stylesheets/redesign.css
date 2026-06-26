@@ -141,7 +141,7 @@ a { color: inherit; }
   background: var(--iris); background-size: 220% 100%; animation: iris-flow 9s linear infinite;
 }
 .hero-copy h1 { font-size: clamp(2.7rem, 6.4vw, 5.1rem); line-height: 1.0; margin: 0.5rem 0 1.1rem; font-weight: 700; }
-.hero-copy .lead { color: var(--muted); font-size: clamp(1.02rem, 1.6vw, 1.18rem); line-height: 1.62; max-width: 42ch; }
+.hero-copy .lead { color: var(--muted); font-size: clamp(1rem, 1.45vw, 1.12rem); line-height: 1.6; max-width: 52ch; }
 .hero-media { position: relative; }
 .hero-media img { border-radius: var(--radius-lg); border: 1px solid var(--line-strong); }
 .hero-media::before {
