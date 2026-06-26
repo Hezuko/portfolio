@@ -140,8 +140,8 @@ a { color: inherit; }
   content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
   background: var(--iris); background-size: 220% 100%; animation: iris-flow 9s linear infinite;
 }
-.hero-copy h1 { font-size: clamp(2.7rem, 6.4vw, 5.1rem); line-height: 1.0; margin: 0.5rem 0 1.1rem; font-weight: 700; }
-.hero-copy .lead { color: var(--muted); font-size: clamp(1rem, 1.45vw, 1.12rem); line-height: 1.6; max-width: 52ch; }
+.hero-copy h1 { font-size: clamp(2.5rem, 5.6vw, 4.5rem); line-height: 1.02; margin: 0.4rem 0 0.85rem; font-weight: 700; }
+.hero-copy .lead { color: var(--muted); font-size: clamp(0.98rem, 1.35vw, 1.08rem); line-height: 1.58; max-width: 56ch; }
 .hero-media { position: relative; }
 .hero-media img { border-radius: var(--radius-lg); border: 1px solid var(--line-strong); }
 .hero-media::before {

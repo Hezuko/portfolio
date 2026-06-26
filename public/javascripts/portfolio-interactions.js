@@ -125,6 +125,10 @@
   let focusScrollTimer = null;
   let isProgrammaticFocusScroll = false;
   const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Hauteur de la navbar sticky : on centre les slides dans l'espace visible SOUS la navbar
+  // (sinon le haut d'une carte un peu haute passe derrière la navbar).
+  const navOffset = () => { const n = document.querySelector(".portfolio-navbar"); return n ? n.getBoundingClientRect().height : 0; };
+  const effectiveCenter = () => (window.innerHeight + navOffset()) / 2;
 
   function getVisibleFocusSections() {
     return focusSections.filter((section) => !section.hidden);
@@ -135,7 +139,7 @@
     const visibleSections = getVisibleFocusSections();
     if (!focusPage || !visibleSections.length) return;
 
-    const viewportCenter = window.innerHeight / 2;
+    const viewportCenter = effectiveCenter();
     let active = visibleSections[0];
     let activeDistance = Number.POSITIVE_INFINITY;
 
@@ -159,7 +163,7 @@
   function getClosestFocusSection() {
     const visibleSections = getVisibleFocusSections();
     if (!visibleSections.length) return null;
-    const viewportCenter = window.innerHeight / 2;
+    const viewportCenter = effectiveCenter();
     return visibleSections.reduce((closest, section) => {
       const rect = section.getBoundingClientRect();
       const sectionCenter = rect.top + rect.height / 2;
@@ -171,8 +175,11 @@
   function centerFocusSection(section, behavior) {
     if (!section) return;
     const mode = behavior || (prefersReducedMotion ? "auto" : "smooth");
+    // Centrage manuel décalé de la navbar (scrollIntoView block:center l'ignorerait).
+    const rect = section.getBoundingClientRect();
+    const target = window.scrollY + rect.top + rect.height / 2 - effectiveCenter();
     isProgrammaticFocusScroll = true;
-    section.scrollIntoView({ block: "center", behavior: mode });
+    window.scrollTo({ top: Math.max(0, target), behavior: mode });
     window.setTimeout(() => {
       isProgrammaticFocusScroll = false;
       requestFocusUpdate();
