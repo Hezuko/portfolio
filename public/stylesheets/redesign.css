@@ -437,6 +437,49 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 .year-detail > summary:hover { color: var(--skin-2); }
 .year-detail[open] > summary { margin-bottom: 0.2rem; }
 
+/* Accordéon de section : replie un bloc long (progression, difficultés) en gardant le rythme de cartes */
+.detail-accordion { padding: 0; }
+.detail-accordion > summary {
+  cursor: pointer; list-style: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.4rem 1.6rem;
+}
+.detail-accordion > summary::-webkit-details-marker { display: none; }
+.detail-accordion > summary::after {
+  content: "+"; font-family: var(--font-mono); font-weight: 700;
+  font-size: 1.35rem; line-height: 1; color: var(--skin); flex: none;
+}
+.detail-accordion[open] > summary::after { content: "–"; }
+.detail-accordion__label { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.detail-accordion__eyebrow {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.14em;
+  font-size: 0.7rem; color: var(--skin);
+}
+.detail-accordion__title {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.25; color: var(--text);
+}
+.detail-accordion > summary:hover .detail-accordion__title { color: var(--skin); }
+.detail-accordion[open] > summary { padding-bottom: 1.05rem; }
+.detail-accordion__body { padding: 0 1.6rem 1.6rem; }
+
+/* Fold "nu" inline : replie un sous-bloc dans une section (catalogue d'UV) sans casser la carte */
+.detail-fold { margin-top: 1.5rem; border-top: 1px solid var(--line); padding-top: 1.3rem; }
+.detail-fold > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: baseline; gap: 0.5rem 0.7rem;
+  flex-wrap: wrap;
+}
+.detail-fold > summary::-webkit-details-marker { display: none; }
+.detail-fold__eyebrow {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em;
+  font-size: 0.7rem; color: var(--skin);
+}
+.detail-fold__eyebrow::before { content: "+ "; font-weight: 700; }
+.detail-fold[open] .detail-fold__eyebrow::before { content: "– "; }
+.detail-fold__hint { color: var(--muted); font-size: 0.9rem; }
+.detail-fold > summary:hover .detail-fold__eyebrow { color: var(--skin-2); }
+.detail-fold[open] > summary { margin-bottom: 1.3rem; }
+
 /* ============================================================
    Accessibilité, conversion & À propos
    ============================================================ */
