@@ -271,36 +271,6 @@ a {
   flex: none;
 }
 
-.hero-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 1.1rem;
-}
-
-.hero-stack__chip {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.hero-stack__chip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
-}
-
-.hero-stack__chip img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
 .project-card h3 {
   margin: 16px 0 10px;
   font-size: 1.35rem;

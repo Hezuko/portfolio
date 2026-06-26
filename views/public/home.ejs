@@ -14,19 +14,6 @@
           <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Mon CV</a><% } %>
           <% if (profile.github) { %><a class="btn btn-outline-dark" href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a><% } %>
         </div>
-        <div class="hero-stack" aria-label="Outils et technologies que j'utilise">
-          <%
-            const heroTools = [
-              ['stmicroelectronics','STM32'], ['kicad','KiCad'], ['arduino','Arduino'], ['c','C'], ['cplusplus','C++'],
-              ['python','Python'], ['fastapi','FastAPI'], ['nodedotjs','Node.js'], ['express','Express'], ['javascript','JavaScript'],
-              ['flutter','Flutter'], ['dart','Dart'], ['react','React'], ['postgresql','PostgreSQL'], ['pytorch','PyTorch'],
-              ['git','Git'], ['docker','Docker'], ['caddy','Caddy'], ['cloudinary','Cloudinary']
-            ];
-          %>
-          <% heroTools.forEach(([slug, label]) => { %>
-            <span class="hero-stack__chip" title="<%= label %>"><img src="/images/tech/<%= slug %>.svg" alt="<%= label %>" width="22" height="22" loading="lazy"></span>
-          <% }) %>
-        </div>
       </div>
       <div class="hero-media">
         <% const heroSrcset = cloudinarySrcset(profile.photo, [360, 540, 720, 1080]); %>

@@ -71,7 +71,6 @@ a { color: inherit; }
 .hero-copy h1 { animation-delay: 0.08s; }
 .hero-copy .lead { animation-delay: 0.16s; }
 .hero-copy .hero-actions { animation-delay: 0.24s; }
-.hero-copy .hero-stack { animation-delay: 0.32s; }
 
 /* ---------- Navbar ---------- */
 .portfolio-navbar {
@@ -149,8 +148,6 @@ a { color: inherit; }
   background: var(--iris); background-size: 220% 100%; animation: iris-flow 9s linear infinite; filter: blur(14px); opacity: 0.35;
 }
 
-.hero-stack__chip { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm); }
-.hero-stack__chip:hover { border-color: var(--skin); box-shadow: 0 8px 24px rgba(139, 108, 255, 0.22); transform: translateY(-2px); }
 
 /* ---------- Cartes résumé ---------- */
 .home-summary-media { background: var(--surface-2); border: 1px solid var(--line); }
