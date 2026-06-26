@@ -47,7 +47,7 @@
             </select>
           </label>
           <button class="btn btn-outline-dark" type="button" data-project-reset>Réinitialiser</button>
-          <p class="project-filter-count" data-project-count><%= projects.length %> projet<%= projects.length > 1 ? 's' : '' %> affiché<%= projects.length > 1 ? 's' : '' %></p>
+          <p class="project-filter-count" data-project-count aria-live="polite"><%= projects.length %> projet<%= projects.length > 1 ? 's' : '' %> affiché<%= projects.length > 1 ? 's' : '' %></p>
         </form>
       <% } %>
     </article>

@@ -14,8 +14,15 @@ var { cloudinaryUrl, cloudinarySrcset } = require("./utils/cloudinary");
 var { techFamily, FAMILY_ORDER } = require("./utils/techFamily");
 const csrf = require("csurf");
 
-// Version d'assets : change à chaque démarrage → casse le cache navigateur après un déploiement
-const ASSET_VERSION = Date.now().toString(36);
+// Version d'assets : stable par release (hash git court, fallback version package).
+// Casse le cache navigateur seulement à un nouveau déploiement, pas à chaque redémarrage.
+const ASSET_VERSION = (() => {
+  try {
+    return require("child_process").execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch (e) {
+    try { return require("./package.json").version || "1"; } catch (_) { return "1"; }
+  }
+})();
 
 // Import des routes
 var publicRouter = require("./routes/public");
@@ -29,6 +36,9 @@ app.use((req, res, next) => {
   res.locals.user = null;
   next();
 });
+
+// Derrière un reverse-proxy (Caddy) : req.protocol reflète https, canonical/OG corrects
+app.set("trust proxy", 1);
 
 // 🟢 Configuration du moteur de vue
 app.set("views", path.join(__dirname, "views"));
@@ -96,6 +106,7 @@ app.use((req, res, next) => {
   res.locals.ogImage =
     "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
   res.locals.robots = /^\/(admin|authentification)/.test(req.path) ? "noindex,nofollow" : "index,follow";
+  res.locals.ogType = "website";
   next();
 });
 
@@ -103,15 +114,9 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
-// 🟢 Routes pour Bootstrap CSS & JS
-app.use(
-  "/css",
-  express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"))
-);
-app.use(
-  "/js",
-  express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"))
-);
+// 🟢 Routes pour Bootstrap CSS & JS (versionné par npm → cache long)
+app.use("/css", express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"), { immutable: true, maxAge: "30d" }));
+app.use("/js", express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"), { immutable: true, maxAge: "30d" }));
 
 app.use(async (req, res, next) => {
   const defaultName = "Henoc Mukumbi";
@@ -153,36 +158,15 @@ app.use("/", publicRouter);
 
 // 🚨 Gestion des erreurs
 
-// ❌ Catch 403 - Accès interdit
-app.use((req, res, next) => {
-  if (req.url.includes("/admin") && !req.user) {
-    return res.status(403).render("errors/403", { title: "Erreur 403" });
-  }
-  next();
-});
-
-// ❌ Catch 404 - Page non trouvée
+// ❌ 404 - Page non trouvée (la protection /admin est gérée dans adminRouter)
 app.use((req, res, next) => {
   res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
 });
 
-// ❌ Catch 500 - Erreur interne du serveur
+// ❌ 500 - Erreur interne du serveur
 app.use((err, req, res, next) => {
   console.error("🚨 Erreur serveur :", err.stack);
   res.status(500).render("errors/500", { title: "Erreur 500", robots: "noindex,nofollow" });
-});
-
-// ❌ Gestion des autres erreurs
-app.use(function (err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  res.status(err.status || 500);
-  res.render("error", {
-    message: err.message,
-    error: err,
-    title: "Erreur",
-  });
 });
 
 module.exports = app;

@@ -27,7 +27,8 @@
         </div>
       </div>
       <div class="hero-media">
-        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>" srcset="<%= cloudinarySrcset(profile.photo, [360, 540, 720, 1080]) %>" sizes="(max-width: 760px) 90vw, 420px" alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
+        <% const heroSrcset = cloudinarySrcset(profile.photo, [360, 540, 720, 1080]); %>
+        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>"<%- heroSrcset ? ` srcset="${heroSrcset}" sizes="(max-width: 760px) 90vw, 420px"` : '' %> alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
       </div>
     </article>
   </section>

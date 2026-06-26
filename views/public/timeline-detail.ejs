@@ -36,6 +36,18 @@
   const heroStack = [...new Set(stackNames.filter(Boolean))].map((name) => ({ name, icon: techIconUrl(name) })).filter((x) => x.icon).slice(0, 12);
 %>
 
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": siteUrl },
+    { "@type": "ListItem", "position": 2, "name": isEducation ? "Études" : "Expériences", "item": siteUrl + (isEducation ? "/etudes" : "/jobs") },
+    { "@type": "ListItem", "position": 3, "name": item.title, "item": canonicalUrl }
+  ]
+}).replace(/</g, "\\u003c") %>
+</script>
+
 <section class="detail-hero <%= skinClass %>">
   <div class="container detail-hero__grid">
     <div class="detail-hero__content">

@@ -10,8 +10,12 @@
   <link rel="canonical" href="<%= canonicalUrl %>">
   <meta name="theme-color" content="#0a0712">
 
+  <!-- Origines tierces du chemin critique : on ouvre la connexion plus tôt -->
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <!-- Open Graph (LinkedIn, Slack, WhatsApp…) -->
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="<%= ogType %>">
   <meta property="og:site_name" content="Henoc Mukumbi">
   <meta property="og:title" content="<%= fullTitle %>">
   <meta property="og:description" content="<%= description %>">

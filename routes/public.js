@@ -9,7 +9,30 @@ var { cloudinaryUrl } = require("../utils/cloudinary");
 
 function shortText(value, max = 300) {
   const s = String(value || "").replace(/\s+/g, " ").trim();
-  return s.length > max ? s.slice(0, max - 1).trimEnd() + "…" : s;
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  // On coupe sur la dernière frontière de mot pour un snippet propre (pas de mot tronqué).
+  return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+}
+
+// Anti-spam : limiteur simple en mémoire (5 envois / 10 min / IP), sans dépendance externe.
+const contactHits = new Map();
+function contactRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const max = 5;
+  const hits = (contactHits.get(ip) || []).filter((t) => now - t < windowMs);
+  if (hits.length >= max) {
+    contactHits.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  contactHits.set(ip, hits);
+  if (contactHits.size > 5000) { // garde-fou mémoire : purge des IP expirées
+    for (const [k, v] of contactHits) if (!v.some((t) => now - t < windowMs)) contactHits.delete(k);
+  }
+  return false;
 }
 
 const profile = {
@@ -122,6 +145,7 @@ router.get("/projets/:slug", async function (req, res, next) {
       title: project.name,
       description: shortText(project.short_description || project.goal || project.context) || res.locals.description,
       ogImage: projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage,
+      ogType: "article",
       profile: buildProfile(settings),
       project,
     });
@@ -152,6 +176,7 @@ router.get("/etudes/:id", async function (req, res, next) {
     res.render("public/timeline-detail", {
       title: item.title,
       description: shortText(item.context || item.description) || res.locals.description,
+      ogType: "article",
       item,
       type: "education",
     });
@@ -182,6 +207,7 @@ router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
     res.render("public/timeline-detail", {
       title: item.title,
       description: shortText(item.short_summary || item.mission_context || item.description) || res.locals.description,
+      ogType: "article",
       item,
       type: "job",
     });
@@ -279,6 +305,11 @@ router.post("/contact", async function (req, res, next) {
     // Anti-spam : champ honeypot (invisible). Rempli = bot -> on simule l'envoi sans rien traiter.
     if ((req.body.website || "").trim()) {
       return res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+    }
+
+    // Anti-spam : limite le nombre d'envois par IP pour ne pas noyer la boîte de réception.
+    if (contactRateLimited(req.ip || "unknown")) {
+      return res.status(429).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: "Trop de tentatives d'envoi. Merci de réessayer dans quelques minutes." });
     }
 
     let { nom, prenom, objet, email, texte } = req.body;

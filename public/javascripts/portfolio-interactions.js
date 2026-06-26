@@ -116,10 +116,7 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeModal();
-    if ((event.key === "Enter" || event.key === " ") && event.target.matches("[data-card-href]")) {
-      event.preventDefault();
-      window.location.href = event.target.dataset.cardHref;
-    }
+    // Les cartes pleine-surface sont un confort souris ; au clavier, on passe par leur lien interne.
   });
 
   const focusPage = document.querySelector("[data-focus-scroll]");
@@ -127,6 +124,7 @@
   let focusFrame = null;
   let focusScrollTimer = null;
   let isProgrammaticFocusScroll = false;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function getVisibleFocusSections() {
     return focusSections.filter((section) => !section.hidden);
@@ -172,15 +170,17 @@
 
   function centerFocusSection(section, behavior) {
     if (!section) return;
+    const mode = behavior || (prefersReducedMotion ? "auto" : "smooth");
     isProgrammaticFocusScroll = true;
-    section.scrollIntoView({ block: "center", behavior: behavior || "smooth" });
+    section.scrollIntoView({ block: "center", behavior: mode });
     window.setTimeout(() => {
       isProgrammaticFocusScroll = false;
       requestFocusUpdate();
-    }, behavior === "auto" ? 0 : 520);
+    }, mode === "auto" ? 0 : 520);
   }
 
   function scheduleFocusSnap() {
+    if (prefersReducedMotion) return; // pas de recentrage auto si l'utilisateur réduit les animations
     const visibleSections = getVisibleFocusSections();
     if (!focusPage || !visibleSections.length || isProgrammaticFocusScroll) return;
     window.clearTimeout(focusScrollTimer);
