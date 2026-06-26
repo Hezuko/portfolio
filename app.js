@@ -126,11 +126,19 @@ app.use(async (req, res, next) => {
     res.locals.siteProfile = {
       name,
       footerText: settings.profile_tagline || "Ingénieur systèmes embarqués — du circuit imprimé au cloud.",
+      email: settings.contact_email || "h.mukumbi100@gmail.com",
+      github: settings.github_url || "https://github.com/Hezuko",
+      linkedin: settings.linkedin_url || "https://www.linkedin.com/in/henocmukumbi",
+      cv: settings.cv_url || "https://hezuko.github.io/resume/resume.pdf",
     };
   } catch (err) {
     res.locals.siteProfile = {
       name: defaultName,
       footerText: "Portfolio personnel, projets, parcours et experiences.",
+      email: "h.mukumbi100@gmail.com",
+      github: "https://github.com/Hezuko",
+      linkedin: "https://www.linkedin.com/in/henocmukumbi",
+      cv: "https://hezuko.github.io/resume/resume.pdf",
     };
   }
   next();

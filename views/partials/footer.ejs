@@ -1,11 +1,29 @@
 <footer class="site-footer">
-  <div class="container footer-grid">
-    <div>
+  <div class="container footer-top">
+    <div class="footer-brand">
       <strong><%= siteProfile.name %></strong>
       <p><%= siteProfile.footerText %></p>
     </div>
-    <nav aria-label="Liens légaux">
+    <nav class="footer-col" aria-label="Navigation">
+      <span class="footer-col__title">Navigation</span>
+      <a href="/">Accueil</a>
       <a href="/a-propos">À propos</a>
+      <a href="/projets">Projets</a>
+      <a href="/etudes">Études</a>
+      <a href="/jobs">Expériences</a>
+      <a href="/contact">Me contacter</a>
+    </nav>
+    <nav class="footer-col" aria-label="Me joindre">
+      <span class="footer-col__title">Me joindre</span>
+      <% if (siteProfile.email) { %><a href="mailto:<%= siteProfile.email %>"><i class="bi bi-envelope" aria-hidden="true"></i> Email</a><% } %>
+      <% if (siteProfile.github) { %><a href="<%= siteProfile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a><% } %>
+      <% if (siteProfile.linkedin) { %><a href="<%= siteProfile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn</a><% } %>
+      <% if (siteProfile.cv) { %><a href="<%= siteProfile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> CV</a><% } %>
+    </nav>
+  </div>
+  <div class="container footer-bottom">
+    <p>© <%= new Date().getFullYear() %> <%= siteProfile.name %> — caméléon par nature.</p>
+    <nav class="footer-legal" aria-label="Liens légaux">
       <a href="/mentions-legales">Mentions légales</a>
       <a href="/confidentialite">Confidentialité</a>
       <a href="/cookies">Cookies</a>

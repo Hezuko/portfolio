@@ -942,38 +942,98 @@ select:focus {
   position: relative;
   z-index: 10;
   border-top: 1px solid var(--line);
-  background: #111;
-  color: #fff;
-  padding: 28px 0;
+  background: var(--surface);
+  color: var(--muted);
+  padding: 3rem 0 1.5rem;
 }
 
-.footer-grid {
+/* Hairline iridescent en haut du footer (signature caméléon, comme la navbar) */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--iris);
+  background-size: 220% 100%;
+  animation: iris-flow 9s linear infinite;
+  opacity: 0.6;
+}
+
+.footer-top {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.footer-brand strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.footer-brand p {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  max-width: 44ch;
+  line-height: 1.6;
+}
+
+.footer-col {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
-.site-footer p {
-  margin: 6px 0 0;
-  color: rgba(255, 255, 255, 0.68);
-}
-
-.site-footer nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
+.footer-col__title {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  color: var(--skin);
+  margin-bottom: 0.2rem;
 }
 
 .site-footer a {
-  color: rgba(255, 255, 255, 0.82);
-  font-weight: 750;
+  color: var(--muted);
+  font-weight: 500;
   text-decoration: none;
+  transition: color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .site-footer a:hover,
 .site-footer a:focus {
-  color: #fff;
+  color: var(--skin);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.footer-legal a {
+  font-size: 0.85rem;
 }
 
 .legal-content {
@@ -1118,9 +1178,14 @@ select:focus {
     flex-direction: column;
   }
 
-  .footer-grid {
-    align-items: flex-start;
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+
+  .footer-bottom {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .legal-content dl {
