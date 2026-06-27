@@ -1,0 +1,21 @@
+{
+  "root": true,
+  "env": { "node": true, "es2021": true },
+  "parserOptions": { "ecmaVersion": 2021, "sourceType": "script" },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_|^next$|^req$|^res$", "varsIgnorePattern": "^_" }],
+    "no-empty": ["warn", { "allowEmptyCatch": true }]
+  },
+  "overrides": [
+    {
+      "files": ["public/javascripts/**/*.js"],
+      "env": { "browser": true, "node": false }
+    },
+    {
+      "files": ["tests/**/*.js", "__tests__/**/*.js", "**/*.test.js"],
+      "env": { "jest": true, "node": true }
+    }
+  ],
+  "ignorePatterns": ["node_modules/", "coverage/", "public/stylesheets/", "migrations/"]
+}
