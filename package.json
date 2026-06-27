@@ -11,7 +11,8 @@
     "lint:all": "npm run lint && npm run lint:css",
     "migrate": "node scripts/migrate.js",
     "migrate:status": "node scripts/migrate.js --status",
-    "migrate:baseline": "node scripts/migrate.js --baseline"
+    "migrate:baseline": "node scripts/migrate.js --baseline",
+    "db:dump": "pg_dump \"$DB_URL\" --no-owner --no-privileges --inserts --exclude-table-data=utilisateurs --exclude-table-data=session --exclude-table-data=contacts --exclude-table-data=schema_migrations > db/seed.sql"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
