@@ -191,3 +191,12 @@ docker compose exec portfolio npm run migrate
 ```
 > La base ayant été seedée avec l'état des migrations, `npm run migrate` n'applique que les
 > **nouvelles** — pas de `migrate:baseline` à faire.
+
+## Déploiement continu (GitHub Actions → SSH)
+
+Depuis 2026-06-27, tout push sur `develop` qui passe lint + tests déclenche un
+déploiement automatique : le job `deploy` (`.github/workflows/node.js.yml`) se
+connecte en SSH à la VM et lance `deploy/ssh-deploy.sh` (git pull + rebuild +
+restart du conteneur portfolio). La clé de déploiement est restreinte à ce seul
+script via une "forced command" dans `~/.ssh/authorized_keys`.
+Secrets GitHub requis : `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
