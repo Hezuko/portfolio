@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon ./bin/www",
-    "test": "jest --coverage",
+    "test": "jest --coverage --runInBand",
     "lint": "eslint . --ext .js",
     "lint:css": "stylelint \"public/stylesheets/**/*.css\"",
     "lint:all": "npm run lint && npm run lint:css"
@@ -43,5 +43,19 @@
     "stylelint": "^17.14.0",
     "stylelint-config-standard": "^40.0.0",
     "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/.claude/",
+      "/coverage/"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/.claude/",
+      "/coverage/",
+      "/migrations/",
+      "/scripts/"
+    ]
   }
 }
