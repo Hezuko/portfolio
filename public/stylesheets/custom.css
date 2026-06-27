@@ -3370,16 +3370,16 @@ a { color: inherit; }
 .detail-kv dt { color: var(--muted); }
 .detail-kv dd { color: var(--text); }
 .detail-gallery img, .detail-gallery__video { background: var(--surface-2); border: 1px solid var(--line); }
-.section-band { background: transparent !important; }
+.section-band { background: transparent; }
 
 /* ---------- Formulaires ---------- */
-input, textarea, select { background: var(--surface-2) !important; color: var(--text) !important; border: 1px solid var(--line) !important; }
-input:focus, textarea:focus, select:focus { border-color: var(--skin) !important; box-shadow: 0 0 0 3px rgba(139, 108, 255, 0.18) !important; }
+input, textarea, select { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
+input:focus, textarea:focus, select:focus { border-color: var(--skin); box-shadow: 0 0 0 3px rgba(139, 108, 255, 0.18); }
 ::placeholder { color: var(--muted); opacity: 0.65; }
-.form-note { background: var(--surface-2) !important; border: 1px solid var(--line) !important; border-left: 2px solid var(--skin) !important; color: var(--muted) !important; }
-.form-note a { color: var(--skin) !important; }
-.alert-success { background: rgba(94, 224, 138, 0.12) !important; color: #7be8a2 !important; border: 1px solid rgba(94, 224, 138, 0.4) !important; }
-.alert-danger { background: rgba(244, 63, 94, 0.12) !important; color: #fb7185 !important; border: 1px solid rgba(244, 63, 94, 0.4) !important; }
+.form-note { background: var(--surface-2); border: 1px solid var(--line); border-left: 2px solid var(--skin); color: var(--muted); }
+.form-note a { color: var(--skin); }
+.alert-success { background: rgba(94, 224, 138, 0.12); color: #7be8a2; border: 1px solid rgba(94, 224, 138, 0.4); }
+.alert-danger { background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4); }
 
 /* ---------- Footer ---------- */
 footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
@@ -3441,11 +3441,11 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 }
 
 /* ---------- Fix contraste : lignes projets / écoles / entreprises ---------- */
-.home-summary-item { background: var(--surface-2) !important; border-color: var(--line) !important; color: var(--text); transition: border-color 0.15s ease, transform 0.15s ease; }
-.home-summary-item:hover { border-color: var(--skin) !important; transform: translateX(2px); }
+.home-summary-item { background: var(--surface-2); border-color: var(--line); color: var(--text); transition: border-color 0.15s ease, transform 0.15s ease; }
+.home-summary-item:hover { border-color: var(--skin); transform: translateX(2px); }
 .home-summary-item strong { color: var(--text); }
 .home-summary-item small { color: var(--muted); }
-.home-summary-media { background: #ffffff !important; border-color: var(--line) !important; }
+.home-summary-media { background: #ffffff; border-color: var(--line); }
 
 /* ============================================================
    Pages projet — mise en page « étude de cas »
@@ -3549,8 +3549,8 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 .info-button:hover, .info-button:focus { background: rgba(139, 108, 255, 0.12); border-color: var(--skin); color: var(--skin); }
 
 /* En-têtes de pages légales (Cookies / Mentions / Confidentialité) + encart d'avertissement */
-.page-header { background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%) !important; border-bottom: 1px solid var(--line); }
-.legal-warning { background: var(--surface-2) !important; color: var(--muted) !important; border-left: 4px solid var(--skin) !important; }
+.page-header { background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%); border-bottom: 1px solid var(--line); }
+.legal-warning { background: var(--surface-2); color: var(--muted); border-left: 4px solid var(--skin); }
 
 /* Pages parcours détaillées (blocs hérités blancs) */
 .experience-year__body, .challenge-item, .program-category,
