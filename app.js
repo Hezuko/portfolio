@@ -40,6 +40,14 @@ if (process.env.NODE_ENV === "production" && !process.env.SITE_URL) {
 // Derrière un reverse-proxy (Caddy) : req.protocol reflète https, canonical/OG corrects
 app.set("trust proxy", 1);
 
+// SEO : une seule forme d'URL. On retire le slash final (hors racine) en 301 → pas de doublon.
+app.use((req, res, next) => {
+  if (req.method === "GET" && req.path.length > 1 && req.path.endsWith("/")) {
+    return res.redirect(301, req.path.slice(0, -1) + req.url.slice(req.path.length));
+  }
+  next();
+});
+
 // 🟢 Configuration du moteur de vue
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -50,6 +58,13 @@ app.set("layout", "layout");
 
 // 📦 Compression gzip/br de toutes les réponses (HTML/CSS/JS) — gros gain réseau
 app.use(compression());
+
+// 🟢 Fichiers statiques servis AVANT session/CSRF/locals : un asset (CSS/JS/police/favicon)
+// ne paie ni le token CSRF, ni le cookie, ni la chaîne de rendu des vues.
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+app.use("/css", express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"), { immutable: true, maxAge: "30d" }));
+app.use("/js", express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"), { immutable: true, maxAge: "30d" }));
 
 // 🛡️ Initialiser la session avant CSRF
 app.use(session.initSession());
@@ -105,18 +120,14 @@ app.use((req, res, next) => {
     "Henoc Mukumbi, ingénieur systèmes embarqués. Je conçois l'électronique et le logiciel qui tourne dessus : du circuit imprimé au cloud, de l'app mobile au coach IA.";
   res.locals.ogImage =
     "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
+  // Portrait FIXE du Person (JSON-LD) — découplé de l'og:image qui varie par page (sinon
+  // l'image d'un projet deviendrait "la photo de Henoc" dans les données structurées).
+  res.locals.personImage =
+    "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_640,h_640,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
   res.locals.robots = /^\/(admin|authentification)/.test(req.path) ? "noindex,nofollow" : "index,follow";
   res.locals.ogType = "website";
   next();
 });
-
-// 🟢 Servir les fichiers statiques (cache long : les assets changent peu)
-app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
-app.get("/favicon.ico", (req, res) => res.status(204).end());
-
-// 🟢 Routes pour Bootstrap CSS & JS (versionné par npm → cache long)
-app.use("/css", express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"), { immutable: true, maxAge: "30d" }));
-app.use("/js", express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"), { immutable: true, maxAge: "30d" }));
 
 app.use(async (req, res, next) => {
   const defaultName = "Henoc Mukumbi";

@@ -15,10 +15,10 @@
     </nav>
     <nav class="footer-col" aria-label="Me joindre">
       <span class="footer-col__title">Me joindre</span>
-      <% if (siteProfile.email) { %><a href="mailto:<%= siteProfile.email %>"><i class="bi bi-envelope" aria-hidden="true"></i> Email</a><% } %>
-      <% if (siteProfile.github) { %><a href="<%= siteProfile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a><% } %>
-      <% if (siteProfile.linkedin) { %><a href="<%= siteProfile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin" aria-hidden="true"></i> LinkedIn</a><% } %>
-      <% if (siteProfile.cv) { %><a href="<%= siteProfile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> CV</a><% } %>
+      <% if (siteProfile.email) { %><a href="mailto:<%= siteProfile.email %>"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-envelope"></use></svg> Email</a><% } %>
+      <% if (siteProfile.github) { %><a href="<%= siteProfile.github %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-github"></use></svg> GitHub</a><% } %>
+      <% if (siteProfile.linkedin) { %><a href="<%= siteProfile.linkedin %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-linkedin"></use></svg> LinkedIn</a><% } %>
+      <% if (siteProfile.cv) { %><a href="<%= siteProfile.cv %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg> CV</a><% } %>
     </nav>
   </div>
   <div class="container footer-bottom">

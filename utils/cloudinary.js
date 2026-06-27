@@ -17,7 +17,7 @@ function parseAuthenticated(url) {
 }
 
 function buildTransform(opts = {}) {
-  const t = { fetch_format: "auto", quality: "auto" };
+  const t = { fetch_format: opts.fmt || "auto", quality: "auto" };
   if (opts.w) t.width = opts.w;
   if (opts.h) t.height = opts.h;
   if (opts.c) t.crop = opts.c;
@@ -45,8 +45,8 @@ function cloudinaryUrl(url, opts = {}) {
 
   // URL upload publique : insertion de chaîne
   if (/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(url)) {
-    if (/\/image\/upload\/[^/]*(f_auto|q_auto|w_\d)/.test(url)) return url; // déjà transformée
-    const parts = ["f_auto", "q_auto"];
+    if (/\/image\/upload\/[^/]*(f_auto|f_avif|f_webp|q_auto|w_\d)/.test(url)) return url; // déjà transformée
+    const parts = [opts.fmt ? "f_" + opts.fmt : "f_auto", "q_auto"];
     if (opts.w) parts.push("w_" + opts.w);
     if (opts.h) parts.push("h_" + opts.h);
     if (opts.c) parts.push("c_" + opts.c);
@@ -62,10 +62,11 @@ function cloudinaryUrl(url, opts = {}) {
 }
 
 // Construit un srcset Cloudinary (plusieurs largeurs) pour les images responsives.
-function cloudinarySrcset(url, widths) {
+// opts.fmt force le format (ex. 'avif' pour une <source> dans un <picture>).
+function cloudinarySrcset(url, widths, opts = {}) {
   if (!url || typeof url !== "string") return "";
   if (!/res\.cloudinary\.com\/[^/]+\/image\/(upload|authenticated)\//.test(url)) return "";
-  return (widths || [400, 600, 900, 1200]).map((w) => `${cloudinaryUrl(url, { w })} ${w}w`).join(", ");
+  return (widths || [400, 600, 900, 1200]).map((w) => `${cloudinaryUrl(url, { ...opts, w })} ${w}w`).join(", ");
 }
 
 module.exports = { cloudinaryUrl, cloudinarySrcset };

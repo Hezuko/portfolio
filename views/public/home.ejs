@@ -12,12 +12,16 @@
           <a class="btn btn-dark" href="/projets">Voir mes projets</a>
           <a class="btn btn-outline-dark" href="/contact">Me contacter</a>
           <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Mon CV</a><% } %>
-          <% if (profile.github) { %><a class="btn btn-outline-dark" href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i> GitHub</a><% } %>
+          <% if (profile.github) { %><a class="btn btn-outline-dark" href="<%= profile.github %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-github"></use></svg> GitHub</a><% } %>
         </div>
       </div>
       <div class="hero-media">
         <% const heroSrcset = cloudinarySrcset(profile.photo, [360, 540, 720, 1080]); %>
-        <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>"<%- heroSrcset ? ` srcset="${heroSrcset}" sizes="(max-width: 760px) 90vw, 420px"` : '' %> alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
+        <% const heroAvif = cloudinarySrcset(profile.photo, [360, 540, 720, 1080], { fmt: 'avif' }); %>
+        <picture>
+          <% if (heroAvif) { %><source type="image/avif" srcset="<%= heroAvif %>" sizes="(max-width: 760px) 90vw, 420px"><% } %>
+          <img src="<%= cloudinaryUrl(profile.photo, { w: 720 }) %>"<%- heroSrcset ? ` srcset="${heroSrcset}" sizes="(max-width: 760px) 90vw, 420px"` : '' %> alt="Portrait de <%= profile.name %>" width="720" height="720" fetchpriority="high">
+        </picture>
       </div>
     </article>
   </section>
@@ -61,7 +65,7 @@
           <a class="home-summary-item" href="/experiences/<%= job.id %>">
             <div class="home-summary-media">
               <% if (job.company_logo_url) { %>
-                <img src="<%= job.company_logo_url %>" alt="Logo <%= job.company_name %>" loading="lazy" decoding="async" width="58" height="58">
+                <img src="<%= cloudinaryUrl(job.company_logo_url, { w: 120 }) %>" alt="Logo <%= job.company_name %>" loading="lazy" decoding="async" width="58" height="58">
               <% } else { %>
                 <span><%= companyInitial %></span>
               <% } %>
@@ -91,7 +95,7 @@
           <a class="home-summary-item" href="/etudes/<%= education.id %>">
             <div class="home-summary-media">
               <% if (education.school_logo_url) { %>
-                <img src="<%= education.school_logo_url %>" alt="Logo <%= education.school_name %>" loading="lazy" decoding="async" width="58" height="58">
+                <img src="<%= cloudinaryUrl(education.school_logo_url, { w: 120 }) %>" alt="Logo <%= education.school_name %>" loading="lazy" decoding="async" width="58" height="58">
               <% } else { %>
                 <span><%= schoolInitial %></span>
               <% } %>

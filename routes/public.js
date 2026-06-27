@@ -129,7 +129,7 @@ router.get("/", async function (req, res, next) {
 router.get("/projets", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
-    res.render("public/projects", { title: "Projets", profile: buildProfile(settingsToMap(data.settings)), projects: data.projects });
+    res.render("public/projects", { title: "Projets", description: "Les projets de Henoc Mukumbi : systèmes embarqués (PIC, STM32), robotique, et JoyTrain — app fitness avec coach IA et moteur RAG. Du circuit imprimé au cloud.", profile: buildProfile(settingsToMap(data.settings)), projects: data.projects });
   } catch (err) {
     next(err);
   }
@@ -159,6 +159,7 @@ router.get("/etudes", async function (req, res, next) {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
       title: "Études",
+      description: "Le parcours de formation de Henoc Mukumbi en électronique, systèmes embarqués et ingénierie logicielle (ESIEE Paris).",
       heading: "Études et formations",
       intro: "Un parcours structuré autour de l'électronique, des systèmes embarqués et de l'apprentissage continu.",
       items: data.educations,
@@ -190,6 +191,7 @@ router.get("/jobs", async function (req, res, next) {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
       title: "Expériences",
+      description: "Les expériences professionnelles de Henoc Mukumbi : validation logicielle embarquée, tests calculateurs automobiles (CAN/LIN), R&D électronique.",
       heading: "Expériences professionnelles",
       intro: "Les missions, environnements et projets qui ont construit mon expérience d'ingénieur.",
       items: data.jobs,
@@ -202,6 +204,10 @@ router.get("/jobs", async function (req, res, next) {
 
 router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
   try {
+    // URL canonique unique : /experiences/:id. /jobs/:id redirige (301) pour éviter le contenu dupliqué.
+    if (req.path.startsWith("/jobs/")) {
+      return res.redirect(301, `/experiences/${req.params.id}`);
+    }
     const item = await repo.getJobDetail(req.params.id);
     if (!item) return res.status(404).render("errors/404", { title: "Experience introuvable" });
     res.render("public/timeline-detail", {
@@ -231,7 +237,7 @@ router.get("/competences", async function (req, res, next) {
         map[domain].push(item);
         return map;
       }, {});
-    res.render("public/skills", { title: "Domaines techniques", groups });
+    res.render("public/skills", { title: "Domaines techniques", description: "Les domaines techniques de Henoc Mukumbi : électronique, systèmes embarqués temps réel, développement logiciel, IA appliquée et cloud.", groups });
   } catch (err) {
     next(err);
   }
@@ -270,7 +276,7 @@ router.get("/api/knowledge/:name", async function (req, res, next) {
 router.get("/contact", async function (req, res, next) {
   try {
     const settings = await repo.getSettingsMap();
-    res.render("public/contact", { title: "Contact", profile: buildProfile(settings), messageSent: false, error: null });
+    res.render("public/contact", { title: "Contact", description: "Contacter Henoc Mukumbi, ingénieur systèmes embarqués — pour une mission, une alternance ou une collaboration. Réponse sous 48 h.", profile: buildProfile(settings), messageSent: false, error: null });
   } catch (err) {
     next(err);
   }

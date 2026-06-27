@@ -53,6 +53,16 @@ h1, h2, h3, .hero-copy h1, .slide-header h2, .detail-hero__content h1, .admin-he
 a { color: inherit; }
 ::selection { background: rgba(139, 108, 255, 0.32); color: #fff; }
 
+/* Icônes SVG inline (remplacent la police bootstrap-icons CDN) */
+.bi { display: inline-block; vertical-align: -0.125em; flex: none; }
+
+/* Corps de texte long : justifié (bords nets à gauche ET à droite) + césure pour éviter les gros trous */
+.detail-section p, .detail-lead-text {
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 /* Texte iridescent (la signature caméléon) */
 .iris-text {
   background: var(--iris);
@@ -215,7 +225,9 @@ footer, .site-footer { border-top: 1px solid var(--line); color: var(--muted); }
 }
 .focus-dot {
   display: flex; align-items: center; gap: 0.6rem;
-  background: none; border: 0; padding: 0; cursor: pointer;
+  background: none; border: 0; cursor: pointer;
+  /* cible cliquable ≥24px (WCAG 2.5.8) sans agrandir le rond visuel */
+  min-height: 24px; padding: 0;
 }
 .focus-dot__label {
   font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase;

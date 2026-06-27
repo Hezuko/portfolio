@@ -123,4 +123,20 @@
       <article class="focus-card"><p class="empty-state">Aucun projet n'a encore été publié.</p></article>
     </section>
   <% } %>
+
+  <% if (projects.length) { %>
+    <section class="focus-scroll-section">
+      <article class="focus-card cta-panel">
+        <div class="slide-header">
+          <p class="eyebrow">Un projet en tête ?</p>
+          <h2>Discutons de votre besoin.</h2>
+          <p>Du circuit imprimé au cloud — je conçois le produit de bout en bout. Parlons-en.</p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-dark" href="/contact">Me contacter</a>
+          <% if (profile.cv) { %><a class="btn btn-outline-dark" href="<%= profile.cv %>" target="_blank" rel="noreferrer">Mon CV</a><% } %>
+        </div>
+      </article>
+    </section>
+  <% } %>
 </div>

@@ -11,7 +11,7 @@
       <div class="timeline-body">
         <header class="timeline-card-header">
           <div class="timeline-heading">
-            <h3><%= item.title %></h3>
+            <h2><%= item.title %></h2>
             <p class="muted entity-name">
               <% if (type === 'education') { %>
                 <%= orgName || 'Ecole a renseigner' %>
@@ -30,7 +30,7 @@
           </div>
           <div class="timeline-logo entity-logo" aria-label="<%= orgLogo ? `Logo ${orgName}` : 'Logo non disponible' %>">
             <% if (orgLogo) { %>
-              <img src="<%= orgLogo %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
+              <img src="<%= cloudinaryUrl(orgLogo, { w: 120 }) %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
             <% } else { %>
               <span><%= orgInitial %></span>
             <% } %>
@@ -83,7 +83,7 @@
           <div class="entity-line">
             <div class="entity-logo large">
               <% if (orgLogo) { %>
-                <img src="<%= orgLogo %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
+                <img src="<%= cloudinaryUrl(orgLogo, { w: 120 }) %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
               <% } else { %>
                 <span><%= orgInitial %></span>
               <% } %>

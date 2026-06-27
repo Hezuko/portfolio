@@ -9,10 +9,10 @@
       <div class="contact-grid">
         <aside class="contact-panel">
           <h2>Liens utiles</h2>
-          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope" aria-hidden="true"></i><%= profile.email %></a>
-          <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github" aria-hidden="true"></i>GitHub</a>
-          <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin" aria-hidden="true"></i>LinkedIn</a>
-          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>CV / Résumé</a><% } %>
+          <a href="mailto:<%= profile.email %>"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-envelope"></use></svg><%= profile.email %></a>
+          <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-github"></use></svg>GitHub</a>
+          <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-linkedin"></use></svg>LinkedIn</a>
+          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg>CV / Résumé</a><% } %>
         </aside>
         <form class="form-surface" method="POST" action="/contact">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
