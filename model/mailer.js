@@ -27,28 +27,29 @@ function esc(value) {
 function buildHtml(d) {
   const message = esc(d.texte).replace(/\n/g, "<br>");
   const logo = logoUrl
-    ? `<td style="padding-right:10px;vertical-align:middle;"><img src="${esc(logoUrl)}" width="30" height="30" alt="Logo" style="display:block;border-radius:7px;"></td>`
+    ? `<td style="padding-right:11px;vertical-align:middle;"><img src="${esc(logoUrl)}" width="30" height="30" alt="Logo" style="display:block;border-radius:8px;"></td>`
     : "";
-  return `<!DOCTYPE html><html><body style="margin:0;background:#f6f4ef;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:24px 0;">
+  return `<!DOCTYPE html><html><body style="margin:0;background:#0a0712;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0712;padding:28px 0;">
     <tr><td align="center">
-      <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#ffffff;border:1px solid #ded8cd;border-radius:14px;overflow:hidden;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
-        <tr><td style="background:#1f6f57;padding:16px 22px;">
+      <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#15101f;border:1px solid #2a2140;border-radius:16px;overflow:hidden;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+        <tr><td style="height:4px;background:#8b6cff;background-image:linear-gradient(90deg,#8b6cff,#c56cff,#6c8bff,#5fd6c4);font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:20px 24px 14px;">
           <table cellpadding="0" cellspacing="0"><tr>
             ${logo}
-            <td style="vertical-align:middle;color:#ffffff;font-size:16px;font-weight:600;">Nouveau message depuis ton portfolio</td>
+            <td style="vertical-align:middle;color:#f1edf7;font-size:16px;font-weight:600;">Nouveau message depuis ton portfolio</td>
           </tr></table>
         </td></tr>
-        <tr><td style="padding:20px 22px;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#171717;">
-            <tr><td width="74" style="color:#6b665d;padding:4px 0;">De</td><td style="padding:4px 0;">${esc(d.prenom)} ${esc(d.nom)}</td></tr>
-            <tr><td style="color:#6b665d;padding:4px 0;">Email</td><td style="padding:4px 0;"><a href="mailto:${esc(d.email)}" style="color:#245c4f;text-decoration:none;">${esc(d.email)}</a></td></tr>
-            <tr><td style="color:#6b665d;padding:4px 0;">Objet</td><td style="padding:4px 0;">${esc(d.objet)}</td></tr>
+        <tr><td style="padding:4px 24px 22px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#f1edf7;">
+            <tr><td width="74" style="color:#a99fc0;padding:5px 0;">De</td><td style="padding:5px 0;color:#f1edf7;">${esc(d.prenom)} ${esc(d.nom)}</td></tr>
+            <tr><td style="color:#a99fc0;padding:5px 0;">Email</td><td style="padding:5px 0;"><a href="mailto:${esc(d.email)}" style="color:#a98bff;text-decoration:none;">${esc(d.email)}</a></td></tr>
+            <tr><td style="color:#a99fc0;padding:5px 0;">Objet</td><td style="padding:5px 0;color:#f1edf7;">${esc(d.objet)}</td></tr>
           </table>
-          <div style="background:#ebe7df;border-radius:8px;padding:14px 16px;margin-top:14px;font-size:14px;line-height:1.6;color:#171717;">${message}</div>
-          <a href="mailto:${esc(d.email)}?subject=RE:%20${encodeURIComponent(d.objet)}" style="display:inline-block;margin-top:18px;background:#1f6f57;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:8px;">Répondre à ${esc(d.prenom)}</a>
+          <div style="background:#1d1630;border:1px solid #2a2140;border-radius:10px;padding:14px 16px;margin-top:14px;font-size:14px;line-height:1.6;color:#e8e2f2;">${message}</div>
+          <a href="mailto:${esc(d.email)}?subject=RE:%20${encodeURIComponent(d.objet)}" style="display:inline-block;margin-top:20px;background:#8b6cff;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:10px;">Répondre à ${esc(d.prenom)}</a>
         </td></tr>
-        <tr><td style="border-top:1px solid #ded8cd;padding:12px 22px;font-size:12px;color:#9a958b;">Reçu via le formulaire de contact de ton portfolio.</td></tr>
+        <tr><td style="border-top:1px solid #2a2140;padding:14px 24px;font-size:12px;color:#6f6790;">Reçu via le formulaire de contact de ton portfolio.</td></tr>
       </table>
     </td></tr>
   </table></body></html>`;
@@ -100,4 +101,4 @@ async function sendContactEmail(d) {
   return sendViaSmtp(d);
 }
 
-module.exports = { sendContactEmail, isConfigured };
+module.exports = { sendContactEmail, isConfigured, buildHtml, buildText };
