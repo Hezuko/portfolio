@@ -170,6 +170,19 @@ app.use((err, req, res, next) => {
 });
 
 
+// 🔒 Restriction d'accès au back-office par IP (configurable, sûr par défaut).
+// ADMIN_IP_ALLOWLIST = IP autorisées séparées par des virgules (ex. "1.2.3.4,5.6.7.8").
+// Vide / non défini = AUCUNE restriction (évite de se verrouiller avant configuration).
+const { parseAllowlist, normalizeIp, isAllowed } = require("./utils/ipAllowlist");
+const adminIpAllowlist = parseAllowlist(process.env.ADMIN_IP_ALLOWLIST);
+
+app.use(["/authentification", "/admin"], (req, res, next) => {
+  if (isAllowed(adminIpAllowlist, req.ip)) return next();
+  // IP non autorisée → 404 furtif (le back-office fait comme s'il n'existait pas)
+  console.warn(`⛔ Back-office refusé depuis ${normalizeIp(req.ip)} (${req.method} ${req.originalUrl})`);
+  return res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
+});
+
 // 🛠️ Définition des routes
 app.use("/authentification", authentificationRouter);
 app.use("/admin", adminRouter);

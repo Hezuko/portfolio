@@ -18,6 +18,8 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET requis dans .env}
       CLOUDINARY_URL: ${CLOUDINARY_URL:?CLOUDINARY_URL requis dans .env}
       SITE_URL: ${SITE_URL:?SITE_URL requis dans .env}
+      # IP autorisées pour /authentification et /admin (vide = aucune restriction)
+      ADMIN_IP_ALLOWLIST: ${ADMIN_IP_ALLOWLIST:-}
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASS: ${MAIL_PASS:-}
       MAIL_TO: ${MAIL_TO:-}
