@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.git
+.github
+.claude
+coverage
+__tests__
+tests
+.env
+*.md
+.eslintrc.json
+.stylelintrc.json

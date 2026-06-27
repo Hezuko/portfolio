@@ -1691,6 +1691,36 @@ INSERT INTO public.projects VALUES (9, 'Système embarqué sans fil sur PIC — 
 
 
 --
+-- Data for Name: schema_migrations; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.schema_migrations VALUES ('20260512_refactor_education_relations.sql', '2026-06-27 09:03:22.786135+02');
+INSERT INTO public.schema_migrations VALUES ('20260513_add_esiee_program_courses.sql', '2026-06-27 09:03:22.78817+02');
+INSERT INTO public.schema_migrations VALUES ('20260513_add_iut_geii_program_courses.sql', '2026-06-27 09:03:22.788456+02');
+INSERT INTO public.schema_migrations VALUES ('20260513_add_utc_program_courses.sql', '2026-06-27 09:03:22.788926+02');
+INSERT INTO public.schema_migrations VALUES ('20260513_enrich_cnrs_experience.sql', '2026-06-27 09:03:22.789375+02');
+INSERT INTO public.schema_migrations VALUES ('20260513_enrich_detail_pages.sql', '2026-06-27 09:03:22.78956+02');
+INSERT INTO public.schema_migrations VALUES ('20260514_enrich_lgm_experience.sql', '2026-06-27 09:03:22.78984+02');
+INSERT INTO public.schema_migrations VALUES ('20260514_restore_cnrs_after_lgm_scope.sql', '2026-06-27 09:03:22.790177+02');
+INSERT INTO public.schema_migrations VALUES ('20260516_add_project_sections_and_robot_gamel_trophy.sql', '2026-06-27 09:03:22.790582+02');
+INSERT INTO public.schema_migrations VALUES ('20260623_add_ecosystem_projects.sql', '2026-06-27 09:03:22.790843+02');
+INSERT INTO public.schema_migrations VALUES ('20260623_projects_polish.sql', '2026-06-27 09:03:22.79109+02');
+INSERT INTO public.schema_migrations VALUES ('20260623_projects_visuels_clients.sql', '2026-06-27 09:03:22.791288+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_embedded_iut_projects.sql', '2026-06-27 09:03:22.791457+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_fix_ai_not_local.sql', '2026-06-27 09:03:22.791601+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_joytrain_link_and_video.sql', '2026-06-27 09:03:22.791812+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_media_cloudinary.sql', '2026-06-27 09:03:22.792019+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_mistral_api.sql', '2026-06-27 09:03:22.792185+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_mmanima_pitch_and_ai.sql', '2026-06-27 09:03:22.792334+02');
+INSERT INTO public.schema_migrations VALUES ('20260624_real_photos_embedded.sql', '2026-06-27 09:03:22.792545+02');
+INSERT INTO public.schema_migrations VALUES ('20260625_cv_and_architect_role.sql', '2026-06-27 09:03:22.79269+02');
+INSERT INTO public.schema_migrations VALUES ('20260625_profile_positioning.sql', '2026-06-27 09:03:22.792897+02');
+INSERT INTO public.schema_migrations VALUES ('20260626_trim_cnrs_experience.sql', '2026-06-27 09:03:22.793164+02');
+INSERT INTO public.schema_migrations VALUES ('20260626_trim_lgm_experience.sql', '2026-06-27 09:03:22.793312+02');
+INSERT INTO public.schema_migrations VALUES ('20260627_content_dedup_and_joytrain.sql', '2026-06-27 09:03:22.793547+02');
+
+
+--
 -- Data for Name: schools; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -1996,7 +2026,7 @@ SELECT pg_catalog.setval('public.technologies_id_seq', 111, true);
 -- Name: utilisateurs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.utilisateurs_id_seq', 56, true);
+SELECT pg_catalog.setval('public.utilisateurs_id_seq', 57, true);
 
 
 --
