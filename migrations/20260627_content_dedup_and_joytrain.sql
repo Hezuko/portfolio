@@ -16,5 +16,6 @@ UPDATE projects SET
   short_description = $t$Une application mobile fitness, nutrition et coach IA que j'ai imaginée, développée et déployée seul — du concept au produit en ligne, bêta avant les stores.$t$,
   long_description  = $t$Une application mobile fitness, nutrition et coach IA que j'ai imaginée, développée et déployée seul — du concept au produit en ligne, bêta avant les stores.$t$,
   results = $t$J'ai porté JoyTrain de bout en bout, seul : penser l'expérience, développer le mobile et le serveur, intégrer l'IA, déployer sur mon VPS (Docker, HTTPS) et préparer la bêta avant les stores.$t$,
+  status = 'beta',
   start_date = '2026-04-15'
 WHERE id = 4;

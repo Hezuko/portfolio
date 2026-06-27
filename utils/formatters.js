@@ -10,6 +10,7 @@ const STATUS_LABELS = {
   default: {
     done: "Terminé",
     in_progress: "En cours",
+    beta: "Bêta",
     planned: "Prevu",
     paused: "En pause",
     cancelled: "Annule",
