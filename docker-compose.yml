@@ -1,0 +1,57 @@
+# Stack portfolio, autonome (déployable depuis /srv/portfolio).
+# L'app rejoint le réseau du Caddy JoyTrain (réseau externe) pour être routée,
+# tout en gardant sa base Postgres isolée sur un réseau privé "internal".
+#
+#   cd /srv/portfolio && docker compose up -d --build
+#
+# Variables (deviennent /srv/portfolio/.env) : voir .env.deploy.example.
+name: portfolio
+
+services:
+  portfolio:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_URL: "postgres://portfolio:${DB_PASSWORD:-portfolio}@portfolio-postgres:5432/portfolio"
+      DB_SSL: "false"
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET requis dans .env}
+      CLOUDINARY_URL: ${CLOUDINARY_URL:?CLOUDINARY_URL requis dans .env}
+      SITE_URL: ${SITE_URL:?SITE_URL requis dans .env}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASS: ${MAIL_PASS:-}
+      MAIL_TO: ${MAIL_TO:-}
+    depends_on:
+      portfolio-postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - web
+
+  portfolio-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-portfolio}
+    volumes:
+      - portfolio_pgdata:/var/lib/postgresql/data
+      # Seed au 1er boot : schéma + contenu + état des migrations.
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+networks:
+  internal: # privé : app <-> base
+  web: # réseau du Caddy JoyTrain (Caddy y atteint "portfolio:3000")
+    external: true
+    name: joytrain-prod_default
+
+volumes:
+  portfolio_pgdata:

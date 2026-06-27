@@ -6,9 +6,8 @@
  *   node scripts/create-admin.js <pseudo> <motdepasse>
  *   ADMIN_USER=henoc ADMIN_PASSWORD=… node scripts/create-admin.js
  *
- * En Docker :
- *   docker compose -f docker-compose.prod.yml exec portfolio \
- *     node scripts/create-admin.js monpseudo 'MonMotDePasseFort!'
+ * En Docker (depuis /srv/portfolio) :
+ *   docker compose exec portfolio node scripts/create-admin.js monpseudo 'MonMotDePasseFort!'
  */
 require("dotenv").config();
 const bcrypt = require("bcryptjs");

@@ -116,59 +116,39 @@ npm run migrate:baseline  # marque toutes les migrations comme appliquées SANS 
 | `MAIL_USER` / `MAIL_PASS` / `MAIL_TO` | email de notification contact | pas de notif (non bloquant) |
 | `DB_SSL` | `true`/`false` selon l'hébergeur PG | — |
 
-## Déploiement sur la VM JoyTrain existante (Docker Compose + Caddy)
+## Déploiement sur la VM JoyTrain (compose autonome dans /srv/portfolio)
 
-La VM JoyTrain a de la marge (RAM/disque). On **ajoute le portfolio à son stack** : son Caddy
-le route par nom de service, et une base Postgres dédiée l'isole des bases JoyTrain.
-La base est **seedée au 1er boot** par `db/seed.sql` (schéma + contenu + état des migrations) →
-pas besoin de jouer les migrations à la main.
+Le portfolio a son **propre stack** dans `/srv/portfolio` (déploiement indépendant de JoyTrain).
+Son app rejoint le **réseau du Caddy JoyTrain** (réseau externe partagé) pour être routée, mais sa
+base Postgres reste **isolée** sur un réseau privé. La base est **seedée au 1er boot** par
+`db/seed.sql` (schéma + contenu + état des migrations) → `npm run migrate` est un no-op direct.
 
-### 1. Cloner le repo à côté de MakasiFit
+> Le `docker-compose.yml` et le `.env.deploy.example` sont fournis **à la racine du repo**.
+
+### 1. Vérifier le nom du réseau Caddy de JoyTrain
 ```bash
-cd /srv/joytrain
-git clone <url-du-repo-portfolio> portfolio   # branche déployée (ex. develop)
+docker network ls | grep joytrain     # attendu : joytrain-prod_default
+```
+Si le nom diffère, ajuste `networks.web.name` dans `docker-compose.yml`.
+
+### 2. Cloner le repo dans /srv/portfolio
+```bash
+cd /srv
+sudo git clone <url-du-repo-portfolio> portfolio   # branche déployée (ex. develop)
+sudo chown -R $USER:$USER /srv/portfolio
 ```
 
-### 2. Ajouter ces 2 services à `deploy/docker-compose.prod.yml`
-```yaml
-  portfolio:
-    build: ../portfolio
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      DB_URL: "postgres://portfolio:${PORTFOLIO_DB_PASSWORD:-portfolio}@portfolio-postgres:5432/portfolio"
-      DB_SSL: "false"
-      SESSION_SECRET: ${PORTFOLIO_SESSION_SECRET}
-      CLOUDINARY_URL: ${PORTFOLIO_CLOUDINARY_URL}
-      SITE_URL: "https://${PORTFOLIO_DOMAIN}"
-    depends_on:
-      portfolio-postgres:
-        condition: service_healthy
-
-  portfolio-postgres:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: portfolio
-      POSTGRES_USER: portfolio
-      POSTGRES_PASSWORD: ${PORTFOLIO_DB_PASSWORD:-portfolio}
-    volumes:
-      - portfolio_pgdata:/var/lib/postgresql/data
-      - ../portfolio/db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-```
-…et le volume dans la section `volumes:` :
-```yaml
-  portfolio_pgdata:
+### 3. Créer /srv/portfolio/.env (depuis le modèle)
+```bash
+cd /srv/portfolio
+cp .env.deploy.example .env
+nano .env    # SITE_URL, DB_PASSWORD, SESSION_SECRET (openssl rand -hex 32), CLOUDINARY_URL
 ```
 
-### 3. Ajouter ce bloc au `Caddyfile`
+### 4. Ajouter le bloc domaine au Caddyfile de JoyTrain
+Dans `/srv/joytrain/deploy/Caddyfile` :
 ```caddyfile
-{$PORTFOLIO_DOMAIN} {
+henoc-mukumbi.com {
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
@@ -179,39 +159,35 @@ git clone <url-du-repo-portfolio> portfolio   # branche déployée (ex. develop)
 	reverse_proxy portfolio:3000
 }
 ```
-
-### 4. Compléter `deploy/.env`
-```bash
-PORTFOLIO_DOMAIN=henoc-mukumbi.com
-PORTFOLIO_DB_PASSWORD=<mot de passe Postgres fort>
-PORTFOLIO_SESSION_SECRET=<chaîne aléatoire longue : openssl rand -hex 32>
-PORTFOLIO_CLOUDINARY_URL=cloudinary://<key>:<secret>@portfolio-hezuko
-```
+(remplace le domaine par le tien ; `portfolio` = nom du service, joignable sur le réseau partagé)
 
 ### 5. DNS
-Un enregistrement **A** : `PORTFOLIO_DOMAIN` → IP de la VM (via Cloudflare ou ton registrar).
+Un enregistrement **A** : ton domaine → IP de la VM (Cloudflare ou registrar).
 
-### 6. Lancer
+### 6. Lancer le portfolio
+```bash
+cd /srv/portfolio
+docker compose up -d --build
+```
+
+### 7. Recharger Caddy (côté JoyTrain) pour prendre le domaine
 ```bash
 cd /srv/joytrain/deploy
-docker compose -f docker-compose.prod.yml up -d --build portfolio portfolio-postgres
-# recharger Caddy pour prendre le nouveau domaine
 docker compose -f docker-compose.prod.yml exec caddy caddy reload --config /etc/caddy/Caddyfile
 ```
 
-### 7. Créer le compte admin (la base seedée n'en contient aucun)
+### 8. Créer le compte admin (la base seedée n'en contient aucun)
 ```bash
-docker compose -f docker-compose.prod.yml exec portfolio \
-  node scripts/create-admin.js monpseudo 'MonMotDePasseFort!'
+cd /srv/portfolio
+docker compose exec portfolio node scripts/create-admin.js monpseudo 'MonMotDePasseFort!'
 ```
 
 ### Mises à jour ultérieures
 ```bash
-cd /srv/joytrain/portfolio && git pull
-cd /srv/joytrain/deploy
-docker compose -f docker-compose.prod.yml up -d --build portfolio
+cd /srv/portfolio && git pull
+docker compose up -d --build
 # si de NOUVELLES migrations ont été ajoutées :
-docker compose -f docker-compose.prod.yml exec portfolio npm run migrate
+docker compose exec portfolio npm run migrate
 ```
 > La base ayant été seedée avec l'état des migrations, `npm run migrate` n'applique que les
 > **nouvelles** — pas de `migrate:baseline` à faire.
