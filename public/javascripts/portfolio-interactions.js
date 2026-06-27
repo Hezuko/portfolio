@@ -17,6 +17,13 @@
     return `<ul class="clean-list">${items.map(render).join("")}</ul>`;
   }
 
+  function focusablesOf(container) {
+    return Array.prototype.slice
+      .call(container.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter((el) => el.offsetWidth || el.offsetHeight || el === document.activeElement);
+  }
+
+  let trapHandler = null;
   function openModal(html) {
     if (!modal || !content || !panel) return;
     lastFocus = document.activeElement;
@@ -24,6 +31,16 @@
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
     panel.focus();
+    // Piège à focus : Tab/Shift+Tab bouclent dans le panneau
+    trapHandler = (e) => {
+      if (e.key !== "Tab") return;
+      const f = focusablesOf(panel);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", trapHandler);
   }
 
   function closeModal() {
@@ -31,6 +48,7 @@
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
     content.innerHTML = "";
+    if (trapHandler) { document.removeEventListener("keydown", trapHandler); trapHandler = null; }
     if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
   }
 
@@ -98,10 +116,7 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeModal();
-    if ((event.key === "Enter" || event.key === " ") && event.target.matches("[data-card-href]")) {
-      event.preventDefault();
-      window.location.href = event.target.dataset.cardHref;
-    }
+    // Les cartes pleine-surface sont un confort souris ; au clavier, on passe par leur lien interne.
   });
 
   const focusPage = document.querySelector("[data-focus-scroll]");
@@ -109,6 +124,11 @@
   let focusFrame = null;
   let focusScrollTimer = null;
   let isProgrammaticFocusScroll = false;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Hauteur de la navbar sticky : on centre les slides dans l'espace visible SOUS la navbar
+  // (sinon le haut d'une carte un peu haute passe derrière la navbar).
+  const navOffset = () => { const n = document.querySelector(".portfolio-navbar"); return n ? n.getBoundingClientRect().height : 0; };
+  const effectiveCenter = () => (window.innerHeight + navOffset()) / 2;
 
   function getVisibleFocusSections() {
     return focusSections.filter((section) => !section.hidden);
@@ -119,7 +139,7 @@
     const visibleSections = getVisibleFocusSections();
     if (!focusPage || !visibleSections.length) return;
 
-    const viewportCenter = window.innerHeight / 2;
+    const viewportCenter = effectiveCenter();
     let active = visibleSections[0];
     let activeDistance = Number.POSITIVE_INFINITY;
 
@@ -143,7 +163,7 @@
   function getClosestFocusSection() {
     const visibleSections = getVisibleFocusSections();
     if (!visibleSections.length) return null;
-    const viewportCenter = window.innerHeight / 2;
+    const viewportCenter = effectiveCenter();
     return visibleSections.reduce((closest, section) => {
       const rect = section.getBoundingClientRect();
       const sectionCenter = rect.top + rect.height / 2;
@@ -154,15 +174,20 @@
 
   function centerFocusSection(section, behavior) {
     if (!section) return;
+    const mode = behavior || (prefersReducedMotion ? "auto" : "smooth");
+    // Centrage manuel décalé de la navbar (scrollIntoView block:center l'ignorerait).
+    const rect = section.getBoundingClientRect();
+    const target = window.scrollY + rect.top + rect.height / 2 - effectiveCenter();
     isProgrammaticFocusScroll = true;
-    section.scrollIntoView({ block: "center", behavior: behavior || "smooth" });
+    window.scrollTo({ top: Math.max(0, target), behavior: mode });
     window.setTimeout(() => {
       isProgrammaticFocusScroll = false;
       requestFocusUpdate();
-    }, behavior === "auto" ? 0 : 520);
+    }, mode === "auto" ? 0 : 520);
   }
 
   function scheduleFocusSnap() {
+    if (prefersReducedMotion) return; // pas de recentrage auto si l'utilisateur réduit les animations
     const visibleSections = getVisibleFocusSections();
     if (!focusPage || !visibleSections.length || isProgrammaticFocusScroll) return;
     window.clearTimeout(focusScrollTimer);
@@ -180,31 +205,6 @@
 
   function refreshFocusNavigation() {
     if (!focusPage || !focusSections.length) return;
-    const visibleSections = getVisibleFocusSections();
-
-    focusSections.forEach((section) => {
-      section.querySelectorAll("[data-focus-target]").forEach((arrow) => {
-        arrow.hidden = true;
-      });
-    });
-
-    visibleSections.forEach((section, index) => {
-      const previous = visibleSections[index - 1];
-      const next = visibleSections[index + 1];
-      const upArrow = section.querySelector(".focus-arrow-up");
-      const downArrow = section.querySelector(".focus-arrow-down");
-
-      if (upArrow && previous) {
-        upArrow.dataset.focusTarget = String(focusSections.indexOf(previous));
-        upArrow.hidden = false;
-      }
-
-      if (downArrow && next) {
-        downArrow.dataset.focusTarget = String(focusSections.indexOf(next));
-        downArrow.hidden = false;
-      }
-    });
-
     buildFocusDots();
   }
 
@@ -246,7 +246,10 @@
     if (!focusDotsNav || !active) return;
     const activeIdx = focusSections.indexOf(active);
     focusDotsNav.querySelectorAll(".focus-dot").forEach((dot) => {
-      dot.classList.toggle("is-active", Number(dot.dataset.focusTarget) === activeIdx);
+      const isActive = Number(dot.dataset.focusTarget) === activeIdx;
+      dot.classList.toggle("is-active", isActive);
+      if (isActive) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
     });
   }
 
@@ -304,13 +307,6 @@
   if (focusPage && focusSections.length) {
     refreshFocusNavigation();
     updateActiveFocusSection();
-    focusPage.addEventListener("click", (event) => {
-      const arrow = event.target.closest("[data-focus-target]");
-      if (!arrow) return;
-      const targetIndex = Number.parseInt(arrow.dataset.focusTarget, 10);
-      const target = focusSections[targetIndex];
-      if (target && !target.hidden) centerFocusSection(target, "smooth");
-    });
     window.addEventListener("scroll", () => {
       requestFocusUpdate();
       scheduleFocusSnap();
@@ -369,6 +365,7 @@
     lastFocus = document.activeElement;
     box.classList.add("is-open");
     document.body.style.overflow = "hidden";
+    box.querySelector(".lightbox__close").focus();
   }
   function close() {
     box.classList.remove("is-open");
@@ -382,7 +379,13 @@
 
   imgs.forEach((el, i) => {
     el.style.cursor = "zoom-in";
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", "Agrandir l'image" + (el.alt ? " : " + el.alt : ""));
     el.addEventListener("click", () => open(i));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(i); }
+    });
   });
   box.querySelector(".lightbox__close").addEventListener("click", close);
   box.querySelector(".lightbox__btn--prev").addEventListener("click", (e) => { e.stopPropagation(); go(-1); });
@@ -393,6 +396,14 @@
     if (e.key === "Escape") close();
     else if (e.key === "ArrowLeft") go(-1);
     else if (e.key === "ArrowRight") go(1);
+    else if (e.key === "Tab") {
+      const f = Array.prototype.slice.call(box.querySelectorAll("button")).filter((b) => b.offsetWidth || b.offsetHeight);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (!box.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
 })();
 
@@ -432,4 +443,20 @@
       if (!el.classList.contains("is-in")) el.classList.remove("reveal-armed");
     });
   }, 1500);
+})();
+
+// Images tissées : marque les portraits (téléphone) pour les afficher côte à côte
+(function () {
+  var imgs = document.querySelectorAll(".story-media img");
+  if (!imgs.length) return;
+  var mark = function (img) {
+    var fig = img.closest(".story-media");
+    if (fig && img.naturalWidth && img.naturalHeight > img.naturalWidth * 1.1) {
+      fig.classList.add("is-portrait");
+    }
+  };
+  imgs.forEach(function (img) {
+    if (img.complete && img.naturalWidth) mark(img);
+    else img.addEventListener("load", function () { mark(img); }, { once: true });
+  });
 })();

@@ -36,6 +36,42 @@
   const heroStack = [...new Set(stackNames.filter(Boolean))].map((name) => ({ name, icon: techIconUrl(name) })).filter((x) => x.icon).slice(0, 12);
 %>
 
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": siteUrl },
+    { "@type": "ListItem", "position": 2, "name": isEducation ? "Études" : "Expériences", "item": siteUrl + (isEducation ? "/etudes" : "/jobs") },
+    { "@type": "ListItem", "position": 3, "name": item.title, "item": canonicalUrl }
+  ]
+}).replace(/</g, "\\u003c") %>
+</script>
+
+<script type="application/ld+json">
+<%- JSON.stringify(
+  isEducation
+    ? {
+        "@context": "https://schema.org",
+        "@type": "EducationalOccupationalProgram",
+        "name": item.title,
+        "description": description,
+        "url": canonicalUrl,
+        "provider": orgName ? { "@type": "EducationalOrganization", "name": orgName } : undefined,
+        "occupationalCategory": item.field || undefined
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "CreativeWork",
+        "name": item.title,
+        "description": description,
+        "url": canonicalUrl,
+        "author": { "@type": "Person", "name": "Henoc Mukumbi" },
+        "about": orgName || undefined
+      }
+).replace(/</g, "\\u003c") %>
+</script>
+
 <section class="detail-hero <%= skinClass %>">
   <div class="container detail-hero__grid">
     <div class="detail-hero__content">
@@ -67,7 +103,7 @@
     <div class="detail-hero__entity">
       <div class="entity-logo large">
         <% if (orgLogo) { %>
-          <img src="<%= orgLogo %>" alt="Logo <%= orgName %>">
+          <img src="<%= orgLogo %>" alt="Logo <%= orgName %>" loading="lazy" decoding="async">
         <% } else { %>
           <span><%= orgInitial %></span>
         <% } %>
@@ -130,9 +166,14 @@
         <% } %>
 
         <% if (hasAlternance) { %>
-          <section class="detail-section" data-reveal>
-            <p class="eyebrow">Progression</p>
-            <h2>Deux années d'alternance</h2>
+          <details class="detail-section detail-accordion" data-reveal>
+            <summary>
+              <span class="detail-accordion__label">
+                <span class="detail-accordion__eyebrow">Progression</span>
+                <span class="detail-accordion__title">Deux années d'alternance, dans le détail</span>
+              </span>
+            </summary>
+            <div class="detail-accordion__body">
             <div class="experience-year-list">
               <% if (item.first_year_summary || firstYearTasks.length || firstYearAchievements.length || firstYearTools.length || firstYearSkills.length) { %>
                 <article class="experience-year">
@@ -171,12 +212,20 @@
                 </article>
               <% } %>
             </div>
-          </section>
+            </div>
+          </details>
         <% } %>
 
         <% if (technicalChallenges.length) { %>
-          <section class="detail-section" data-reveal>
-            <p class="eyebrow">Difficultés & résolution</p>
+          <% const nChal = technicalChallenges.length; %>
+          <details class="detail-section detail-accordion" data-reveal>
+            <summary>
+              <span class="detail-accordion__label">
+                <span class="detail-accordion__eyebrow">Difficultés &amp; résolution</span>
+                <span class="detail-accordion__title"><%= nChal %> obstacle<%= nChal > 1 ? 's' : '' %> rencontré<%= nChal > 1 ? 's' : '' %> et levé<%= nChal > 1 ? 's' : '' %></span>
+              </span>
+            </summary>
+            <div class="detail-accordion__body">
             <div class="challenge-list">
               <% technicalChallenges.forEach((challenge) => { %>
                 <% const parts = String(challenge).split('|').map((part) => part.trim()).filter(Boolean); %>
@@ -186,7 +235,8 @@
                 </details>
               <% }) %>
             </div>
-          </section>
+            </div>
+          </details>
         <% } %>
 
         <% if (item.results || resultsList.length || item.personal_contribution || personalContributionList.length) { %>
@@ -247,6 +297,11 @@
                 <% }) %>
               </div>
             <% } %>
+            <details class="detail-fold" data-reveal>
+              <summary>
+                <span class="detail-fold__eyebrow">Détail du programme</span>
+                <span class="detail-fold__hint">Voir les <%= program.length %> domaines et leurs UV</span>
+              </summary>
             <div class="program-category-list">
               <% program.forEach((category) => { %>
                 <% const categorySkills = formatList(category.skills_summary).length ? formatList(category.skills_summary) : [...new Set(category.courses.flatMap((course) => formatList(course.skills_summary)))]; %>
@@ -295,6 +350,7 @@
                 </article>
               <% }) %>
             </div>
+            </details>
           </section>
         <% } %>
 

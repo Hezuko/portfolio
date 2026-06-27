@@ -9,7 +9,30 @@ var { cloudinaryUrl } = require("../utils/cloudinary");
 
 function shortText(value, max = 300) {
   const s = String(value || "").replace(/\s+/g, " ").trim();
-  return s.length > max ? s.slice(0, max - 1).trimEnd() + "…" : s;
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  // On coupe sur la dernière frontière de mot pour un snippet propre (pas de mot tronqué).
+  return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+}
+
+// Anti-spam : limiteur simple en mémoire (5 envois / 10 min / IP), sans dépendance externe.
+const contactHits = new Map();
+function contactRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const max = 5;
+  const hits = (contactHits.get(ip) || []).filter((t) => now - t < windowMs);
+  if (hits.length >= max) {
+    contactHits.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  contactHits.set(ip, hits);
+  if (contactHits.size > 5000) { // garde-fou mémoire : purge des IP expirées
+    for (const [k, v] of contactHits) if (!v.some((t) => now - t < windowMs)) contactHits.delete(k);
+  }
+  return false;
 }
 
 const profile = {
@@ -17,7 +40,7 @@ const profile = {
   role: "Ingénieur architecte en systèmes embarqués",
   tagline: "Ingénieur architecte en systèmes embarqués — je conçois un produit de A à Z, du circuit imprimé au cloud.",
   about:
-    "Si je devais me définir : ingénieur-architecte en systèmes embarqués. Ce que j'aime, c'est concevoir un produit de A à Z — du schéma électronique jusqu'à la ligne de code qui le fait vivre.\n\nAujourd'hui, j'ai acquis des compétences larges sur de nombreux domaines de l'informatique : électronique embarquée, développement logiciel (back-end, web, mobile), intelligence artificielle et cloud. C'est cette polyvalence qui me permet de tenir un produit de bout en bout, de l'idée à la version finie.",
+    "Si je devais me définir : ingénieur-architecte en systèmes embarqués. Ce que j'aime, c'est concevoir un produit de A à Z — du schéma électronique jusqu'à la ligne de code qui le fait vivre.",
   email: "h.mukumbi100@gmail.com",
   github: "https://github.com/Hezuko",
   linkedin: "https://www.linkedin.com/in/henocmukumbi",
@@ -106,7 +129,7 @@ router.get("/", async function (req, res, next) {
 router.get("/projets", async function (req, res, next) {
   try {
     const data = await repo.getPublicData();
-    res.render("public/projects", { title: "Projets", profile: buildProfile(settingsToMap(data.settings)), projects: data.projects });
+    res.render("public/projects", { title: "Projets", description: "Les projets de Henoc Mukumbi : systèmes embarqués (PIC, STM32), robotique, et JoyTrain — app fitness avec coach IA et moteur RAG. Du circuit imprimé au cloud.", profile: buildProfile(settingsToMap(data.settings)), projects: data.projects });
   } catch (err) {
     next(err);
   }
@@ -120,8 +143,9 @@ router.get("/projets/:slug", async function (req, res, next) {
     const projImg = project.main_image_url || project.main_image;
     res.render("public/project-detail", {
       title: project.name,
-      description: shortText(project.short_description || project.goal || project.context) || res.locals.description,
+      description: shortText(project.short_description || project.goal || project.context, 160) || res.locals.description,
       ogImage: projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage,
+      ogType: "article",
       profile: buildProfile(settings),
       project,
     });
@@ -135,6 +159,7 @@ router.get("/etudes", async function (req, res, next) {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
       title: "Études",
+      description: "Le parcours de formation de Henoc Mukumbi en électronique, systèmes embarqués et ingénierie logicielle (ESIEE Paris).",
       heading: "Études et formations",
       intro: "Un parcours structuré autour de l'électronique, des systèmes embarqués et de l'apprentissage continu.",
       items: data.educations,
@@ -151,7 +176,8 @@ router.get("/etudes/:id", async function (req, res, next) {
     if (!item) return res.status(404).render("errors/404", { title: "Formation introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
-      description: shortText(item.context || item.description) || res.locals.description,
+      description: shortText(item.context || item.description, 160) || res.locals.description,
+      ogType: "article",
       item,
       type: "education",
     });
@@ -165,6 +191,7 @@ router.get("/jobs", async function (req, res, next) {
     const data = await repo.getPublicData();
     res.render("public/timeline", {
       title: "Expériences",
+      description: "Les expériences professionnelles de Henoc Mukumbi : validation logicielle embarquée, tests calculateurs automobiles (CAN/LIN), R&D électronique.",
       heading: "Expériences professionnelles",
       intro: "Les missions, environnements et projets qui ont construit mon expérience d'ingénieur.",
       items: data.jobs,
@@ -177,11 +204,16 @@ router.get("/jobs", async function (req, res, next) {
 
 router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
   try {
+    // URL canonique unique : /experiences/:id. /jobs/:id redirige (301) pour éviter le contenu dupliqué.
+    if (req.path.startsWith("/jobs/")) {
+      return res.redirect(301, `/experiences/${req.params.id}`);
+    }
     const item = await repo.getJobDetail(req.params.id);
     if (!item) return res.status(404).render("errors/404", { title: "Experience introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
-      description: shortText(item.short_summary || item.mission_context || item.description) || res.locals.description,
+      description: shortText(item.short_summary || item.mission_context || item.description, 160) || res.locals.description,
+      ogType: "article",
       item,
       type: "job",
     });
@@ -205,7 +237,7 @@ router.get("/competences", async function (req, res, next) {
         map[domain].push(item);
         return map;
       }, {});
-    res.render("public/skills", { title: "Domaines techniques", groups });
+    res.render("public/skills", { title: "Domaines techniques", description: "Les domaines techniques de Henoc Mukumbi : électronique, systèmes embarqués temps réel, développement logiciel, IA appliquée et cloud.", groups });
   } catch (err) {
     next(err);
   }
@@ -241,28 +273,40 @@ router.get("/api/knowledge/:name", async function (req, res, next) {
   }
 });
 
-router.get("/contact", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/contact", { title: "Contact", profile: buildProfile(settings), messageSent: false, error: null }))
-    .catch((err) => res.render("public/contact", { title: "Contact", profile, messageSent: false, error: err.message }));
+router.get("/contact", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/contact", { title: "Contact", description: "Contacter Henoc Mukumbi, ingénieur systèmes embarqués — pour une mission, une alternance ou une collaboration. Réponse sous 48 h.", profile: buildProfile(settings), messageSent: false, error: null });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/mentions-legales", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/legal-notice", { title: "Mentions legales", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/legal-notice", { title: "Mentions legales", legal: { ...legal, error: err.message } }));
+router.get("/mentions-legales", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/legal-notice", { title: "Mentions légales", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/confidentialite", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/privacy", { title: "Politique de confidentialite", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/privacy", { title: "Politique de confidentialite", legal: { ...legal, error: err.message } }));
+router.get("/confidentialite", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/privacy", { title: "Politique de confidentialité", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get("/cookies", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/cookies", { title: "Cookies", legal: buildLegal(settings) }))
-    .catch((err) => res.render("public/cookies", { title: "Cookies", legal: { ...legal, error: err.message } }));
+router.get("/cookies", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/cookies", { title: "Cookies", legal: buildLegal(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/desauthentification", function (req, res, next) {
@@ -275,6 +319,17 @@ router.post("/desauthentification", function (req, res, next) {
 router.post("/contact", async function (req, res, next) {
   try {
     const currentProfile = buildProfile(await repo.getSettingsMap());
+
+    // Anti-spam : champ honeypot (invisible). Rempli = bot -> on simule l'envoi sans rien traiter.
+    if ((req.body.website || "").trim()) {
+      return res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+    }
+
+    // Anti-spam : limite le nombre d'envois par IP pour ne pas noyer la boîte de réception.
+    if (contactRateLimited(req.ip || "unknown")) {
+      return res.status(429).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: "Trop de tentatives d'envoi. Merci de réessayer dans quelques minutes." });
+    }
+
     let { nom, prenom, objet, email, texte } = req.body;
     nom = (nom || "").trim();
     prenom = (prenom || "").trim();
@@ -283,7 +338,8 @@ router.post("/contact", async function (req, res, next) {
     texte = (texte || "").trim();
 
     const fail = (msg) => res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: msg });
-    if (!nom || !prenom || !objet || !email || !texte) return fail("Tous les champs sont requis.");
+    if (!nom || !prenom || !email || !texte) return fail("Le nom, le prénom, l'email et le message sont requis.");
+    if (!objet) objet = "Prise de contact";
     if (!validator.isEmail(email)) return fail("Adresse email invalide.");
     if (nom.length > 80 || prenom.length > 80) return fail("Le nom et le prénom sont trop longs (80 caractères maximum).");
     if (objet.length > 140) return fail("L'objet est trop long (140 caractères maximum).");
@@ -303,10 +359,13 @@ router.post("/contact", async function (req, res, next) {
   }
 });
 
-router.get("/a-propos", function (req, res) {
-  repo.getSettingsMap()
-    .then((settings) => res.render("public/about", { title: "À propos", description: "À propos de Henoc Mukumbi, ingénieur systèmes embarqués : électronique, systèmes embarqués, logiciel et IA.", profile: buildProfile(settings) }))
-    .catch(() => res.render("public/about", { title: "À propos", profile: buildProfile() }));
+router.get("/a-propos", async function (req, res, next) {
+  try {
+    const settings = await repo.getSettingsMap();
+    res.render("public/about", { title: "À propos", description: "À propos de Henoc Mukumbi, ingénieur systèmes embarqués : électronique, systèmes embarqués, logiciel et IA.", profile: buildProfile(settings) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 function siteUrlOf(req) {
@@ -324,13 +383,23 @@ router.get("/sitemap.xml", async function (req, res, next) {
   try {
     const base = siteUrlOf(req);
     const data = await repo.getPublicData();
-    const paths = [
-      "/", "/a-propos", "/projets", "/etudes", "/jobs", "/competences", "/contact",
-      ...(data.projects || []).filter((p) => p.slug).map((p) => `/projets/${p.slug}`),
-      ...(data.educations || []).map((e) => `/etudes/${e.id}`),
-      ...(data.jobs || []).map((j) => `/experiences/${j.id}`),
+    const lastmodOf = (entity) => {
+      const d = entity.updated_at || entity.end_date || entity.start_date;
+      if (!d) return null;
+      const t = new Date(d);
+      return Number.isNaN(t.getTime()) ? null : t.toISOString().slice(0, 10);
+    };
+    const entries = [
+      { loc: "/" }, { loc: "/a-propos" }, { loc: "/projets" }, { loc: "/etudes" },
+      { loc: "/jobs" }, { loc: "/competences" }, { loc: "/contact" },
+      ...(data.projects || []).filter((p) => p.slug).map((p) => ({ loc: `/projets/${p.slug}`, lastmod: lastmodOf(p) })),
+      ...(data.educations || []).map((e) => ({ loc: `/etudes/${e.id}`, lastmod: lastmodOf(e) })),
+      ...(data.jobs || []).map((j) => ({ loc: `/experiences/${j.id}`, lastmod: lastmodOf(j) })),
     ];
-    const body = paths.map((p) => `  <url><loc>${base}${p === "/" ? "" : p}</loc></url>`).join("\n");
+    const body = entries.map((e) => {
+      const loc = `${base}${e.loc === "/" ? "" : e.loc}`;
+      return `  <url><loc>${loc}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}</url>`;
+    }).join("\n");
     res.type("application/xml").send(
       `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
     );

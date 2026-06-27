@@ -31,6 +31,9 @@ function signedUrl(asset) {
     secure: true,
     sign_url: true,
     version: asset.version || undefined,
+    // Optimisation par défaut (format + qualité auto) : la signature couvre la transfo,
+    // donc les médias signés (logos, photo) sont servis légers partout, même sans wrapping.
+    transformation: asset.resource_type === "video" ? undefined : [{ fetch_format: "auto", quality: "auto" }],
   });
 }
 

@@ -1,7 +1,7 @@
 <% const isCompact = Boolean(typeof compact !== 'undefined' && compact); %>
 <% const projectHref = project.slug ? `/projets/${project.slug}` : ''; %>
-<article class="project-card <%= isCompact ? 'project-card--compact clickable-card' : '' %>" <% if (isCompact && projectHref) { %>data-card-href="<%= projectHref %>" tabindex="0" role="link" aria-label="Voir le projet <%= project.name || project.titre %>"<% } %>>
-  <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="<%= project.name || project.titre %>">
+<article class="project-card <%= isCompact ? 'project-card--compact clickable-card' : '' %>" <% if (isCompact && projectHref) { %>data-card-href="<%= projectHref %>"<% } %>>
+  <img src="<%= cloudinaryUrl(project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg', { w: 800, c: 'fill' }) %>" alt="<%= project.name || project.titre %>" loading="lazy" decoding="async">
   <div>
     <div class="card-meta">
       <span><%= formatStatus(project.status || project.etat, 'default') %></span>

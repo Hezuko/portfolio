@@ -8,6 +8,16 @@ var app = require('../app');
 var debug = require('debug')('portfolio:server');
 var http = require('http');
 
+// Filets de sécurité process : on loggue puis on laisse le superviseur (Docker/systemd)
+// redémarrer proprement, au lieu d'un crash silencieux sans trace.
+process.on('unhandledRejection', function (reason) {
+  console.error('🚨 Rejet de promesse non géré :', reason);
+});
+process.on('uncaughtException', function (err) {
+  console.error('🚨 Exception non capturée :', err);
+  process.exit(1);
+});
+
 /**
  * Get port from environment and store in Express.
  */

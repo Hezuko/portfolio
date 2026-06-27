@@ -13,7 +13,10 @@
       </div>
     </div>
     <figure class="detail-hero__media">
-      <img src="<%= cloudinaryUrl(profile.photo, { w: 640 }) %>" alt="Portrait de <%= profile.name %>" width="640" height="640">
+      <picture>
+        <source type="image/avif" srcset="<%= cloudinarySrcset(profile.photo, [360, 480, 640, 960], { fmt: 'avif' }) %>" sizes="(max-width: 760px) 90vw, 420px">
+        <img src="<%= cloudinaryUrl(profile.photo, { w: 640 }) %>" srcset="<%= cloudinarySrcset(profile.photo, [360, 480, 640, 960]) %>" sizes="(max-width: 760px) 90vw, 420px" alt="Portrait de <%= profile.name %>" width="640" height="640" fetchpriority="high">
+      </picture>
     </figure>
   </div>
 </section>
@@ -50,10 +53,10 @@
       <section class="detail-side-card detail-side-card--sticky">
         <h2>Me joindre</h2>
         <div class="about-links">
-          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><span><%= profile.email %></span></a>
-          <% if (profile.github) { %><a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i><span>GitHub</span></a><% } %>
-          <% if (profile.linkedin) { %><a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i><span>LinkedIn</span></a><% } %>
-          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><i class="bi bi-file-earmark-text"></i><span>CV / Résumé</span></a><% } %>
+          <a href="mailto:<%= profile.email %>"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-envelope"></use></svg><span><%= profile.email %></span></a>
+          <% if (profile.github) { %><a href="<%= profile.github %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-github"></use></svg><span>GitHub</span></a><% } %>
+          <% if (profile.linkedin) { %><a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-linkedin"></use></svg><span>LinkedIn</span></a><% } %>
+          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg><span>CV / Résumé</span></a><% } %>
         </div>
       </section>
     </aside>

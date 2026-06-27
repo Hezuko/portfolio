@@ -4,29 +4,33 @@
       <div class="contact-focus-header">
         <p class="eyebrow">Contact</p>
         <h1>Discutons d’un projet</h1>
-        <p>Un message clair, un contexte, et je reviens vers toi.</p>
+        <p>Un projet embarqué ou logiciel à concrétiser&nbsp;? Décris-le en deux lignes — je réponds généralement sous 48&nbsp;h.</p>
       </div>
       <div class="contact-grid">
         <aside class="contact-panel">
           <h2>Liens utiles</h2>
-          <a href="mailto:<%= profile.email %>"><i class="bi bi-envelope"></i><%= profile.email %></a>
-          <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><i class="bi bi-github"></i>GitHub</a>
-          <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i>LinkedIn</a>
+          <a href="mailto:<%= profile.email %>"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-envelope"></use></svg><%= profile.email %></a>
+          <a href="<%= profile.github %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-github"></use></svg>GitHub</a>
+          <a href="<%= profile.linkedin %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-linkedin"></use></svg>LinkedIn</a>
+          <% if (profile.cv) { %><a href="<%= profile.cv %>" target="_blank" rel="noreferrer"><svg class="bi" width="1em" height="1em" fill="currentColor" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg>CV / Résumé</a><% } %>
         </aside>
         <form class="form-surface" method="POST" action="/contact">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <% if (messageSent) { %><p class="alert alert-success">Message envoyé.</p><% } %>
-          <% if (error) { %><p class="alert alert-danger"><%= error %></p><% } %>
+          <div aria-live="polite">
+            <% if (messageSent) { %><p class="alert alert-success" role="status">Message envoyé. Je reviens vers toi rapidement.</p><% } %>
+            <% if (error) { %><p class="alert alert-danger" role="alert"><%= error %></p><% } %>
+          </div>
           <div class="form-row">
             <label>Nom<input name="nom" required></label>
             <label>Prénom<input name="prenom" required></label>
           </div>
           <label>Email<input name="email" type="email" required></label>
-          <label>Objet<input name="objet" required></label>
+          <label>Objet <span class="label-hint">(optionnel)</span><input name="objet"></label>
           <label>Message<textarea name="texte" rows="6" required></textarea></label>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
           <p class="form-note">
             Les informations envoyées via ce formulaire sont utilisées uniquement pour traiter ta demande.
-            Pour en savoir plus, consulte la <a href="/confidentialite">politique de confidentialite</a>.
+            Pour en savoir plus, consulte la <a href="/confidentialite">politique de confidentialité</a>.
           </p>
           <button class="btn btn-dark" type="submit">Envoyer</button>
         </form>

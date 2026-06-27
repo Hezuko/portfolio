@@ -1,5 +1,4 @@
 require("dotenv").config();
-var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
@@ -10,11 +9,19 @@ var session = require("./config/session");
 var portfolioRepository = require("./model/portfolioRepository");
 var { formatContractType, formatDateRange, formatLevel, formatProjectCategory, formatStatus } = require("./utils/formatters");
 var { techIconUrl } = require("./utils/techIcons");
-var { cloudinaryUrl } = require("./utils/cloudinary");
+var { cloudinaryUrl, cloudinarySrcset } = require("./utils/cloudinary");
+var { techFamily, FAMILY_ORDER } = require("./utils/techFamily");
 const csrf = require("csurf");
 
-// Version d'assets : change à chaque démarrage → casse le cache navigateur après un déploiement
-const ASSET_VERSION = Date.now().toString(36);
+// Version d'assets : stable par release (hash git court, fallback version package).
+// Casse le cache navigateur seulement à un nouveau déploiement, pas à chaque redémarrage.
+const ASSET_VERSION = (() => {
+  try {
+    return require("child_process").execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch (e) {
+    try { return require("./package.json").version || "1"; } catch (_) { return "1"; }
+  }
+})();
 
 // Import des routes
 var publicRouter = require("./routes/public");
@@ -23,9 +30,20 @@ var authentificationRouter = require("./routes/authentification");
 
 var app = express();
 
-// Valeurs par défaut utilisées par le layout, même si la session échoue.
+// Garde-fou déploiement : sans SITE_URL en prod, canonical/OG/JSON-LD/sitemap retombent
+// sur l'hôte de la requête (risque d'indexer une mauvaise origine).
+if (process.env.NODE_ENV === "production" && !process.env.SITE_URL) {
+  console.warn("⚠️  SITE_URL non défini en production — les URLs absolues (canonical, OG, JSON-LD, sitemap) utiliseront l'hôte de la requête. Définir SITE_URL=https://<domaine>.");
+}
+
+// Derrière un reverse-proxy (Caddy) : req.protocol reflète https, canonical/OG corrects
+app.set("trust proxy", 1);
+
+// SEO : une seule forme d'URL. On retire le slash final (hors racine) en 301 → pas de doublon.
 app.use((req, res, next) => {
-  res.locals.user = null;
+  if (req.method === "GET" && req.path.length > 1 && req.path.endsWith("/")) {
+    return res.redirect(301, req.path.slice(0, -1) + req.url.slice(req.path.length));
+  }
   next();
 });
 
@@ -39,6 +57,13 @@ app.set("layout", "layout");
 
 // 📦 Compression gzip/br de toutes les réponses (HTML/CSS/JS) — gros gain réseau
 app.use(compression());
+
+// 🟢 Fichiers statiques servis AVANT session/CSRF/locals : un asset (CSS/JS/police/favicon)
+// ne paie ni le token CSRF, ni le cookie, ni la chaîne de rendu des vues.
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+app.use("/css", express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"), { immutable: true, maxAge: "30d" }));
+app.use("/js", express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"), { immutable: true, maxAge: "30d" }));
 
 // 🛡️ Initialiser la session avant CSRF
 app.use(session.initSession());
@@ -76,7 +101,15 @@ app.use((req, res, next) => {
   res.locals.formatStatus = formatStatus;
   res.locals.techIconUrl = techIconUrl;
   res.locals.cloudinaryUrl = cloudinaryUrl;
+  res.locals.cloudinarySrcset = cloudinarySrcset;
+  res.locals.techFamily = techFamily;
+  res.locals.familyOrder = FAMILY_ORDER;
   res.locals.assetVersion = ASSET_VERSION;
+  // Peau caméléon par catégorie (whitelist : pas de classe muette pour une catégorie inconnue)
+  res.locals.skinClass = (cat) => {
+    const c = String(cat || "").toLowerCase();
+    return ["web", "mobile", "ai", "robotics", "electronique"].includes(c) ? "skin-" + c : "";
+  };
 
   // 🔎 SEO / partage : valeurs par défaut, surchargeables par chaque route.
   const host = req.get("host");
@@ -86,23 +119,15 @@ app.use((req, res, next) => {
     "Henoc Mukumbi, ingénieur systèmes embarqués. Je conçois l'électronique et le logiciel qui tourne dessus : du circuit imprimé au cloud, de l'app mobile au coach IA.";
   res.locals.ogImage =
     "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
-  res.locals.robots = "index,follow";
+  // Portrait FIXE du Person (JSON-LD) — découplé de l'og:image qui varie par page (sinon
+  // l'image d'un projet deviendrait "la photo de Henoc" dans les données structurées).
+  res.locals.personImage =
+    "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_640,h_640,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
+  res.locals.robots = /^\/(admin|authentification)/.test(req.path) ? "noindex,nofollow" : "index,follow";
+  res.locals.ogType = "website";
+  res.locals.currentPath = req.path;
   next();
 });
-
-// 🟢 Servir les fichiers statiques (cache long : les assets changent peu)
-app.use(express.static(path.join(__dirname, "public"), { maxAge: "7d" }));
-app.get("/favicon.ico", (req, res) => res.status(204).end());
-
-// 🟢 Routes pour Bootstrap CSS & JS
-app.use(
-  "/css",
-  express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"))
-);
-app.use(
-  "/js",
-  express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"))
-);
 
 app.use(async (req, res, next) => {
   const defaultName = "Henoc Mukumbi";
@@ -112,11 +137,19 @@ app.use(async (req, res, next) => {
     res.locals.siteProfile = {
       name,
       footerText: settings.profile_tagline || "Ingénieur systèmes embarqués — du circuit imprimé au cloud.",
+      email: settings.contact_email || "h.mukumbi100@gmail.com",
+      github: settings.github_url || "https://github.com/Hezuko",
+      linkedin: settings.linkedin_url || "https://www.linkedin.com/in/henocmukumbi",
+      cv: settings.cv_url || "https://hezuko.github.io/resume/resume.pdf",
     };
   } catch (err) {
     res.locals.siteProfile = {
       name: defaultName,
       footerText: "Portfolio personnel, projets, parcours et experiences.",
+      email: "h.mukumbi100@gmail.com",
+      github: "https://github.com/Hezuko",
+      linkedin: "https://www.linkedin.com/in/henocmukumbi",
+      cv: "https://hezuko.github.io/resume/resume.pdf",
     };
   }
   next();
@@ -144,36 +177,15 @@ app.use("/", publicRouter);
 
 // 🚨 Gestion des erreurs
 
-// ❌ Catch 403 - Accès interdit
+// ❌ 404 - Page non trouvée (la protection /admin est gérée dans adminRouter)
 app.use((req, res, next) => {
-  if (req.url.includes("/admin") && !req.user) {
-    return res.status(403).render("errors/403", { title: "Erreur 403" });
-  }
-  next();
+  res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
 });
 
-// ❌ Catch 404 - Page non trouvée
-app.use((req, res, next) => {
-  res.status(404).render("errors/404", { title: "Erreur 404" });
-});
-
-// ❌ Catch 500 - Erreur interne du serveur
+// ❌ 500 - Erreur interne du serveur
 app.use((err, req, res, next) => {
   console.error("🚨 Erreur serveur :", err.stack);
-  res.status(500).render("errors/500", { title: "Erreur 500" });
-});
-
-// ❌ Gestion des autres erreurs
-app.use(function (err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  res.status(err.status || 500);
-  res.render("error", {
-    message: err.message,
-    error: err,
-    title: "Erreur",
-  });
+  res.status(500).render("errors/500", { title: "Erreur 500", robots: "noindex,nofollow" });
 });
 
 module.exports = app;

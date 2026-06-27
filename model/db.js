@@ -10,4 +10,10 @@ const pool = new Pool({
     ssl: process.env.DB_SSL === "false" ? false : { rejectUnauthorized: false }
 });
 
+// Un client PG inactif qui reçoit une erreur (redémarrage DB, coupure réseau) émettrait
+// un 'error' non géré qui ferait tomber tout le process. On le loggue sans crasher.
+pool.on("error", (err) => {
+    console.error("⚠️  Erreur sur un client PG inactif :", err.message);
+});
+
 module.exports = pool;

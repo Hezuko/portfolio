@@ -1,0 +1,12 @@
+-- Allègement rédactionnel de l'expérience LGM (id=2) : ~55 % de prose en moins,
+-- redites supprimées (le lead ne re-résume plus année 1/2, déjà détaillées dans Progression).
+-- TOUS les faits/chiffres/technos sont conservés. Réversible : restaurer depuis git/backup.
+
+UPDATE jobs SET
+  mission_context = $t$Alternance en environnement automobile, sur le logiciel embarqué, les protocoles de communication et la validation de calculateurs. Le produit central : OCEAN, une pile de protocoles embarquée et configurable qui permet aux calculateurs (ECU) de communiquer sur différents réseaux.$t$,
+  company_context = $t$LGM Ingénierie (groupe LGM) conçoit de l'électronique et du logiciel embarqués : bancs de test, intégration, validation, qualification — pour l'aéronautique, la défense, l'énergie, les transports et l'automobile. J'étais dans la Business Line ENPS (Embedded Networks Products & Services), sur les réseaux embarqués et la validation de calculateurs.$t$,
+  product_context = $t$OCEAN permet la communication entre calculateurs automobiles via plusieurs protocoles (CAN, CAN FD, LIN, LVDS, J1939). Il gère la transmission, la réception, le diagnostic et les échanges réseau, à travers des drivers, des couches de transport, des services de diagnostic et une couche d'abstraction de l'OS. Mon travail visait la conformité entre spécifications, diagrammes et comportement réel du code.$t$,
+  first_year_summary = $t$Montée en compétence sur OCEAN, le cycle en V et la validation logicielle. J'ai réalisé plus de 200 tests unitaires sur les fonctions d'OCEAN avec IBM Rational Test RealTime, en vérifiant la conformité aux diagrammes fonctionnels et aux spécifications — certains modules simples, d'autres demandant plusieurs jours d'analyse (complexité, dépendances, incohérences diagrammes/code).$t$,
+  second_year_summary = $t$Élargissement vers une approche système : validation de calculateurs et tests sur cible en C, analyse des communications CAN/LIN avec CANoe, oscilloscope, multimètre et bancs de test. J'ai aussi contribué à l'analyse d'incidents, aux rapports qualité, à l'amélioration des procédures et au développement d'outils Python/Django pour automatiser les rapports et la traçabilité.$t$,
+  results = $t$Une progression de la découverte d'OCEAN et des tests unitaires vers la validation de calculateurs, les tests sur cible, l'analyse d'incidents et l'automatisation — dans un cadre industriel automobile où qualité, traçabilité et rigueur documentaire sont essentielles.$t$
+WHERE id = 2;

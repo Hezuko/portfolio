@@ -6,12 +6,10 @@
       <h1>Compétences reliées au parcours</h1>
       <p>Une compétence n’est affichée ici que comme point d’entrée vers les projets, expériences et études où elle apparaît réellement.</p>
     </article>
-    <% if (domainEntries.length) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="1" aria-label="Aller au domaine suivant"><span aria-hidden="true"></span></button><% } %>
   </section>
 
   <% domainEntries.forEach(([domain, items], index) => { %>
     <section class="focus-scroll-section">
-      <button class="focus-arrow focus-arrow-up" type="button" data-focus-target="<%= index %>" aria-label="Aller au domaine précédent"><span aria-hidden="true"></span></button>
       <article class="focus-card technical-domain-section">
         <div class="technical-domain-section__header">
           <h2><%= domain %></h2>
@@ -51,7 +49,6 @@
           <% }) %>
         </div>
       </article>
-      <% if (index < domainEntries.length - 1) { %><button class="focus-arrow focus-arrow-down" type="button" data-focus-target="<%= index + 2 %>" aria-label="Aller au domaine suivant"><span aria-hidden="true"></span></button><% } %>
     </section>
   <% }) %>
 </div>

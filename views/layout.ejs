@@ -10,29 +10,34 @@
   <link rel="canonical" href="<%= canonicalUrl %>">
   <meta name="theme-color" content="#0a0712">
 
+  <!-- Origine tierce du chemin critique (images) : on ouvre la connexion plus tôt -->
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+
   <!-- Open Graph (LinkedIn, Slack, WhatsApp…) -->
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="<%= ogType %>">
   <meta property="og:site_name" content="Henoc Mukumbi">
   <meta property="og:title" content="<%= fullTitle %>">
   <meta property="og:description" content="<%= description %>">
   <meta property="og:url" content="<%= canonicalUrl %>">
   <meta property="og:image" content="<%= ogImage %>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="<%= fullTitle %>">
   <meta property="og:locale" content="fr_FR">
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= fullTitle %>">
   <meta name="twitter:description" content="<%= description %>">
   <meta name="twitter:image" content="<%= ogImage %>">
+  <meta name="twitter:image:alt" content="<%= fullTitle %>">
 
   <link rel="stylesheet" href="/css/bootstrap.min.css">
   <link rel="stylesheet" href="/stylesheets/custom.css?v=<%= assetVersion %>">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/stylesheets/redesign.css?v=<%= assetVersion %>">
-  <link rel="icon" type="image/png" href="/images/came.png">
-  <link rel="apple-touch-icon" href="/images/came.png">
+  <link rel="preload" href="/fonts/spacegrotesk-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/inter-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/stylesheets/fonts.css?v=<%= assetVersion %>">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -40,13 +45,14 @@
     "name": "Henoc Mukumbi",
     "jobTitle": "Ingénieur systèmes embarqués",
     "url": "<%= siteUrl %>",
-    "image": "<%= ogImage %>",
+    "image": "<%= personImage %>",
     "email": "h.mukumbi100@gmail.com",
     "sameAs": ["https://github.com/Hezuko", "https://www.linkedin.com/in/henocmukumbi"]
   }
   </script>
 </head>
 <body>
+  <%- include('partials/icon-sprite') %>
   <a class="skip-link" href="#main">Aller au contenu</a>
   <%- include('components/navbar') %>
   <main id="main" tabindex="-1">

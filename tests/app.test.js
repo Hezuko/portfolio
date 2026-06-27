@@ -100,6 +100,71 @@ describe("vision admin", () => {
   });
 });
 
+describe("routes publiques (SEO + contact)", () => {
+  async function contactSession() {
+    const agent = request.agent(app);
+    const page = await agent.get("/contact");
+    const csrf = cheerio.load(page.text)('input[name="_csrf"]').val();
+    return { agent, csrf };
+  }
+
+  it("sert le sitemap.xml", async () => {
+    const r = await request(app).get("/sitemap.xml");
+    expect(r.statusCode).toBe(200);
+    expect(r.headers["content-type"]).toMatch(/xml/);
+    expect(r.text).toContain("<urlset");
+    expect(r.text).toContain("/projets");
+  });
+
+  it("sert robots.txt (sitemap + disallow admin)", async () => {
+    const r = await request(app).get("/robots.txt");
+    expect(r.statusCode).toBe(200);
+    expect(r.text).toMatch(/Sitemap:/i);
+    expect(r.text).toMatch(/Disallow:\s*\/admin/);
+  });
+
+  it("redirige /jobs/:id (301) vers /experiences/:id", async () => {
+    const r = await request(app).get("/jobs/2");
+    expect(r.statusCode).toBe(301);
+    expect(r.headers.location).toBe("/experiences/2");
+  });
+
+  it("normalise le slash final (301)", async () => {
+    const r = await request(app).get("/projets/");
+    expect(r.statusCode).toBe(301);
+    expect(r.headers.location).toBe("/projets");
+  });
+
+  it("POST /contact : champs manquants -> 400", async () => {
+    const { agent, csrf } = await contactSession();
+    const r = await agent.post("/contact").send({ _csrf: csrf, website: "" });
+    expect(r.statusCode).toBe(400);
+  });
+
+  it("POST /contact : honeypot rempli -> succès simulé sans traitement", async () => {
+    const { agent, csrf } = await contactSession();
+    const r = await agent.post("/contact").send({ _csrf: csrf, website: "http://bot.example", nom: "B", prenom: "O", email: "b@o.com", texte: "spam" });
+    expect(r.statusCode).toBe(200);
+  });
+
+  it("POST /contact : email invalide -> 400", async () => {
+    const { agent, csrf } = await contactSession();
+    const r = await agent.post("/contact").send({ _csrf: csrf, website: "", nom: "Test", prenom: "User", email: "pas-un-email", texte: "Bonjour" });
+    expect(r.statusCode).toBe(400);
+  });
+
+  // En dernier : ce test consomme le quota de l'IP de test (rate-limit en mémoire).
+  it("POST /contact : rate-limit -> 429 au-delà de la limite", async () => {
+    const { agent, csrf } = await contactSession();
+    const codes = [];
+    for (let i = 0; i < 12; i++) {
+      const r = await agent.post("/contact").send({ _csrf: csrf, website: "", nom: "x", prenom: "y", email: "bad", texte: "z" });
+      codes.push(r.statusCode);
+    }
+    expect(codes).toContain(429);
+  });
+});
+
 afterAll(async () => {
   await pool.query("DELETE FROM utilisateurs WHERE pseudo = $1", [TEST_ADMIN.pseudo]);
   await pool.end();

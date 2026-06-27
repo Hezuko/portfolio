@@ -16,7 +16,9 @@
     if (isVideo(src)) {
       return `<figure class="story-media" data-reveal><video class="detail-gallery__video" src="${esc(src)}" controls preload="metadata" playsinline></video></figure>`;
     }
-    return `<figure class="story-media" data-reveal><img src="${esc(cloudinaryUrl(src, { w: 900 }))}" alt="${esc(project.name)} — visuel ${i + 1}" loading="lazy"></figure>`;
+    const srcset = cloudinarySrcset(src, [400, 600, 900, 1200]);
+    const ss = srcset ? ` srcset="${esc(srcset)}" sizes="(max-width: 760px) 92vw, 600px"` : '';
+    return `<figure class="story-media" data-reveal><img src="${esc(cloudinaryUrl(src, { w: 900 }))}"${ss} alt="${esc(project.name)} — visuel ${i + 1}" loading="lazy"></figure>`;
   };
   // Répartition des images sur les sections de récit (pour les semer régulièrement, pas en bloc).
   const storySectionCount = [
@@ -26,8 +28,32 @@
     project.results,
     project.future_improvements,
   ].filter(Boolean).length;
-  const perSection = storySectionCount ? Math.ceil(images.length / storySectionCount) : images.length;
+  // Vise des rangées de ~3 images (les portraits s'affichent alors 3 côte à côte).
+  const perSection = Math.max(3, storySectionCount ? Math.ceil(images.length / storySectionCount) : images.length);
 %>
+
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": project.name,
+  "creator": { "@type": "Person", "name": "Henoc Mukumbi", "url": siteUrl },
+  "url": canonicalUrl,
+  "description": String(project.short_description || project.goal || "").replace(/\s+/g, " ").trim().slice(0, 300),
+  "keywords": techs.join(", ")
+}).replace(/</g, "\\u003c") %>
+</script>
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": siteUrl },
+    { "@type": "ListItem", "position": 2, "name": "Projets", "item": siteUrl + "/projets" },
+    { "@type": "ListItem", "position": 3, "name": project.name, "item": canonicalUrl }
+  ]
+}).replace(/</g, "\\u003c") %>
+</script>
 
 <section class="detail-hero skin-<%= project.category %>">
   <div class="container detail-hero__grid">
@@ -64,7 +90,8 @@
       <% } %>
     </div>
     <figure class="detail-hero__media">
-      <img src="<%= cloudinaryUrl(project.main_image_url || project.main_image || '/images/background.jpg', { w: 800 }) %>" alt="<%= project.name %>">
+      <% const heroImg = project.main_image_url || project.main_image || '/images/background.jpg'; %>
+      <img src="<%= cloudinaryUrl(heroImg, { w: 800 }) %>" srcset="<%= cloudinarySrcset(heroImg, [400, 600, 800, 1200]) %>" sizes="(max-width: 900px) 92vw, 460px" alt="<%= project.name %>" fetchpriority="high">
     </figure>
   </div>
 </section>
@@ -73,7 +100,7 @@
   <div class="container detail-page__grid">
     <main class="detail-main">
       <% let mi = 0; %>
-      <% const popMediaGroup = (n) => { let h = ''; for (let k = 0; k < n && mi < images.length; k++) { h += mediaFigure(images[mi], mi); mi++; } return h; }; %>
+      <% const popMediaGroup = (n) => { let h = ''; for (let k = 0; k < n && mi < images.length; k++) { h += mediaFigure(images[mi], mi); mi++; } return h ? `<div class="story-shots">${h}</div>` : ''; }; %>
       <% if (project.context || project.long_description || project.goal) { %>
         <section class="detail-section detail-section--lead" data-reveal>
           <p class="eyebrow">Le projet</p>
