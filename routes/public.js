@@ -40,7 +40,7 @@ const profile = {
   role: "Ingénieur architecte en systèmes embarqués",
   tagline: "Ingénieur architecte en systèmes embarqués — je conçois un produit de A à Z, du circuit imprimé au cloud.",
   about:
-    "Si je devais me définir : ingénieur-architecte en systèmes embarqués. Ce que j'aime, c'est concevoir un produit de A à Z — du schéma électronique jusqu'à la ligne de code qui le fait vivre.\n\nMes expériences, mes études et mes projets m'ont fait toucher à un large spectre de l'informatique — du matériel au logiciel, de l'embarqué à l'IA. J'en ai tiré une polyvalence qui me permet aujourd'hui de m'approprier vite un nouveau sujet et de le mener jusqu'au produit fini.",
+    "Si je devais me définir : ingénieur-architecte en systèmes embarqués. Ce que j'aime, c'est concevoir un produit de A à Z — du schéma électronique jusqu'à la ligne de code qui le fait vivre.",
   email: "h.mukumbi100@gmail.com",
   github: "https://github.com/Hezuko",
   linkedin: "https://www.linkedin.com/in/henocmukumbi",
