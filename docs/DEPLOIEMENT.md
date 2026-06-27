@@ -87,3 +87,31 @@ Cloudflare (tous les domaines, DNS gratuit)
 3. Entrée de domaine dans le `Caddyfile`.
 4. `.env` de prod (modèle) + procédure d'application des migrations.
 5. Choix final : **VPS-1 (Caddy/Compose)** ou **VPS-2 (Coolify)**.
+
+## Migrations de base de données
+
+Runner intégré (suivi dans la table `schema_migrations`, ordre chronologique, transaction par fichier) :
+
+```bash
+npm run migrate           # applique les migrations en attente
+npm run migrate:status    # liste appliquées / en attente
+npm run migrate:baseline  # marque toutes les migrations comme appliquées SANS les exécuter
+```
+
+- **Base neuve** (jamais déployée) : `npm run migrate` applique tout dans l'ordre.
+- **Base déjà peuplée** (migrations passées appliquées à la main) : lancer **une fois**
+  `npm run migrate:baseline` pour adopter le suivi sans tout ré-exécuter, puis `npm run migrate`
+  pour les nouvelles. Sinon le runner tenterait de ré-rejouer d'anciennes migrations non idempotentes.
+- En Docker : lancer `npm run migrate` au démarrage du conteneur (entrypoint) ou en job ponctuel.
+
+## Variables d'environnement de prod (obligatoires sauf indication)
+
+| Variable | Rôle | Sans elle |
+|---|---|---|
+| `DB_URL` | connexion PostgreSQL | l'app ne démarre pas |
+| `SESSION_SECRET` | signature des sessions | l'app ne démarre pas |
+| `CLOUDINARY_URL` | médias (URLs signées) | photo + logos cassés |
+| `SITE_URL` | `https://<domaine>` pour canonical/OG/JSON-LD/sitemap | URLs en `localhost` |
+| `NODE_ENV=production` | cookies `secure` + garde-fou SITE_URL | cookies non sécurisés |
+| `MAIL_USER` / `MAIL_PASS` / `MAIL_TO` | email de notification contact | pas de notif (non bloquant) |
+| `DB_SSL` | `true`/`false` selon l'hébergeur PG | — |
