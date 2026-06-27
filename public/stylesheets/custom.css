@@ -626,6 +626,59 @@ select:focus {
   gap: 18px;
 }
 
+/* Page d'authentification (back-office) — au thème caméléon */
+.auth-page {
+  min-height: 72vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 5vw, 3rem) 0;
+}
+
+.auth-card {
+  width: min(100%, 440px);
+  text-align: center;
+}
+
+.auth-header h1 {
+  margin: 8px 0 8px;
+}
+
+.auth-header p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-form {
+  margin-top: 22px;
+  text-align: left;
+}
+
+.auth-form .btn {
+  margin-top: 4px;
+  width: 100%;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.auth-visitor {
+  width: 100%;
+}
+
 .admin-form-group {
   display: grid;
   gap: 14px;
@@ -1149,8 +1202,13 @@ select:focus {
   }
 
   .footer-top {
-    grid-template-columns: 1fr;
-    gap: 1.8rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.8rem 1.5rem;
+  }
+
+  /* La marque occupe toute la largeur ; Navigation et Me joindre côte à côte en dessous */
+  .footer-brand {
+    grid-column: 1 / -1;
   }
 
   .footer-bottom {
