@@ -126,6 +126,7 @@ app.use((req, res, next) => {
     "https://res.cloudinary.com/portfolio-hezuko/image/upload/f_auto,q_auto,w_640,h_640,c_fill,g_face/v1740309643/henoc_r0fiwi.jpg";
   res.locals.robots = /^\/(admin|authentification)/.test(req.path) ? "noindex,nofollow" : "index,follow";
   res.locals.ogType = "website";
+  res.locals.currentPath = req.path;
   next();
 });
 

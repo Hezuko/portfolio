@@ -7,13 +7,22 @@
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Ouvrir la navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+    <%
+      const cp = typeof currentPath === "string" ? currentPath : "/";
+      const isCurrent = (href) => {
+        if (href === "/") return cp === "/";
+        if (href === "/jobs") return cp === "/jobs" || cp.indexOf("/experiences") === 0 || cp.indexOf("/jobs/") === 0;
+        return cp === href || cp.indexOf(href + "/") === 0;
+      };
+      const navAttrs = (href) => isCurrent(href) ? ' aria-current="page" class="nav-link active"' : ' class="nav-link"';
+    %>
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav ms-auto align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
-        <li class="nav-item"><a class="nav-link" href="/a-propos">À propos</a></li>
-        <li class="nav-item"><a class="nav-link" href="/projets">Projets</a></li>
-        <li class="nav-item"><a class="nav-link" href="/etudes">Études</a></li>
-        <li class="nav-item"><a class="nav-link" href="/jobs">Expériences</a></li>
+        <li class="nav-item"><a<%- navAttrs("/") %> href="/">Accueil</a></li>
+        <li class="nav-item"><a<%- navAttrs("/a-propos") %> href="/a-propos">À propos</a></li>
+        <li class="nav-item"><a<%- navAttrs("/projets") %> href="/projets">Projets</a></li>
+        <li class="nav-item"><a<%- navAttrs("/etudes") %> href="/etudes">Études</a></li>
+        <li class="nav-item"><a<%- navAttrs("/jobs") %> href="/jobs">Expériences</a></li>
         <li class="nav-item"><a class="btn btn-sm btn-dark ms-lg-2" href="/contact">Me contacter</a></li>
         <% if (user && user.role === "admin") { %>
           <li class="nav-item"><a class="btn btn-sm btn-outline-dark ms-lg-2" href="/admin">Admin</a></li>

@@ -143,7 +143,7 @@ router.get("/projets/:slug", async function (req, res, next) {
     const projImg = project.main_image_url || project.main_image;
     res.render("public/project-detail", {
       title: project.name,
-      description: shortText(project.short_description || project.goal || project.context) || res.locals.description,
+      description: shortText(project.short_description || project.goal || project.context, 160) || res.locals.description,
       ogImage: projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage,
       ogType: "article",
       profile: buildProfile(settings),
@@ -176,7 +176,7 @@ router.get("/etudes/:id", async function (req, res, next) {
     if (!item) return res.status(404).render("errors/404", { title: "Formation introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
-      description: shortText(item.context || item.description) || res.locals.description,
+      description: shortText(item.context || item.description, 160) || res.locals.description,
       ogType: "article",
       item,
       type: "education",
@@ -212,7 +212,7 @@ router.get(["/jobs/:id", "/experiences/:id"], async function (req, res, next) {
     if (!item) return res.status(404).render("errors/404", { title: "Experience introuvable" });
     res.render("public/timeline-detail", {
       title: item.title,
-      description: shortText(item.short_summary || item.mission_context || item.description) || res.locals.description,
+      description: shortText(item.short_summary || item.mission_context || item.description, 160) || res.locals.description,
       ogType: "article",
       item,
       type: "job",

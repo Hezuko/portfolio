@@ -38,7 +38,7 @@
           <% const projHref = project.slug ? `/projets/${project.slug}` : '/projets'; %>
           <a class="home-summary-item" href="<%= projHref %>">
             <div class="home-summary-media home-summary-media--project">
-              <img src="<%= project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg' %>" alt="Visuel <%= project.name || project.titre %>" loading="lazy" decoding="async" width="58" height="58">
+              <img src="<%= cloudinaryUrl(project.main_image_url || project.main_image || project.iconpath || '/images/background.jpg', { w: 120, h: 120, c: 'fill' }) %>" alt="Visuel <%= project.name || project.titre %>" loading="lazy" decoding="async" width="58" height="58">
             </div>
             <div>
               <strong><%= project.name || project.titre %></strong>
