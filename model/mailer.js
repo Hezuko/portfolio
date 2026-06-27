@@ -1,17 +1,21 @@
-const path = require("path");
 const nodemailer = require("nodemailer");
 
 const mailUser = process.env.MAIL_USER;
 const mailPass = process.env.MAIL_PASS;
 const mailTo = process.env.MAIL_TO || mailUser;
+const mailFrom = process.env.MAIL_FROM || mailUser;
+const brevoApiKey = process.env.BREVO_API_KEY;
+// Logo via URL publique (l'API ne gère pas les images inline CID simplement).
+const logoUrl = `${process.env.SITE_URL || ""}/images/came.png`;
 
-// Transporteur créé seulement si les identifiants sont présents (sinon: no-op gracieux).
+// SMTP (dev local) — créé seulement si identifiants présents. En prod OVH le SMTP
+// sortant est bloqué : on passe par l'API HTTPS de Brevo (cf. sendViaBrevo).
 const transporter = mailUser && mailPass
   ? nodemailer.createTransport({ service: "gmail", auth: { user: mailUser, pass: mailPass } })
   : null;
 
 function isConfigured() {
-  return Boolean(transporter && mailTo);
+  return Boolean(mailTo && mailFrom && (brevoApiKey || transporter));
 }
 
 function esc(value) {
@@ -22,13 +26,16 @@ function esc(value) {
 
 function buildHtml(d) {
   const message = esc(d.texte).replace(/\n/g, "<br>");
+  const logo = logoUrl
+    ? `<td style="padding-right:10px;vertical-align:middle;"><img src="${esc(logoUrl)}" width="30" height="30" alt="Logo" style="display:block;border-radius:7px;"></td>`
+    : "";
   return `<!DOCTYPE html><html><body style="margin:0;background:#f6f4ef;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:24px 0;">
     <tr><td align="center">
       <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#ffffff;border:1px solid #ded8cd;border-radius:14px;overflow:hidden;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
         <tr><td style="background:#1f6f57;padding:16px 22px;">
           <table cellpadding="0" cellspacing="0"><tr>
-            <td style="padding-right:10px;vertical-align:middle;"><img src="cid:portfoliologo" width="30" height="30" alt="Logo" style="display:block;border-radius:7px;"></td>
+            ${logo}
             <td style="vertical-align:middle;color:#ffffff;font-size:16px;font-weight:600;">Nouveau message depuis ton portfolio</td>
           </tr></table>
         </td></tr>
@@ -53,22 +60,44 @@ function buildText(d) {
     `Message :\n${d.texte}\n\n— Reçu via le formulaire de contact. Réponds directement à ${d.email}.`;
 }
 
-async function sendContactEmail(d) {
-  if (!isConfigured()) return { sent: false, reason: "mail-non-configure" };
+// Envoi via l'API HTTPS de Brevo (port 443 — non bloqué par OVH, contrairement au SMTP).
+async function sendViaBrevo(d) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": brevoApiKey, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      sender: { email: mailFrom, name: "Portfolio — contact" },
+      to: [{ email: mailTo }],
+      replyTo: { email: d.email, name: `${d.prenom} ${d.nom}`.trim() },
+      subject: `Nouveau message : ${d.objet}`,
+      htmlContent: buildHtml(d),
+      textContent: buildText(d),
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Brevo API ${res.status}: ${body.slice(0, 300)}`);
+  }
+  return { sent: true, via: "brevo" };
+}
+
+async function sendViaSmtp(d) {
   await transporter.sendMail({
-    from: `"Portfolio — contact" <${mailUser}>`,
+    from: `"Portfolio — contact" <${mailFrom}>`,
     to: mailTo,
     replyTo: d.email,
     subject: `Nouveau message : ${d.objet}`,
     text: buildText(d),
     html: buildHtml(d),
-    attachments: [{
-      filename: "logo.png",
-      path: path.join(__dirname, "..", "public", "images", "came.png"),
-      cid: "portfoliologo",
-    }],
   });
-  return { sent: true };
+  return { sent: true, via: "smtp" };
+}
+
+async function sendContactEmail(d) {
+  if (!isConfigured()) return { sent: false, reason: "mail-non-configure" };
+  // Priorité à l'API Brevo (fonctionne en prod OVH) ; SMTP en repli pour le dev local.
+  if (brevoApiKey) return sendViaBrevo(d);
+  return sendViaSmtp(d);
 }
 
 module.exports = { sendContactEmail, isConfigured };
