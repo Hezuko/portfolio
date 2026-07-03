@@ -9,4 +9,6 @@ set -euo pipefail
 cd /srv/portfolio
 git pull --ff-only origin develop
 docker compose up -d --build portfolio
+# Applique les migrations en attente (schéma + contenu) une fois le conteneur à jour.
+docker compose exec -T portfolio npm run migrate
 echo "✓ Déploiement terminé : $(git rev-parse --short HEAD)"

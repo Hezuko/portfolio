@@ -72,6 +72,9 @@ jobs:
       - name: Seed test database
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
 
+      - name: Run migrations
+        run: npm run migrate
+
       - name: Run tests
         run: npm test
 
