@@ -19,7 +19,9 @@ const ASSET_VERSION = (() => {
   try {
     return require("child_process").execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
   } catch (e) {
-    try { return require("./package.json").version || "1"; } catch (_) { return "1"; }
+    // En Docker, .git est exclu de l'image : on prend l'instant de démarrage.
+    // Chaque déploiement redémarre le conteneur → nouvelle version → cache CSS/JS invalidé.
+    return Date.now().toString(36);
   }
 })();
 

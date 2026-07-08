@@ -217,6 +217,13 @@ a {
   background: var(--surface-2);
 }
 
+/* Logos / icônes d'app (images ~carrées, détectées en JS) : affichés en entier
+   sur un fond de surface, au lieu d'être zoomés-coupés par object-fit: cover. */
+.project-card img.is-logo {
+  object-fit: contain;
+  padding: 1.6rem 2.2rem;
+}
+
 .project-card--compact img {
   aspect-ratio: 16 / 7;
 }

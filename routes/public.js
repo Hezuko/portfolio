@@ -141,10 +141,14 @@ router.get("/projets/:slug", async function (req, res, next) {
     if (!project) return res.status(404).render("errors/404", { title: "Projet introuvable" });
     const settings = await repo.getSettingsMap();
     const projImg = project.main_image_url || project.main_image;
+    // og:image doit être une URL ABSOLUE (exigence Facebook/LinkedIn/WhatsApp) :
+    // les images locales (/images/...) sont préfixées par l'URL du site.
+    let ogImage = projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage;
+    if (ogImage && ogImage.startsWith("/")) ogImage = res.locals.siteUrl + ogImage;
     res.render("public/project-detail", {
       title: project.name,
       description: shortText(project.short_description || project.goal || project.context, 160) || res.locals.description,
-      ogImage: projImg ? cloudinaryUrl(projImg, { w: 1200, h: 630, c: "fill" }) : res.locals.ogImage,
+      ogImage,
       ogType: "article",
       profile: buildProfile(settings),
       project,

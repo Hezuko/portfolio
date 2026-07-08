@@ -460,3 +460,18 @@
     else img.addEventListener("load", function () { mark(img); }, { once: true });
   });
 })();
+
+// Cartes projets : les images carrées (logos, icônes d'app) sont écrasées par le
+// recadrage 16/10 → on les détecte au chargement et on les affiche en entier (contain).
+(function () {
+  const imgs = document.querySelectorAll(".project-card img");
+  const mark = function (img) {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    if (ratio > 0.8 && ratio < 1.25) img.classList.add("is-logo");
+  };
+  imgs.forEach(function (img) {
+    if (img.complete && img.naturalWidth) mark(img);
+    else img.addEventListener("load", function () { mark(img); }, { once: true });
+  });
+})();
