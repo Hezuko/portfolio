@@ -414,6 +414,16 @@ router.get("/", async function (req, res, next) {
   }
 });
 
+// 📊 Statistiques de visite (collectées par utils/analytics.js)
+router.get("/stats", async function (req, res, next) {
+  try {
+    const visits = await require("../utils/analytics").getStats();
+    res.render("admin/stats", { title: "Statistiques", entities: ENTITY_META, visits });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Boîte de réception : messages reçus via le formulaire de contact
 router.get("/messages", async function (req, res, next) {
   try {

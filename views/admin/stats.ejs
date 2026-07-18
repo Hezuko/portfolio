@@ -1,0 +1,69 @@
+<section class="admin-shell">
+  <%- include('../partials/admin-sidebar', { entities }) %>
+  <div class="admin-content">
+    <div class="admin-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Statistiques de visite</h1>
+      </div>
+      <a class="btn btn-outline-dark" href="/">Voir le site</a>
+    </div>
+
+    <div class="stats-grid">
+      <article><strong><%= visits.totals.visitors_today %></strong><span>Visiteurs aujourd'hui</span></article>
+      <article><strong><%= visits.totals.visitors_7d %></strong><span>Visiteurs 7 jours</span></article>
+      <article><strong><%= visits.totals.visitors_30d %></strong><span>Visiteurs 30 jours</span></article>
+      <article><strong><%= visits.totals.views_30d %></strong><span>Pages vues 30 jours</span></article>
+      <article><strong><%= visits.devices.mobile %></strong><span>Vues mobile (30 j)</span></article>
+      <article><strong><%= visits.devices.desktop %></strong><span>Vues desktop (30 j)</span></article>
+    </div>
+
+    <section class="admin-panel">
+      <h2>14 derniers jours</h2>
+      <% const maxV = Math.max(1, ...visits.daily.map(d => d.visitors)); %>
+      <div class="stats-bars">
+        <% visits.daily.forEach((d) => { %>
+          <div class="stats-bar" title="<%= formatDate(d.day) %> — <%= d.visitors %> visiteur(s), <%= d.views %> vue(s)">
+            <span style="height: <%= Math.max(6, Math.round((d.visitors / maxV) * 100)) %>%"></span>
+            <small><%= new Date(d.day).getDate() %></small>
+          </div>
+        <% }) %>
+        <% if (!visits.daily.length) { %><p class="stats-empty">Aucune visite enregistrée pour l'instant — les compteurs démarrent maintenant.</p><% } %>
+      </div>
+    </section>
+
+    <div class="stats-columns">
+      <section class="admin-panel">
+        <h2>Pages les plus vues (30 j)</h2>
+        <div class="admin-table">
+          <% visits.topPages.forEach((p) => { %>
+            <div class="table-row"><strong><%= p.path %></strong><small><%= p.views %> vues</small></div>
+          <% }) %>
+          <% if (!visits.topPages.length) { %><p class="stats-empty">—</p><% } %>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <h2>Sources (30 j)</h2>
+        <div class="admin-table">
+          <% visits.topReferrers.forEach((r) => { %>
+            <div class="table-row"><strong><%= r.source %></strong><small><%= r.views %> vues</small></div>
+          <% }) %>
+          <% if (!visits.topReferrers.length) { %><p class="stats-empty">—</p><% } %>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <h2>Pays (30 j)</h2>
+        <div class="admin-table">
+          <% visits.topCountries.forEach((c) => { %>
+            <div class="table-row"><strong><%= c.country %></strong><small><%= c.visitors %> visiteur(s)</small></div>
+          <% }) %>
+          <% if (!visits.topCountries.length) { %><p class="stats-empty">—</p><% } %>
+        </div>
+      </section>
+    </div>
+
+    <p class="stats-note">Comptage anonyme, sans cookies : ni adresse IP ni identité stockées (hash journalier irréversible). Les robots et ton back-office ne sont pas comptés.</p>
+  </div>
+</section>

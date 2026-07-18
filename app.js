@@ -210,6 +210,9 @@ app.use(["/authentification", "/admin"], (req, res, next) => {
   return res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
 });
 
+// 📊 Statistiques de visite intégrées (anonymes, sans cookies — cf. utils/analytics.js)
+app.use(require("./utils/analytics").middleware);
+
 // 🩺 Healthcheck (monitoring externe + Docker) : vérifie l'app ET la base.
 app.get("/health", async (req, res) => {
   try {
