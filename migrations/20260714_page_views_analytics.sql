@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS page_views (
   is_mobile BOOLEAN NOT NULL DEFAULT false
 );
 
+-- (index d'expression sur ts::date refusé : cast non IMMUTABLE en timestamptz ;
+--  au volume d'un portfolio, l'index simple sur ts couvre tous les agrégats)
 CREATE INDEX IF NOT EXISTS idx_page_views_ts ON page_views (ts DESC);
-CREATE INDEX IF NOT EXISTS idx_page_views_day_visitor ON page_views ((ts::date), visitor_hash);
 
 COMMIT;
