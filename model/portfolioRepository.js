@@ -245,7 +245,31 @@ async function findProjectBySlug(slug) {
   return project;
 }
 
+// ⚡ Cache mémoire des lectures publiques (TTL court) : chaque page publique
+// déclenchait 7 requêtes SQL identiques. Invalidé à toute écriture admin,
+// désactivé pendant les tests pour garder des assertions déterministes.
+const PUBLIC_CACHE_TTL_MS = 60 * 1000;
+const publicCache = new Map(); // clé -> { data, at }
+
+function cacheGet(key) {
+  if (process.env.NODE_ENV === "test") return null;
+  const entry = publicCache.get(key);
+  if (!entry || Date.now() - entry.at > PUBLIC_CACHE_TTL_MS) return null;
+  return entry.data;
+}
+
+function cacheSet(key, data) {
+  if (process.env.NODE_ENV === "test") return data;
+  publicCache.set(key, { data, at: Date.now() });
+  return data;
+}
+
+function invalidatePublicCache() {
+  publicCache.clear();
+}
+
 async function create(entity, body) {
+  invalidatePublicCache();
   const config = ENTITY_CONFIG[entity];
   const payload = normalizePayload(entity, body);
   const fields = Object.keys(payload);
@@ -267,6 +291,7 @@ async function create(entity, body) {
 }
 
 async function update(entity, id, body) {
+  invalidatePublicCache();
   const config = ENTITY_CONFIG[entity];
   const payload = normalizePayload(entity, body);
   const fields = Object.keys(payload);
@@ -289,11 +314,14 @@ async function update(entity, id, body) {
 }
 
 async function remove(entity, id) {
+  invalidatePublicCache();
   const config = ENTITY_CONFIG[entity];
   await pool.query(`DELETE FROM ${config.table} WHERE id = $1`, [id]);
 }
 
 async function getPublicData() {
+  const cached = cacheGet("publicData");
+  if (cached) return cached;
   const [projects, educations, jobs, schools, companies, skills, settings] = await Promise.all([
     pool.query(`SELECT p.*, s.name AS school_name, c.name AS company_name
                 FROM projects p
@@ -327,7 +355,7 @@ async function getPublicData() {
     list("settings"),
   ]);
 
-  return {
+  return cacheSet("publicData", {
     projects: signMediaFields(projects.rows),
     educations,
     jobs: signMediaFields(jobs.rows),
@@ -335,15 +363,17 @@ async function getPublicData() {
     companies,
     skills,
     settings,
-  };
+  });
 }
 
 async function getSettingsMap() {
+  const cached = cacheGet("settingsMap");
+  if (cached) return cached;
   const settings = await list("settings");
-  return settings.reduce((map, setting) => {
+  return cacheSet("settingsMap", settings.reduce((map, setting) => {
     map[setting.setting_key] = setting.setting_value;
     return map;
-  }, {});
+  }, {}));
 }
 
 async function getAdminStats() {

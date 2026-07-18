@@ -24,6 +24,18 @@ describe("pages publiques (GET 200)", () => {
     expect(r.statusCode).toBe(200);
     expect(r.text.toLowerCase()).toContain(String(needle).toLowerCase());
   });
+
+  it("GET /health -> 200 {ok:true} (app + base)", async () => {
+    const r = await request(app).get("/health");
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toEqual({ ok: true });
+  });
+
+  it("les pages publiques portent une CSP stricte (script-src 'self')", async () => {
+    const r = await request(app).get("/");
+    expect(r.headers["content-security-policy"]).toContain("script-src 'self';");
+    expect(r.headers["content-security-policy"]).toContain("res.cloudinary.com");
+  });
 });
 
 describe("pages de détail", () => {

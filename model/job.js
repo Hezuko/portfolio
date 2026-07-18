@@ -28,10 +28,6 @@ async function addJob(titre, description, employeur, adresse, date_debut, date_f
             document = document || null;
             partenaire = partenaire || null;
             iconpath = iconpath || null;
-
-            console.log(`📌 Requête SQL exécutée : 
-                INSERT INTO job (titre, description,employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) 
-                VALUES ('${titre}', '${description}', '${employeur}','${adresse}', '${date_debut}', '${date_fin}', '${document}', '${partenaire}', '${iconpath}')`);
     
 
         const res = await pool.query(
@@ -49,13 +45,6 @@ async function addJob(titre, description, employeur, adresse, date_debut, date_f
 // 🟢 Mettre à jour un job
 async function updateJob(id, titre, description, employeur, adresse, date_debut, date_fin, document, partenaire, iconpath) {
     try {
-        console.log(`📌 Requête SQL exécutée :
-            UPDATE job 
-            SET titre = '${titre}', description = '${description}', employeur = '${employeur}', adresse = '${adresse}', 
-                date_debut = '${date_debut}', date_fin = '${date_fin}', document = '${document}', 
-                partenaire = '${partenaire}', iconpath = '${iconpath}'
-            WHERE id = ${id}
-        `);
 
         const res = await pool.query(
             `UPDATE job 

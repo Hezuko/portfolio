@@ -71,7 +71,32 @@ app.use("/js", express.static(path.join(__dirname, "node_modules/bootstrap/dist/
 app.use(session.initSession());
 
 // 🟢 Middlewares
-app.use(logger("dev"));
+// Logs : format court et coloré en dev, format Apache complet (IP, UA) en prod.
+app.use(logger(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+// 🛡️ Content-Security-Policy — ceinture anti-XSS.
+// Public : scripts locaux uniquement. Admin : + 'unsafe-inline' (confirm() inline),
+// déjà protégé par l'allowlist IP + l'authentification.
+// Analytics Umami (optionnel) : activé seulement si UMAMI_URL + UMAMI_SITE_ID sont définis.
+const UMAMI_URL = (process.env.UMAMI_URL || "").replace(/\/$/, "");
+const UMAMI_SITE_ID = process.env.UMAMI_SITE_ID || "";
+const UMAMI_ORIGIN = UMAMI_URL ? new URL(UMAMI_URL).origin : "";
+
+app.use((req, res, next) => {
+  const isAdmin = /^\/(admin|authentification)/.test(req.path);
+  const scriptSrc = (isAdmin ? "'self' 'unsafe-inline'" : "'self'") + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "");
+  const connectSrc = "'self'" + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "");
+  res.setHeader(
+    "Content-Security-Policy",
+    `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; ` +
+    "img-src 'self' data: https://res.cloudinary.com; media-src 'self' https://res.cloudinary.com; " +
+    `font-src 'self'; connect-src ${connectSrc}; ` +
+    "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+  );
+  res.locals.umamiUrl = UMAMI_URL;
+  res.locals.umamiSiteId = UMAMI_SITE_ID;
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser()); // ✅ Doit être AVANT `csurf()`
@@ -183,6 +208,16 @@ app.use(["/authentification", "/admin"], (req, res, next) => {
   // IP non autorisée → 404 furtif (le back-office fait comme s'il n'existait pas)
   console.warn(`⛔ Back-office refusé depuis ${normalizeIp(req.ip)} (${req.method} ${req.originalUrl})`);
   return res.status(404).render("errors/404", { title: "Erreur 404", robots: "noindex,nofollow" });
+});
+
+// 🩺 Healthcheck (monitoring externe + Docker) : vérifie l'app ET la base.
+app.get("/health", async (req, res) => {
+  try {
+    await require("./model/db").query("SELECT 1");
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(503).json({ ok: false });
+  }
 });
 
 // 🛠️ Définition des routes

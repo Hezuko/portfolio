@@ -50,6 +50,10 @@
     "sameAs": ["https://github.com/Hezuko", "https://www.linkedin.com/in/henocmukumbi"]
   }
   </script>
+  <% if (umamiUrl && umamiSiteId) { %>
+  <%# Analytics Umami (auto-hébergé, sans cookies, conforme RGPD sans bannière) %>
+  <script defer src="<%= umamiUrl %>/script.js" data-website-id="<%= umamiSiteId %>"></script>
+  <% } %>
 </head>
 <body>
   <%- include('partials/icon-sprite') %>

@@ -29,10 +29,6 @@ async function addProjet(titre, description, adresse, date_debut, date_fin, docu
         partenaire = partenaire || null;
         iconpath = iconpath || null;
 
-        console.log(`📌 Requête SQL exécutée : 
-            INSERT INTO projet (titre, description, adresse, date_debut, date_fin, document, etat, partenaire, iconpath) 
-            VALUES ('${titre}', '${description}', '${adresse}', '${date_debut}', '${date_fin}', '${document}', '${etat}', '${partenaire}', '${iconpath}')`);
-
         const res = await pool.query(
             `INSERT INTO projet (titre, description, adresse, date_debut, date_fin, document, etat, partenaire, iconpath) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
@@ -50,13 +46,6 @@ async function addProjet(titre, description, adresse, date_debut, date_fin, docu
 
 async function updateProjet(id, titre, description, adresse, date_debut, date_fin, document, etat, partenaire, iconpath) {
     try {
-        console.log(`📌 Requête SQL exécutée :
-            UPDATE projet 
-            SET titre = '${titre}', description = '${description}', adresse = '${adresse}', 
-                date_debut = '${date_debut}', date_fin = '${date_fin}', document = '${document}', 
-                etat = '${etat}', partenaire = '${partenaire}', iconpath = '${iconpath}'
-            WHERE id = ${id}
-        `);
 
         const res = await pool.query(
             `UPDATE projet 

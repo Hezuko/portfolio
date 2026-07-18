@@ -3803,6 +3803,9 @@ textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:
 .error-page .eyebrow { color: var(--skin); justify-content: center; }
 .error-page h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.05; margin: 0.6rem 0 1rem; }
 .error-page__lead { color: var(--muted); max-width: 46ch; margin: 0 auto 1.7rem; font-size: 1.05rem; line-height: 1.55; }
+.error-page__links { margin-top: 1.6rem; color: var(--muted); font-size: 0.92rem; }
+.error-page__links a { color: var(--skin); text-decoration: none; margin: 0 0.15rem; }
+.error-page__links a:hover { color: var(--skin-2); text-decoration: underline; }
 .error-page .hero-actions { justify-content: center; }
 
 /* Champ honeypot anti-spam : hors écran (pas display:none, que certains bots ignorent) */

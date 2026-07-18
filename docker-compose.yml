@@ -26,6 +26,9 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       # Envoi via l'API Brevo (HTTPS) — requis en prod OVH (SMTP sortant bloqué)
       BREVO_API_KEY: ${BREVO_API_KEY:-}
+      # Analytics Umami (optionnel) — vide = désactivé
+      UMAMI_URL: ${UMAMI_URL:-}
+      UMAMI_SITE_ID: ${UMAMI_SITE_ID:-}
     depends_on:
       portfolio-postgres:
         condition: service_healthy

@@ -200,3 +200,55 @@ connecte en SSH à la VM et lance `deploy/ssh-deploy.sh` (git pull + rebuild +
 restart du conteneur portfolio). La clé de déploiement est restreinte à ce seul
 script via une "forced command" dans `~/.ssh/authorized_keys`.
 Secrets GitHub requis : `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`.
+
+## Umami — statistiques de visite (auto-hébergé, sans cookies)
+
+Umami compte les visites sans cookies ni données personnelles (pas de bannière RGPD).
+Le script ne se charge que si `UMAMI_URL` + `UMAMI_SITE_ID` sont définis dans le `.env`
+du portfolio (sinon : désactivé, zéro impact).
+
+### 1. Stack sur la VM (`/srv/umami/docker-compose.yml`)
+```yaml
+name: umami
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami"
+      APP_SECRET: ${UMAMI_APP_SECRET}   # openssl rand -hex 32
+    depends_on: [umami-db]
+    networks: [internal, web]
+  umami-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    volumes: [umami_pgdata:/var/lib/postgresql/data]
+    networks: [internal]
+networks:
+  internal:
+  web: { external: true, name: joytrain-prod_default }
+volumes:
+  umami_pgdata:
+```
+
+### 2. DNS + Caddy
+- A record : `stats.henocmukumbi.com` → IP de la VM.
+- Bloc à ajouter au Caddyfile JoyTrain (puis `restart caddy`, pas `reload`) :
+```caddyfile
+stats.henocmukumbi.com {
+	reverse_proxy umami:3000
+}
+```
+
+### 3. Configuration
+1. `docker compose up -d` dans `/srv/umami`, puis ouvrir `https://stats.henocmukumbi.com`
+   (login initial `admin`/`umami` → changer le mot de passe immédiatement).
+2. Ajouter le site `henocmukumbi.com` dans Umami → copier le **Website ID**.
+3. Dans `/srv/portfolio/.env` :
+   `UMAMI_URL=https://stats.henocmukumbi.com` et `UMAMI_SITE_ID=<website-id>`,
+   puis `docker compose up -d --force-recreate portfolio`.
+La CSP du portfolio autorise automatiquement ce domaine quand les variables sont définies.
