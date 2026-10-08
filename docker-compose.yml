@@ -29,6 +29,9 @@ services:
       # Analytics Umami (optionnel) — vide = désactivé
       UMAMI_URL: ${UMAMI_URL:-}
       UMAMI_SITE_ID: ${UMAMI_SITE_ID:-}
+      # Anti-robots Cloudflare Turnstile (optionnel) — les DEUX vides = désactivé
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     depends_on:
       portfolio-postgres:
         condition: service_healthy
