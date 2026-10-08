@@ -6,6 +6,8 @@ var mailer = require("../model/mailer");
 var repo = require("../model/portfolioRepository");
 var { formatLevel } = require("../utils/formatters");
 var { cloudinaryUrl } = require("../utils/cloudinary");
+var { scoreContact } = require("../utils/antispam");
+var turnstile = require("../utils/turnstile");
 
 function shortText(value, max = 300) {
   const s = String(value || "").replace(/\s+/g, " ").trim();
@@ -280,6 +282,9 @@ router.get("/api/knowledge/:name", async function (req, res, next) {
 router.get("/contact", async function (req, res, next) {
   try {
     const settings = await repo.getSettingsMap();
+    // Piège temporel : on note quand le formulaire a été affiché. Un robot qui
+    // poste dans la foulée (moins de 3 s) se trahit — un humain met plus longtemps.
+    req.session.contactFormAt = Date.now();
     res.render("public/contact", { title: "Contact", description: "Contacter Henoc Mukumbi, ingénieur systèmes embarqués — pour une mission, une alternance ou une collaboration. Réponse sous 48 h.", profile: buildProfile(settings), messageSent: false, error: null });
   } catch (err) {
     next(err);
@@ -324,14 +329,27 @@ router.post("/contact", async function (req, res, next) {
   try {
     const currentProfile = buildProfile(await repo.getSettingsMap());
 
-    // Anti-spam : champ honeypot (invisible). Rempli = bot -> on simule l'envoi sans rien traiter.
-    if ((req.body.website || "").trim()) {
-      return res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+    const renderContact = (status, view) =>
+      res.status(status).render("public/contact", Object.assign({ title: "Contact", profile: currentProfile }, view));
+    // Succès : le formulaire repart vierge, on réarme le piège temporel.
+    const ok = () => {
+      req.session.contactFormAt = Date.now();
+      return renderContact(200, { messageSent: true, error: null });
+    };
+    // Échec de validation : on garde l'horodatage d'origine, sinon une simple
+    // correction de typo renvoyée dans la foulée passerait pour un robot.
+    const fail = (msg) => renderContact(400, { messageSent: false, error: msg });
+
+    // Anti-spam 1 : champs honeypot (invisibles, jamais remplis par un humain).
+    // Remplis = robot -> on affiche la page de succès sans rien traiter, pour ne
+    // lui donner aucun retour exploitable.
+    if ((req.body.website || "").trim() || (req.body.entreprise_url || "").trim()) {
+      return ok();
     }
 
-    // Anti-spam : limite le nombre d'envois par IP pour ne pas noyer la boîte de réception.
+    // Anti-spam 2 : limite le nombre d'envois par IP pour ne pas noyer la boîte.
     if (contactRateLimited(req.ip || "unknown")) {
-      return res.status(429).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: "Trop de tentatives d'envoi. Merci de réessayer dans quelques minutes." });
+      return renderContact(429, { messageSent: false, error: "Trop de tentatives d'envoi. Merci de réessayer dans quelques minutes." });
     }
 
     let { nom, prenom, objet, email, texte } = req.body;
@@ -341,7 +359,6 @@ router.post("/contact", async function (req, res, next) {
     email = (email || "").trim();
     texte = (texte || "").trim();
 
-    const fail = (msg) => res.status(400).render("public/contact", { title: "Contact", profile: currentProfile, messageSent: false, error: msg });
     if (!nom || !prenom || !email || !texte) return fail("Le nom, le prénom, l'email et le message sont requis.");
     if (!objet) objet = "Prise de contact";
     if (!validator.isEmail(email)) return fail("Adresse email invalide.");
@@ -349,15 +366,33 @@ router.post("/contact", async function (req, res, next) {
     if (objet.length > 140) return fail("L'objet est trop long (140 caractères maximum).");
     if (texte.length > 4000) return fail("Le message est trop long (4000 caractères maximum).");
 
+    // Anti-spam 3 : Turnstile, si les clés sont configurées. C'est une vraie
+    // vérification côté Cloudflare (pas une heuristique) : un échec est refusé net.
+    const captcha = await turnstile.verify(req.body["cf-turnstile-response"], req.ip);
+    if (!captcha.ok) return fail("La vérification anti-robot a échoué. Recharge la page et réessaie.");
+
+    // Anti-spam 4 : signaux de formulaire + analyse du contenu. Un message
+    // suspect est enregistré et marqué, mais n'envoie pas de notification.
+    const signals = [];
+    const openedAt = Number(req.session.contactFormAt) || 0;
+    const elapsed = openedAt ? Date.now() - openedAt : null;
+    if (elapsed === null) signals.push({ points: 2, reason: "formulaire non affiché avant l'envoi" });
+    else if (elapsed < 3000) signals.push({ points: 4, reason: "formulaire rempli en moins de 3 s" });
+
     const normalizedEmail = validator.normalizeEmail(email) || email;
     const data = { nom, prenom, objet, email: normalizedEmail, texte };
+    const verdict = scoreContact(data, signals);
 
     // On enregistre le message en base (valeurs brutes, échappées à l'affichage),
     // puis on notifie par email sans bloquer la réponse si l'envoi échoue.
-    await contact.AddContact(nom, prenom, objet, normalizedEmail, texte);
-    mailer.sendContactEmail(data).catch((e) => console.error("Email de contact non envoyé :", e.message));
+    await contact.AddContact(nom, prenom, objet, normalizedEmail, texte, verdict);
+    if (verdict.spam) {
+      console.warn(`Message de contact classé indésirable (score ${verdict.score}) : ${verdict.reasons.join(", ")}`);
+    } else {
+      mailer.sendContactEmail(data).catch((e) => console.error("Email de contact non envoyé :", e.message));
+    }
 
-    res.render("public/contact", { title: "Contact", profile: currentProfile, messageSent: true, error: null });
+    return ok();
   } catch (err) {
     next(err);
   }

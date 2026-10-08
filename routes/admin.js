@@ -427,8 +427,13 @@ router.get("/stats", async function (req, res, next) {
 // Boîte de réception : messages reçus via le formulaire de contact
 router.get("/messages", async function (req, res, next) {
   try {
-    const messages = await contact.listContacts();
-    res.render("admin/messages", { title: "Messages reçus", entities: ENTITY_META, messages });
+    // Les indésirables sont séparés mais jamais perdus : relecture possible,
+    // et requalification en un clic si le filtre s'est trompé.
+    const [messages, spam] = await Promise.all([
+      contact.listContacts(false),
+      contact.listContacts(true),
+    ]);
+    res.render("admin/messages", { title: "Messages reçus", entities: ENTITY_META, messages, spam });
   } catch (err) {
     next(err);
   }
@@ -437,6 +442,26 @@ router.get("/messages", async function (req, res, next) {
 router.post("/messages/:id/delete", async function (req, res, next) {
   try {
     await contact.deleteContact(req.params.id);
+    res.redirect("/admin/messages");
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Requalifier un message classé indésirable à tort
+router.post("/messages/:id/not-spam", async function (req, res, next) {
+  try {
+    await contact.markNotSpam(req.params.id);
+    res.redirect("/admin/messages");
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Vider d'un coup la liste des indésirables
+router.post("/messages/spam/purge", async function (req, res, next) {
+  try {
+    await contact.deleteSpam();
     res.redirect("/admin/messages");
   } catch (err) {
     next(err);

@@ -124,6 +124,25 @@ Tu peux changer le port avec :
 PORT=3001 npm start
 ```
 
+## Anti-spam du formulaire de contact
+
+Quatre couches, de la moins intrusive à la plus stricte :
+
+1. **Honeypots** — deux champs invisibles (`website`, `entreprise_url`). Remplis = robot, la
+   soumission est ignorée et la page de succès est quand même affichée.
+2. **Piège temporel** — un envoi expédié moins de 3 s après l'affichage du formulaire
+   n'est pas une saisie humaine.
+3. **Score de contenu** (`utils/antispam.js`) — alphabet non latin, liens, mots-clés
+   SEO/crypto, adresse email générée… Au-delà du seuil, le message est **enregistré et
+   marqué indésirable** mais ne déclenche aucune notification email.
+4. **Cloudflare Turnstile** (optionnel) — CAPTCHA invisible, gratuit et sans cookie.
+   Actif seulement si `TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY` sont définis
+   (clés créées sur <https://dash.cloudflare.com> → Turnstile, widget « Managed »).
+
+Rien n'est jamais perdu : les indésirables sont relisibles dans `/admin/messages`,
+avec leur score, les raisons du classement, et un bouton pour les requalifier en cas
+de faux positif.
+
 ## CSS
 
 Le fichier source Sass est `public/stylesheets/custom.scss`.

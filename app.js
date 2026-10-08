@@ -78,23 +78,29 @@ app.use(logger(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 // Public : scripts locaux uniquement. Admin : + 'unsafe-inline' (confirm() inline),
 // déjà protégé par l'allowlist IP + l'authentification.
 // Analytics Umami (optionnel) : activé seulement si UMAMI_URL + UMAMI_SITE_ID sont définis.
+// Turnstile (optionnel) : si les clés sont définies, le widget Cloudflare est
+// rendu sur la page Contact — il faut donc autoriser son origine dans la CSP.
+const turnstile = require("./utils/turnstile");
 const UMAMI_URL = (process.env.UMAMI_URL || "").replace(/\/$/, "");
 const UMAMI_SITE_ID = process.env.UMAMI_SITE_ID || "";
 const UMAMI_ORIGIN = UMAMI_URL ? new URL(UMAMI_URL).origin : "";
 
 app.use((req, res, next) => {
   const isAdmin = /^\/(admin|authentification)/.test(req.path);
-  const scriptSrc = (isAdmin ? "'self' 'unsafe-inline'" : "'self'") + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "");
-  const connectSrc = "'self'" + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "");
+  const captchaOrigin = turnstile.isEnabled() ? ` ${turnstile.SCRIPT_ORIGIN}` : "";
+  const scriptSrc = (isAdmin ? "'self' 'unsafe-inline'" : "'self'") + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "") + captchaOrigin;
+  const connectSrc = "'self'" + (UMAMI_ORIGIN ? ` ${UMAMI_ORIGIN}` : "") + captchaOrigin;
+  const frameSrc = captchaOrigin ? `frame-src${captchaOrigin}; ` : "frame-src 'none'; ";
   res.setHeader(
     "Content-Security-Policy",
     `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; ` +
     "img-src 'self' data: https://res.cloudinary.com; media-src 'self' https://res.cloudinary.com; " +
-    `font-src 'self'; connect-src ${connectSrc}; ` +
+    `font-src 'self'; connect-src ${connectSrc}; ` + frameSrc +
     "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
   );
   res.locals.umamiUrl = UMAMI_URL;
   res.locals.umamiSiteId = UMAMI_SITE_ID;
+  res.locals.turnstileSiteKey = turnstile.isEnabled() ? turnstile.siteKey() : "";
   next();
 });
 app.use(express.json());

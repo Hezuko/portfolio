@@ -22,6 +22,9 @@
       .message-card__actions form { margin: 0; }
       .btn-danger { background: #b3322a; color: #fff; border: 1px solid #b3322a; padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: 600; }
       .btn-danger:hover { background: #962a23; }
+      .message-card--spam { opacity: .72; border-style: dashed; }
+      .message-card__flag { display: inline-block; font-size: .78rem; font-weight: 600; color: #b3322a; border: 1px solid #b3322a; border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+      .spam-panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     </style>
 
     <% if (!messages || !messages.length) { %>
@@ -45,6 +48,47 @@
               <p class="message-card__texte"><%= m.texte %></p>
               <div class="message-card__actions">
                 <a class="btn btn-outline-dark" href="mailto:<%= m.email %>?subject=RE:%20<%= encodeURIComponent(m.objet) %>">Répondre</a>
+                <form method="POST" action="/admin/messages/<%= m.id %>/delete" onsubmit="return confirm('Supprimer ce message ?');">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn-danger" type="submit">Supprimer</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (spam && spam.length) { %>
+      <section class="admin-panel">
+        <div class="spam-panel__head">
+          <div>
+            <h2><%= spam.length %> indésirable<%= spam.length > 1 ? 's' : '' %></h2>
+            <p class="muted">Filtrés automatiquement : aucune notification email n'a été envoyée. Si l'un d'eux est légitime, requalifie-le.</p>
+          </div>
+          <form method="POST" action="/admin/messages/spam/purge" onsubmit="return confirm('Supprimer tous les indésirables ?');">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn-danger" type="submit">Tout supprimer</button>
+          </form>
+        </div>
+        <div class="message-list">
+          <% spam.forEach((m) => { %>
+            <article class="message-card message-card--spam">
+              <span class="message-card__flag">Indésirable · score <%= m.spam_score %><%= m.spam_reasons ? ' · ' + m.spam_reasons : '' %></span>
+              <div class="message-card__head">
+                <div>
+                  <strong><%= m.prenom %> <%= m.nom %></strong>
+                  <span class="muted"><%= m.email %></span>
+                </div>
+                <small><%= formatDate(m.date_submitted) %></small>
+              </div>
+              <p class="message-card__objet"><%= m.objet %></p>
+              <p class="message-card__texte"><%= m.texte %></p>
+              <div class="message-card__actions">
+                <form method="POST" action="/admin/messages/<%= m.id %>/not-spam">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-outline-dark" type="submit">Ce n'est pas un spam</button>
+                </form>
                 <form method="POST" action="/admin/messages/<%= m.id %>/delete" onsubmit="return confirm('Supprimer ce message ?');">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button class="btn-danger" type="submit">Supprimer</button>
